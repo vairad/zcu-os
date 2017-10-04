@@ -1,0 +1,5 @@
+#ignore visual studio files
+.vs/
+
+[Dd]ebug/
+[Rr]elease/
