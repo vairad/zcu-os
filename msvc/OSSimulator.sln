@@ -8,6 +8,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "kernel\kernel.vcxproj", "{B4305463-59C5-40C3-9A1A-92976A40562D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "user", "user\user.vcxproj", "{A5F63FF3-DE9A-4B0B-BBF9-AD27200CE81F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B4305463-59C5-40C3-9A1A-92976A40562D} = {B4305463-59C5-40C3-9A1A-92976A40562D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
