@@ -114,6 +114,7 @@ struct TProcess_Startup_Info {
 
 										OUT: ax je handle nove vytvoreneho procesu
 			2 - cekej na handle			 IN: rdx pointer na pole THandle, na ktere se ma cekat, rcx je pocet handlu
+											funkce se vraci jakmile je signalizovan prvni handle
 										OUT: rax je index handle, ktery byl signalizovan
 
 
@@ -137,12 +138,13 @@ const uint8_t scIO = 1;		//IO operace
 const uint8_t scCreate_File = 1;
 const uint8_t scWrite_File = 2;
 const uint8_t scRead_File = 3;
-const uint8_t scSet_File_Position = 4;
-const uint8_t scGet_File_Position = 5;
-const uint8_t scClose_Handle = 6;
-const uint8_t scGet_Current_Directory = 7;
-const uint8_t scSet_Current_Directory = 8;
-const uint8_t scCreate_Pipe = 9;
+const uint8_t scDelete_File = 4;
+const uint8_t scSet_File_Position = 5;
+const uint8_t scGet_File_Position = 6;
+const uint8_t scClose_Handle = 7;
+const uint8_t scGet_Current_Directory = 8;
+const uint8_t scSet_Current_Directory = 9;
+const uint8_t scCreate_Pipe = 10;
 
 
 const uint8_t scProc = 2;	//sprava procesu a vlaken
