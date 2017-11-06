@@ -1,5 +1,22 @@
 #include "process.h"
 
+#include <mutex>
+/// Lock for critical section of PCB Table
+std::mutex process_table_lock;
+
+/// Lock for critical section of tid to pid map
+std::mutex tid_map_lock;
+
+/// Variable for next PID (Use in critical section only of PCB table !!!)
+kiv_os::THandle next_pid_value = 0;
+
+/// Map of TID (simulator machine) to PID (simulated in OS)
+std::map<std::thread::id, kiv_os::THandle> tid_to_pid;
+
+/// Table of running processes - declare global variable
+std::vector<PCB> process_table;
+
+
 /// /////////////////////////////////////////////////////////////////////////////////////////
 /// Interface funnction
 /// Function handle and call routines connected with creating process
