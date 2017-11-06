@@ -54,7 +54,7 @@ struct TDir_Entry {
 
 struct TProcess_Startup_Info {
 	char *arg;			//pointer na parametry
-	THandle stdin, stdout, stderr;	//kazdy, ktery bude erInvalid_Handle, bude mit vychozi hodnotu
+	THandle OSstdin, OSstdout, OSstderr;	//kazdy, ktery bude erInvalid_Handle, bude mit vychozi hodnotu
 };
 
 /*
