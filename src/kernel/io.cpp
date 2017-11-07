@@ -66,7 +66,7 @@ namespace kiv_os_io {
 	/*
 		IN:		dx je handle souboru
 				rcx je typ pozice [fsBeginning|fsCurrent|fsEnd]
-		OUT:	rax je pozice v souboru	 
+		OUT:	rax je pozice v souboru
 	*/
 	void getFilePos(kiv_os::TRegisters &regs) {
 
@@ -103,27 +103,34 @@ namespace kiv_os_io {
 	void createPipe(kiv_os::TRegisters &regs) {
 
 	}
-
-	// make sure these are in check with api.h sys calls
-	IoHandle ioHandlers[] = {
-		illegalAL,
-		createFile,
-		readFile,
-		writeFile,
-		deleteFile,
-		setFilePos,
-		getFilePos,
-		closeHandle,
-		getWorkDir,
-		setWorkDir,
-		createPipe,
-	};
 }
 
 void HandleIO(kiv_os::TRegisters &regs) {
-	if (regs.rax.l < 1 || regs.rax.l > 10) {
-		kiv_os_io::ioHandlers[0](regs);
-	} else {
-		kiv_os_io::ioHandlers[regs.rax.l](regs);
+	switch (regs.rax.l)
+	{
+	case kiv_os::scCreate_File:
+		return kiv_os_io::createFile(regs);
+	case kiv_os::scRead_File:
+		return kiv_os_io::readFile(regs);
+	case kiv_os::scWrite_File:
+		return kiv_os_io::writeFile(regs);
+	case kiv_os::scDelete_File:
+		return kiv_os_io::deleteFile(regs);
+	case kiv_os::scSet_File_Position:
+		return kiv_os_io::setFilePos(regs);
+	case kiv_os::scGet_File_Position:
+		return kiv_os_io::getFilePos(regs);
+	case kiv_os::scClose_Handle:
+		return kiv_os_io::closeHandle(regs);
+	case kiv_os::scSet_Current_Directory:
+		return kiv_os_io::setWorkDir(regs);
+	case kiv_os::scGet_Current_Directory:
+		return kiv_os_io::getWorkDir(regs);
+	case kiv_os::scCreate_Pipe:
+		return kiv_os_io::createPipe(regs);
+
+	default:
+		return kiv_os_io::illegalAL(regs);
 	}
+	
 }
