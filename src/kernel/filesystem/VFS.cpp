@@ -2,6 +2,10 @@
 
 namespace ko_vfs {
 
+	uint8_t _max_fs_driver_count;
+	uint8_t _fs_driver_count;
+	FsDriver **_fs_drivers;
+
 	int init(uint8_t driverCount) {
 		_fs_drivers = new __nothrow FsDriver *[driverCount];
 		if (_fs_drivers == nullptr) {

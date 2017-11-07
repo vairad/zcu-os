@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "../../api/api.h"
+
 typedef uint8_t filesys_id;
 
 struct FileDescriptor {
@@ -20,22 +22,23 @@ struct FileDescriptor {
 };
 
 struct FsDriver {
-	(int)(read)(FileDescriptor *fd, uint8_t *b);
-	(int)(write)(FileDescriptor *fd, uint8_t b);
+	int(*openFile)(char *path, uint8_t flags, uint8_t attrs);
+	int(*read)(FileDescriptor *fd, uint8_t *b);
+	int(*write)(FileDescriptor *fd, uint8_t b);
 };
 
 namespace ko_vfs {
 
-	uint8_t _max_fs_driver_count;
-	uint8_t _fs_driver_count;
-	FsDriver **_fs_drivers;
-
 	int init(uint8_t driverCount);
 	int destroy();
+	
+	int registerDriver(FsDriver *p_driver, filesys_id *result);
 
-	filesys_id registerDriver(FsDriver *p_driver);
-
-	int read(FileDescriptor *fd, char *dest, uint64_t length);
-	int write(FileDescriptor *fd, char *dest, uint64_t length);
+	int openFile(char *path, uint8_t flags, uint8_t attrs);
+	int read(kiv_os::THandle fd, char *dest, uint64_t length);
+	int write(kiv_os::THandle fd, char *dest, uint64_t length);
+	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
+	int getPos(kiv_os::THandle fd, uint8_t posType);
+	int close(kiv_os::THandle fd);
 
 }
