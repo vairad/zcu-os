@@ -46,7 +46,7 @@ namespace ko_vfs {
 
 		int status = 0;
 		uint64_t i;
-		
+
 		for (i = 0; i < length; i++) {
 			status += (driver->read(fDesc, dest + i));
 			// todo: check for error every read call?
@@ -76,7 +76,7 @@ namespace ko_vfs {
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
 		return kiv_os::erInvalid_Handle;
 	}
-	
+
 	int write(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
 		return 1;
 	}
@@ -85,10 +85,52 @@ namespace ko_vfs {
 		return 1;
 	}
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType) {
-		return 1;
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+		if (files[fd].status == 0) {
+			return 2;
+		}
+
+		size_t newPosition;
+
+
+		switch (posType) {
+		case kiv_os::fsBeginning:
+			newPosition = position; break;
+		case kiv_os::fsCurrent:
+			newPosition = files[fd].position + position; break;
+		case kiv_os::fsEnd:
+			newPosition = files[fd].size - position; break;
+		default: return 3; break;
+		}
+
+		// todo: possibly validate position change for each case individually
+		if (newPosition > files[fd].size) {
+			return 4;
+		}
+
+		files[fd].position = newPosition;
+		return 0;
 	}
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType) {
-		return 1;
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+		if (files[fd].status == 0) {
+			return 2;
+		}
+
+		switch (posType) {
+		case kiv_os::fsBeginning:
+			*position = files[fd].position; break;
+		case kiv_os::fsCurrent:
+			*position = 0; break;
+		case kiv_os::fsEnd:
+			*position = files[fd].size - files[fd].position; break;
+		default: return 3; break;
+		}
+		return 0;
 	}
 	int close(kiv_os::THandle fd) {
 		if (fd == kiv_os::erInvalid_Handle) {
