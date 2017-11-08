@@ -6,7 +6,9 @@ namespace ko_vfs {
 	uint8_t _fs_driver_count;
 	FsDriver **_fs_drivers;
 
-	int init(uint8_t driverCount) {
+	FileDescriptor files[fdCount];
+
+	int init(size_t driverCount) {
 		_fs_drivers = new __nothrow FsDriver *[driverCount];
 		if (_fs_drivers == nullptr) {
 			return 2;
@@ -27,45 +29,80 @@ namespace ko_vfs {
 
 	int registerDriver(FsDriver *p_driver, filesys_id *result) {
 		if (_fs_driver_count >= _max_fs_driver_count) {
-			return VFS_DRIVER_REG_ERR_NO_MORE_ROOM;
+			return driverReg_err;
 		}
 		_fs_drivers[_fs_driver_count] = p_driver;
 		*result = _fs_driver_count;
 
-		return VFS_DRIVER_REG_OK;
+		return 0;
 	}
 
-	int read(FileDescriptor *fd, uint8_t *dest, uint64_t length) {
-		FsDriver *driver = _fs_drivers[fd->fsid];
+	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
+		FileDescriptor *fDesc = files + fd;
+		FsDriver *driver = _fs_drivers[fDesc->fsid];
 		if (driver == nullptr) {
-			return VFS_DRIVER_ERR_NOT_LOADED;
+			return driverErr_notLoaded;
 		}
 
 		int status = 0;
 		uint64_t i;
 		
 		for (i = 0; i < length; i++) {
-			status += (driver->read(fd, dest + i));
+			status += (driver->read(fDesc, dest + i));
 			// todo: check for error every read call?
 		}
 
 		return status;
 	}
 
-	int write(FileDescriptor *fd, uint8_t *src, uint64_t length) {
-		FsDriver *driver = _fs_drivers[fd->fsid];
+	int write(kiv_os::THandle fd, uint8_t *src, uint64_t length) {
+		FileDescriptor *fDesc = files + fd;
+		FsDriver *driver = _fs_drivers[fDesc->fsid];
 		if (driver == nullptr) {
-			return VFS_DRIVER_ERR_NOT_LOADED;
+			return driverErr_notLoaded;
 		}
 
 		int status = 0;
 		uint64_t i;
 
 		for (i = 0; i < length; i++) {
-			status += (driver->write(fd, src[i]));
+			status += (driver->write(fDesc, src[i]));
 			// todo: check for error every write call?
 		}
 
 		return status;
+	}
+
+	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
+		return kiv_os::erInvalid_Handle;
+	}
+	
+	int write(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
+		return 1;
+	}
+
+	int delFile(char *path) {
+		return 1;
+	}
+	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType) {
+		return 1;
+	}
+	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType) {
+		return 1;
+	}
+	int close(kiv_os::THandle fd) {
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+		if (files[fd].openCounter > 1) {
+			files[fd].openCounter--;
+		}
+		if (files[fd].status != 0) {
+			return 2;
+		}
+		// todo: possibly use better closed signalization
+		files[fd].status = 0;
+
+		return 0;
 	}
 }
