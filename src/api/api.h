@@ -77,13 +77,12 @@ struct TProcess_Startup_Info {
 			3 - cti ze souboru
 											 IN: dx je handle souboru, rdi je pointer na buffer, kam zapsat, rcx je velikost bufferu v bytech
 											OUT: rax je pocet prectenych bytu
-
-			4 - odstran soubor			 IN/OUT: TBD
-
 			5 - nastav pozici v souboru		 IN: dx je handle souboru, rdi je nova pozice v souboru
 												cl konstatna je typ pozice (jedna z fs konstant),
 												ch == 0 jenom nastavn pozici (fsSet_Position)
 												ch == 1 nastav pozici a nastav velikost souboru na tuto pozici (fsSet_Size)
+			
+			4 - smaz soubor				IN: rdx je pointer na null-terminated ANSI char string udavajici file_name
 
 			6 - cti  pozici v souboru		 IN: dx je handle souboru, rcx je typ pozice (jedna z fs konstant),
 											 OUT: rax je pozice v souboru
@@ -92,12 +91,12 @@ struct TProcess_Startup_Info {
 											fsCurrent: od aktualni pozice v souboru
 											fsEnd: od konce souboru
 
-			7 - zavri handle				IN: dx  je handle libovolneho typu k zavreni
+			7 - zavri handle			 IN: dx  je handle libovolneho typu k zavreni
 
 			8 - ziskej pracovni adresar		IN: rdx je pointer na ANSI char buffer, rcx je velikost buffer
 										   OUT: rax pocet zapsanych znaku
 
-			9 - nastav pracovni adresar		IN: rdx je pointer na null-terminated ANSI char string udavajici novy adresar (muze byt relativni cesta)
+			9 - nastav pracovni adresar    IN: rdx je pointer na null-terminated ANSI char string udavajici novy adresar (muze byt relativni cesta)
 
 			10 - vytvore pipe				IN: rdx je pointer na pole dvou Thandle - prvni zapis a druhy pro cteni z pipy
 
