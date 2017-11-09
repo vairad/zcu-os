@@ -30,7 +30,12 @@ namespace kiv_os_io {
 		OUT:	rax je pocet zapsanych bytu
 	*/
 	void readFile(kiv_os::TRegisters &regs) {
-
+		DWORD read;
+		HANDLE hnd = Resolve_kiv_os_Handle(regs.rdx.x);
+		regs.flags.carry = hnd == INVALID_HANDLE_VALUE;
+		if (!regs.flags.carry) regs.flags.carry = !ReadFile(hnd, reinterpret_cast<void*>(regs.rdi.r), (DWORD)regs.rcx.r, &read, NULL);
+		if (!regs.flags.carry) regs.rax.r = read;
+		else regs.rax.r = GetLastError();
 	}
 
 	/*
