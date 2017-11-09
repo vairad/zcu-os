@@ -1,6 +1,7 @@
 #include "process.h"
 
 #include <mutex>
+#include <vector>
 #include <Windows.h>
 
 const kiv_os::THandle MAX_PROCESS_COUNT = 1024;
@@ -126,6 +127,7 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 
 	//fill io descriptors
 	kiv_os::TProcess_Startup_Info *procInfo = (kiv_os::TProcess_Startup_Info *) context.rdi.r;
+	new_pcb->io_devices = std::vector<kiv_os::THandle>();
 	new_pcb->io_devices.push_back(procInfo->OSstdin);
 	new_pcb->io_devices.push_back(procInfo->OSstdout);
 	new_pcb->io_devices.push_back(procInfo->OSstderr);
@@ -140,11 +142,11 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	}
 
 	// TODO run thread
-	//new_pcb->thread = std::thread(program, *context);
+	new_pcb->thread = std::thread(program, context);
 
-	//tid_map_lock.lock();
-	//tid_to_pid[new_pcb->thread.get_id()] = pid;
-	//tid_map_lock.unlock();
+	tid_map_lock.lock();
+	tid_to_pid[new_pcb->thread.get_id()] = pid;
+	tid_map_lock.unlock();
 
 
 	process_table_lock.unlock();
