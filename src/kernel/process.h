@@ -34,6 +34,13 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context);
 
 bool subroutineCreateThread(kiv_os::TRegisters & context);
 
+
+//helpful subroutines
+kiv_os::THandle getNextFreePid();
+std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid);
+void initialisePCB(std::shared_ptr<PCB>new_pcb , char * program_name, kiv_os::TProcess_Startup_Info * startup_info);
+
+
 // get PID
 kiv_os::THandle getPid();
 

@@ -91,10 +91,7 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	process_table_lock.lock();
 
 	//find next free PID value
-	kiv_os::THandle pid = 0;
-	while (process_table[pid] != nullptr && pid < MAX_PROCESS_COUNT) {
-		pid++;
-	}
+	kiv_os::THandle pid = getNextFreePid();
 
 	//there is no free PID
 	if (MAX_PROCESS_COUNT == pid)
@@ -106,43 +103,13 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	}
 
 	//create new process record
-	std::shared_ptr<PCB> new_pcb(new PCB());
-	new_pcb->pid = pid;
-	if (pid == 0)
-	{
-		new_pcb->parent_pid = pid; // process don't have parent
-	}
-	else
-	{
-		new_pcb->parent_pid = getPid();
-	}
-	process_table[pid] = new_pcb;
-	
-	//fill program name
-	char * program_name = (char *)context.rdx.r;
-	new_pcb->program_name = std::string(program_name);
+	std::shared_ptr<PCB> new_pcb = createFreePCB(pid);
 
-	//fill working directory
-	if (pid == 0)
-	{
-		new_pcb->working_directory = root_directory;
-	} 
-	else
-	{
-		new_pcb->working_directory = process_table[getPid()]->working_directory;
-	}
-
-	
-
-	//fill io descriptors
-	kiv_os::TProcess_Startup_Info *procInfo = (kiv_os::TProcess_Startup_Info *) context.rdi.r;
-	new_pcb->io_devices = std::vector<kiv_os::THandle>();
-	new_pcb->io_devices.push_back(procInfo->OSstdin);
-	new_pcb->io_devices.push_back(procInfo->OSstdout);
-	new_pcb->io_devices.push_back(procInfo->OSstderr);
+	//initialise values in pcb
+	initialisePCB(new_pcb, (char *)context.rdx.r, (kiv_os::TProcess_Startup_Info *) context.rdi.r);
 
 	//prepare and run thread
-	kiv_os::TEntry_Point program = (kiv_os::TEntry_Point)GetProcAddress(User_Programs, program_name);
+	kiv_os::TEntry_Point program = (kiv_os::TEntry_Point)GetProcAddress(User_Programs, new_pcb->program_name.c_str());
 	if (!program)
 	{
 		//TODO clear PCB table
@@ -150,13 +117,11 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 		return false;
 	}
 
-	// TODO run thread
 	new_pcb->thread = std::thread(program, context);
 
 	tid_map_lock.lock();
 	tid_to_pid[new_pcb->thread.get_id()] = pid;
 	tid_map_lock.unlock();
-
 
 	process_table_lock.unlock();
 	return true;
@@ -170,6 +135,57 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 {
 	//TODO not implemented yet
 	return false;
+}
+
+kiv_os::THandle getNextFreePid()
+{
+	kiv_os::THandle pid = 0;
+	while (process_table[pid] != nullptr && pid < MAX_PROCESS_COUNT) {
+		pid++;
+	}
+	return pid;
+}
+
+/// TODO thread safety?? :D
+/// !!! ACCESS PCB TABLE !!!!
+/// !!! THREAD UNSAFE !!!!!
+std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid)
+{
+	std::shared_ptr<PCB> empty_pcb(new PCB());
+	empty_pcb->pid = pid;
+	if (pid == 0)
+	{
+		empty_pcb->parent_pid = pid; // process don't have parent
+	}
+	else
+	{
+		empty_pcb->parent_pid = getPid();
+	}
+	process_table[pid] = empty_pcb;
+	
+	return empty_pcb;
+}
+
+void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProcess_Startup_Info * startup_info)
+{
+	//fill program name
+	pcb->program_name = std::string(program_name);
+
+	//fill working directory
+	if (pcb->pid == 0)
+	{
+		pcb->working_directory = root_directory;
+	}
+	else
+	{
+		pcb->working_directory = process_table[getPid()]->working_directory;
+	}
+
+	//fill io descriptors
+	pcb->io_devices = std::vector<kiv_os::THandle>();
+	pcb->io_devices.push_back(startup_info->OSstdin);
+	pcb->io_devices.push_back(startup_info->OSstdout);
+	pcb->io_devices.push_back(startup_info->OSstderr);
 }
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
