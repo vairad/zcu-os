@@ -108,7 +108,14 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	//create new process record
 	std::shared_ptr<PCB> new_pcb(new PCB());
 	new_pcb->pid = pid;
-	new_pcb->parent_pid = pid; // process don't have parent
+	if (pid == 0)
+	{
+		new_pcb->parent_pid = pid; // process don't have parent
+	}
+	else
+	{
+		new_pcb->parent_pid = getPid();
+	}
 	process_table[pid] = new_pcb;
 	
 	//fill program name
@@ -124,6 +131,8 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	{
 		new_pcb->working_directory = process_table[getPid()]->working_directory;
 	}
+
+	
 
 	//fill io descriptors
 	kiv_os::TProcess_Startup_Info *procInfo = (kiv_os::TProcess_Startup_Info *) context.rdi.r;
