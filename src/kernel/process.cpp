@@ -33,9 +33,11 @@ bool HandleProcess(kiv_os::TRegisters &context)
 		switch (context.rax.l)
 		{
 			case kiv_os::scClone:
-				routineCloneProcess(context);
+				return routineCloneProcess(context);
+		
 			case kiv_os::scWait_For:
-				routineWaitForProcess(context);
+				return routineWaitForProcess(context);
+		
 			default:
 				Set_Err_Process(kiv_os::erInvalid_Argument, context);
 				break;
@@ -88,7 +90,7 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 /// <return>Success flag</return>
 bool subroutineCreateProcess(kiv_os::TRegisters & context)
 {	
-	process_table_lock.lock();
+	std::lock_guard<std::mutex> lck(process_table_lock);
 
 	//find next free PID value
 	kiv_os::THandle pid = getNextFreePid();
@@ -96,7 +98,6 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	//there is no free PID
 	if (MAX_PROCESS_COUNT == pid)
 	{
-		process_table_lock.unlock();
 		Set_Err_Process(kiv_os::erInvalid_Handle, context); //TODO novy chybovy stav? ...
 		
 		return false;
@@ -119,11 +120,9 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 
 	new_pcb->thread = std::thread(program, context);
 
-	tid_map_lock.lock();
+	std::lock_guard<std::mutex> lck2(tid_map_lock);
 	tid_to_pid[new_pcb->thread.get_id()] = pid;
-	tid_map_lock.unlock();
 
-	process_table_lock.unlock();
 	return true;
 }
 
@@ -196,9 +195,8 @@ kiv_os::THandle getPid()
 	kiv_os::THandle pid = -1;
 	std::thread::id this_id = std::this_thread::get_id();
 
-	tid_map_lock.lock();
+	std::lock_guard<std::mutex> lck2(tid_map_lock);
 	pid = tid_to_pid[this_id];
-	tid_map_lock.unlock();
 
 	return pid;
 }
@@ -209,11 +207,10 @@ kiv_os::THandle getPid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getParentPid()
 {
+	std::lock_guard<std::mutex> lck(process_table_lock);
 	kiv_os::THandle pid = getPid();
 	kiv_os::THandle ppid = -1;
-	process_table_lock.lock();
 	ppid = process_table[pid]->parent_pid;
-	process_table_lock.unlock();
 	
 	return ppid; 
 }
@@ -223,10 +220,9 @@ kiv_os::THandle getParentPid()
 /// <return>working directory of process</return>
 std::string getWorkingDir() 
 {
+	std::lock_guard<std::mutex> lck(process_table_lock);
 	kiv_os::THandle pid = getPid();
-	process_table_lock.lock();
 	std::string wd = process_table[pid]->working_directory;
-	process_table_lock.unlock();
 
 	return wd;
 }
