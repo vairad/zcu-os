@@ -5,6 +5,7 @@
 
 namespace kiv_os {
 
+	// TODO: Klaus - Consider renaming.
 	enum class Type {
 		STANDARD,
 		PIPE,
@@ -14,7 +15,6 @@ namespace kiv_os {
 	typedef struct shell_command {
 		std::string name;
 		std::vector<std::string> parameters;
-		// TODO: Klaus - Create enum to set in, out, err.
 		Type std_in;
 		Type std_out;
 		Type std_err;

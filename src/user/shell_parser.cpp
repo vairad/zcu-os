@@ -10,6 +10,7 @@ kiv_os::Command createCommand(std::string command, std::vector<std::string> para
 	retVal.parameters = parameters;
 	retVal.std_in = *in;
 	retVal.std_out = *out;
+	// TODO: Klaus - What should std_err be? Same as out unless specified?
 	if (*out == kiv_os::Type::PIPE) {
 		*in = kiv_os::Type::PIPE;
 	} else {
@@ -30,7 +31,7 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 
 	for (int i = 0; i < size; i++) {
 		std::string p = parts[i];
-		// TODO: Klaus - Handle pipes and redirects
+		// TODO: Klaus - Handle redirects
 		if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc" || p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown") {
 			if (i != 0) {
 				retVal.push_back(createCommand(command, params, &out, &in));
