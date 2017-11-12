@@ -16,7 +16,6 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 		std::string line;
 		char readLine[256];
 		size_t read;
-		size_t written;
 		bool status = kiv_os_rtl::Read_File(std_in, &readLine, sizeof(readLine) - 1 /*TODO: Klaus - What size should the buffer be?*/, read);
 		readLine[read] = 0; // Terminate the line
 		line = readLine;

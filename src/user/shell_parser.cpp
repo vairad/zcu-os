@@ -4,10 +4,18 @@
 
 #include "shell_parser.h"
 
-kiv_os::Command createCommand(std::string command, std::vector<std::string> parameters) {
+kiv_os::Command createCommand(std::string command, std::vector<std::string> parameters, kiv_os::Type *out, kiv_os::Type *in) {
 	kiv_os::Command retVal;
 	retVal.name = command;
 	retVal.parameters = parameters;
+	retVal.std_in = *in;
+	retVal.std_out = *out;
+	if (*out == kiv_os::Type::PIPE) {
+		*in = kiv_os::Type::PIPE;
+	} else {
+		*in = kiv_os::Type::STANDARD;
+	}
+	*out = kiv_os::Type::STANDARD;
 
 	return retVal;
 }
@@ -17,22 +25,27 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 	std::vector<std::string> params = std::vector<std::string>();
 	std::string command;
 	size_t size = parts.size();
+	kiv_os::Type out = kiv_os::Type::STANDARD;
+	kiv_os::Type in = kiv_os::Type::STANDARD;
 
 	for (int i = 0; i < size; i++) {
 		std::string p = parts[i];
 		// TODO: Klaus - Handle pipes and redirects
 		if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc" || p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown") {
 			if (i != 0) {
-				retVal.push_back(createCommand(command, params));
+				retVal.push_back(createCommand(command, params, &out, &in));
 				params.clear();
 			}
 			command = p;
+		}
+		else if (p == "|") {
+			out = kiv_os::Type::PIPE;
 		} else {
 			params.push_back(p);
 		}
 	}
 	if (size > 0) {
-		retVal.push_back(createCommand(command, params));
+		retVal.push_back(createCommand(command, params, &out, &in));
 	}
 
 	return retVal;
