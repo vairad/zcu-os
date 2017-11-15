@@ -53,7 +53,7 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 		} else if (p == "2>>") {
 			err = kiv_os::InOutType::FILE_APPEND;
 		} else {
-			p.erase(std::remove_if(p.begin(), p.end(), [l = std::locale{}](char c) {return std::isspace<char>(c, l); }), p.end());
+			//p.erase(std::remove_if(p.begin(), p.end(), ](char c) {return c == '\"'; }), p.end());
 			params.push_back(p);
 		}
 	}
