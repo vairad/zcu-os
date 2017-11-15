@@ -11,7 +11,6 @@ kiv_os::Command createCommand(std::string command, std::vector<std::string> para
 	retVal.std_in = *in;
 	retVal.std_out = *out;
 	retVal.std_err = *err;
-	// TODO: Klaus - What should std_err be? Same as out unless specified?
 	if (*out == kiv_os::InOutType::PIPE) {
 		*in = kiv_os::InOutType::PIPE;
 	} else {
@@ -54,7 +53,7 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 		} else if (p == "2>>") {
 			err = kiv_os::InOutType::FILE_APPEND;
 		} else {
-			// TODO: Klaus - Handle parameters in quotes.
+			p.erase(std::remove_if(p.begin(), p.end(), [l = std::locale{}](char c) {return std::isspace<char>(c, l); }), p.end());
 			params.push_back(p);
 		}
 	}
@@ -68,15 +67,36 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 
 std::vector<kiv_os::Command> kiv_os::parseLine(std::string line) {
 	std::vector<std::string> parts = std::vector<std::string>();
-	const char delim[] = " ";
-	char *cstr = const_cast<char *>(line.c_str());
-	char *nextToken;
-	char *token = strtok_s(cstr, delim, &nextToken);
-	while (token != NULL) {
-		std::string s = token;
-		s.erase(std::remove_if(s.begin(), s.end(), [l = std::locale{}](char c) {return std::isspace<char>(c, l); }), s.end());
-		parts.push_back(s);
-		token = strtok_s(NULL, delim, &nextToken);
+	std::string token = "";
+	bool inQuotes = false;
+	for (size_t i = 0; i < line.length(); i++) {
+		char c = line[i];
+		if (!inQuotes) {
+			if (c == ' ') {
+				parts.push_back(token);
+				token = "";
+			} else if (isspace(c, std::locale{})) {
+				continue;
+			} else if (c == '\"') {
+				token.append(1, c);
+				inQuotes = true;
+			} else {
+				token.append(1, c);
+			}
+		} else {
+			if (isspace(c, std::locale{}) && c != ' ') {
+				continue;
+			} else if (c == '\"') {
+				token.append(1, c);
+				inQuotes = false;
+			} else {
+				token.append(1, c);
+			}
+		}
+	}
+	// Push last part to vector
+	if (!line.empty()) {
+		parts.push_back(token);
 	}
 
 	return splitToCommands(parts);
