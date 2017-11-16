@@ -20,15 +20,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\user\dllmain.cpp" />
+    <ClCompile Include="..\..\src\user\echo.cpp" />
+    <ClCompile Include="..\..\src\user\freq.cpp" />
+    <ClCompile Include="..\..\src\user\md.cpp" />
+    <ClCompile Include="..\..\src\user\ps.cpp" />
+    <ClCompile Include="..\..\src\user\rd.cpp" />
+    <ClCompile Include="..\..\src\user\rgen.cpp" />
     <ClCompile Include="..\..\src\user\rtl.cpp" />
     <ClCompile Include="..\..\src\user\shell.cpp" />
     <ClCompile Include="..\..\src\user\shell_parser.cpp" />
+    <ClCompile Include="..\..\src\user\shutdown.cpp" />
+    <ClCompile Include="..\..\src\user\sort.cpp" />
+    <ClCompile Include="..\..\src\user\type.cpp" />
+    <ClCompile Include="..\..\src\user\wc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\user\rtl.h" />
     <ClInclude Include="..\..\src\user\shell.h" />
     <ClInclude Include="..\..\src\user\shell_parser.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\user\user.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A5F63FF3-DE9A-4B0B-BBF9-AD27200CE81F}</ProjectGuid>
