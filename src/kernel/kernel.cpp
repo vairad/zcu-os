@@ -1,13 +1,12 @@
 #pragma once
 
-#include "kernel.h"
-#include "io.h"
 #include <Windows.h>
 
+#include "kernel.h"
+#include "io.h"
+#include "process.h"
+
 HMODULE User_Programs;
-
-
-
 
 void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
 	if (failed) {
@@ -27,14 +26,25 @@ void Shutdown_Kernel() {
 	FreeLibrary(User_Programs);
 }
 
-void __stdcall Sys_Call(kiv_os::TRegisters &regs) {
-
-	switch (regs.rax.h) {
+void __stdcall Sys_Call(kiv_os::TRegisters &regs)
+{
+	switch (regs.rax.h) 
+	{
+		case kiv_os::scProc:	HandleProcess(regs);
+			break;
 		case kiv_os::scIO:		HandleIO(regs);
+			break;
+		default:
+			// todo set up error state
+			break;
 	}
 
 }
 
+
+/// ///////////////////////////////////////////////////////////////////
+///  Kernel entry point
+///
 void __stdcall Run_VM() {
 	Initialize_Kernel();
 
