@@ -131,18 +131,51 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	}
 	
 	//prepare and run thread
-	kiv_os::THandle tid = createThread(pid, program, context);
+	kiv_os::THandle tid = createProcessThread(pid, program, context);
 	if ( -1 == tid)
 	{
 		Set_Err_Process(kiv_os::erProces_Not_Created, context);
 		return false;
 	}
 
+	context.rax.x = pid;
 	return true;
 }
 
+/// /////////////////////////////////////////////////////////////////////////////////////////
+/// rdx is TThreadProc -> thread entry point
+/// rdi is *data -> data for thread routine
+///<param name='context'>Reference to processor registers</param>
+/// <return>Success flag</return>
+bool subroutineCreateThread(kiv_os::TRegisters & context)
+{
+	std::lock_guard<std::mutex> lck(process_table_lock);
 
-kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context)
+	kiv_os::THandle pid = getPid();
+
+	kiv_os::TThread_Proc program = (kiv_os::TThread_Proc) context.rdx.r;
+	void *data = (void *)context.rdi.r;
+
+	kiv_os::THandle tid = createThread(pid, program, data);
+	if (-1 == tid)
+	{
+		Set_Err_Process(kiv_os::erProces_Not_Created, context);
+		return false;
+	}
+
+	context.rax.x = tid;
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// /////////////////////////////////////////////////////////////////////////////////////////
+/// Routine create and run main thread for process
+///<param name='context'>PID running process</param>
+///<param name='entry_point'>Entry point of process kiv_os::TEntry_Point</param>
+///<param name='data'>Registers of processor for </param>
+/// <return>TID of created thread</return>
+kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context)
 {
 	std::lock_guard<std::mutex> lck(thread_table_lock);
 
@@ -163,16 +196,38 @@ kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_poi
 }
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
-/// rdx is TThreadProc -> thread entry point
-/// rdi is *data -> data for thread routine
-///<param name='context'>Reference to processor registers</param>
-/// <return>Success flag</return>
-bool subroutineCreateThread(kiv_os::TRegisters & context)
+/// Routine create and run new thread for process
+///<param name='context'>PID running process</param>
+///<param name='entry_point'>Entry point of thread kiv_os::TThread_Proc</param>
+///<param name='data'>Pointer to data for thread entry_point</param>
+/// <return>TID of created thread</return>
+kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data)
 {
-	//todo not implemented
-	return FALSE;
+	std::lock_guard<std::mutex> lck(thread_table_lock);
+
+	//find next free TID value
+	kiv_os::THandle tid = getNextFreeTid();
+	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
+	{
+		return -1;
+	}
+
+	std::shared_ptr<TCB> tcb = createFreeTCB(tid, pid);
+
+	tcb->thread = std::thread(entry_point, data);
+	std::lock_guard<std::mutex> lck2(tid_map_lock);
+	thread_to_tid[tcb->thread.get_id()] = tid;
+
+	return tid;
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/// /////////////////////////////////////////////////////////////////////////////////////////
+/// <return>Unused pid in PCB table</return>
 kiv_os::THandle getNextFreePid()
 {
 	kiv_os::THandle pid = 0;
@@ -182,6 +237,8 @@ kiv_os::THandle getNextFreePid()
 	return pid;
 }
 
+/// /////////////////////////////////////////////////////////////////////////////////////////
+/// <return>Unused tid in TCB table</return>
 kiv_os::THandle getNextFreeTid()
 {
 	kiv_os::THandle tid = 0;
@@ -249,15 +306,34 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 }
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
+/// Function look up TID in map. Using current thread ID instead of using HW scheduler values.
+/// <return>TID of running process -1 if error occured</return>
+kiv_os::THandle getTid()
+{
+	//TODO check retval
+	kiv_os::THandle tid = -1;
+	std::thread::id this_id = std::this_thread::get_id();
+
+	std::lock_guard<std::mutex> lck(tid_map_lock);
+	tid = thread_to_tid[this_id];
+
+	return tid;
+}
+
+/// /////////////////////////////////////////////////////////////////////////////////////////
 /// Function look up PID in map. Using current thread ID instead of using HW scheduler values.
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getPid()
 {
-	kiv_os::THandle pid = -1;
+	//todo check retval
+	kiv_os::THandle tid = -1 , pid = -1;
 	std::thread::id this_id = std::this_thread::get_id();
 
-	std::lock_guard<std::mutex> lck2(tid_map_lock);
-	pid = thread_to_tid[this_id];
+	tid = getTid();
+	
+	std::lock_guard<std::mutex> lck1(thread_table_lock);
+
+	pid = thread_table[tid - BASE_TID_INDEX]->pid;
 
 	return pid;
 }
@@ -268,6 +344,7 @@ kiv_os::THandle getPid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getParentPid()
 {
+	//todo check retval
 	std::lock_guard<std::mutex> lck(process_table_lock);
 	kiv_os::THandle pid = getPid();
 	kiv_os::THandle ppid = -1;
@@ -281,6 +358,7 @@ kiv_os::THandle getParentPid()
 /// <return>working directory of process</return>
 std::string getWorkingDir() 
 {
+	//todo check retval
 	std::lock_guard<std::mutex> lck(process_table_lock);	
 	kiv_os::THandle pid = getPid();
 	std::string wd = process_table[pid]->working_directory;
@@ -289,6 +367,8 @@ std::string getWorkingDir()
 }
  
 
+/// /////////////////////////////////////////////////////////////////////////////////////////
+///
 void Set_Err_Process(uint16_t ErrorCode, kiv_os::TRegisters & regs)
 {
 	regs.flags.carry = true;
