@@ -476,7 +476,7 @@ void cr0(process::TStartBlock &procInfo)
 	procInfo.entry_point(procInfo.context);
 
 	//I'm done, notify others
-	std::lock_guard<std::mutex> lck(process_table_lock);
+//	std::lock_guard<std::mutex> lck(process_table_lock); // TODO RVA inspect - causing deadlock... why?
 	const auto pid = getPid();
 	process_table[pid]->waiting.notifyAll();
 }

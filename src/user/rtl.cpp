@@ -90,3 +90,21 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * program)
 	*returned = kiv_os::erInvalid_Handle;
 	return false;
 }
+
+
+bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for)
+{
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scWait_For);
+	
+	kiv_os::THandle handles[1];
+	handles[0] = wait_for;
+
+	regs.rdx.r = uint64_t(handles);
+	regs.rcx.r = 1;
+
+	if (Do_SysCall(regs))
+	{
+		return true;
+	}
+	return false;
+}

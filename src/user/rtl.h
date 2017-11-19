@@ -20,4 +20,5 @@ namespace kiv_os_rtl {
 	//vraci true, kdyz vse OK
 
 	bool Create_Process(kiv_os::THandle * returned, char * args);
+	bool Join_One_Handle(kiv_os::THandle wait_for);
 }
