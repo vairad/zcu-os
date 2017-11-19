@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <vector>
+#include <map>
 #include <Windows.h>
 
 // THandle 1 - 65535 
@@ -86,11 +87,22 @@ bool routineCloneProcess(kiv_os::TRegisters & context)
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
 /// Routine wait wait for another process
+///IN: rdx is pointer to array of THandle, which we are waitong for
+///    rcx is handle count
+///    returns when first handle is signalised
+///OUT:rax is signalized handle
+///
 ///<param name='context'>Reference to processor registers</param>
 /// <return>Success flag</return>
 bool routineWaitForProcess(kiv_os::TRegisters & context)
 {
-	//TODO not implemented yet
+	kiv_os::THandle* handles = (kiv_os::THandle*)context.rdx.r;
+	const size_t handlesCount = context.rcx.x;
+
+	for (size_t iter = 0; iter < handlesCount; iter++)
+	{
+		kiv_os::THandle handle = waitForSingleHandle(handles[iter]);
+	}
 	return false;
 }
 
@@ -169,6 +181,58 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+kiv_os::THandle waitForSingleHandle(kiv_os::THandle handle)
+{
+	if (handle < BASE_TID_INDEX) {
+		return waitForProcess(handle);
+	}
+	else {
+		return waitForThread(handle);
+	}
+}
+
+
+kiv_os::THandle waitForProcess(const kiv_os::THandle handle)
+{
+	std::lock_guard<std::mutex> lck(process_table_lock);
+	if(!validateHandle(handle))
+	{
+		return -1;
+	}
+	process_table[handle]->waiting.wait();
+	//TODO RVA clean PCB table
+	return handle;
+}
+
+/// //////////////////////////////////////////////////////////////////////////////////////////
+/// Function joins thread depends of 
+///
+kiv_os::THandle waitForThread(const kiv_os::THandle handle)
+{
+	if(!validateHandle(handle))
+	{
+		return -1;
+	}
+	thread_table[handle - BASE_TID_INDEX]->thread.join();
+
+	//TODO RVA clean TCB table
+	return handle;
+}
+
+/// //////////////////////////////////////////////////////////////////////////////////////////
+/// Function validate
+///
+bool validateHandle(const kiv_os::THandle handle)
+{
+	if (handle < BASE_TID_INDEX) {
+		return process_table[handle] != nullptr;
+	}
+	else {
+		return thread_table[handle - BASE_TID_INDEX] != nullptr;
+	}
+}
+
 /// /////////////////////////////////////////////////////////////////////////////////////////
 /// Routine create and run main thread for process
 ///<param name='context'>PID running process</param>
@@ -185,10 +249,10 @@ kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point en
 	{
 		return -1;
 	}
-
+	process::TStartBlock procInfo(entry_point, context);
 	std::shared_ptr<TCB> tcb = createFreeTCB(tid, pid);
 
-	tcb->thread = std::thread(entry_point, context);
+	tcb->thread = std::thread(&cr0, procInfo);
 	std::lock_guard<std::mutex> lck2(tid_map_lock);
 	thread_to_tid[tcb->thread.get_id()] = tid;
 
@@ -248,7 +312,7 @@ kiv_os::THandle getNextFreeTid()
 	return BASE_TID_INDEX + tid;
 }
 
-/// TODO thread safety?? :D
+/// TODO RVA thread safety?
 /// !!! ACCESS PCB TABLE !!!!
 /// !!! THREAD UNSAFE !!!!!
 std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid)
@@ -268,7 +332,7 @@ std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid)
 	return empty_pcb;
 }
 
-/// TODO thread safety?? :D
+/// TODO RVA thread safety?
 /// !!! ACCESS TCB TABLE !!!!
 /// !!! THREAD UNSAFE !!!!!
 std::shared_ptr<TCB> createFreeTCB(kiv_os::THandle tid, kiv_os::THandle pid)
@@ -300,9 +364,33 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 
 	//fill io descriptors
 	pcb->io_devices = std::vector<kiv_os::THandle>();
-	pcb->io_devices.push_back(startup_info->OSstdin);
-	pcb->io_devices.push_back(startup_info->OSstdout);
-	pcb->io_devices.push_back(startup_info->OSstderr);
+	if(startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	{
+		pcb->io_devices.push_back(kiv_os::stdInput);
+	}
+	else
+	{
+		pcb->io_devices.push_back(startup_info->OSstdin);
+	}
+
+	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	{
+		pcb->io_devices.push_back(kiv_os::stdOutput);
+	}
+	else
+	{
+		pcb->io_devices.push_back(startup_info->OSstdout);
+	}
+
+	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	{
+		pcb->io_devices.push_back(kiv_os::stdError);
+	}
+	else
+	{
+		pcb->io_devices.push_back(startup_info->OSstderr);
+	}
+
 }
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +398,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 /// <return>TID of running process -1 if error occured</return>
 kiv_os::THandle getTid()
 {
-	//TODO check retval
+	//TODO RVA check retval
 	kiv_os::THandle tid = -1;
 	std::thread::id this_id = std::this_thread::get_id();
 
@@ -325,7 +413,7 @@ kiv_os::THandle getTid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getPid()
 {
-	//todo check retval
+	//todo RVA check retval
 	kiv_os::THandle tid = -1 , pid = -1;
 	std::thread::id this_id = std::this_thread::get_id();
 
@@ -344,7 +432,7 @@ kiv_os::THandle getPid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getParentPid()
 {
-	//todo check retval
+	//todo RVA check retval
 	std::lock_guard<std::mutex> lck(process_table_lock);
 	kiv_os::THandle pid = getPid();
 	kiv_os::THandle ppid = -1;
@@ -358,19 +446,31 @@ kiv_os::THandle getParentPid()
 /// <return>working directory of process</return>
 std::string getWorkingDir() 
 {
-	//todo check retval
+	//todo RVA check retval
 	std::lock_guard<std::mutex> lck(process_table_lock);	
 	kiv_os::THandle pid = getPid();
 	std::string wd = process_table[pid]->working_directory;
 
 	return wd;
 }
- 
+
 
 /// /////////////////////////////////////////////////////////////////////////////////////////
 ///
-void Set_Err_Process(uint16_t ErrorCode, kiv_os::TRegisters & regs)
+void Set_Err_Process(const uint16_t ErrorCode, kiv_os::TRegisters & regs)
 {
 	regs.flags.carry = true;
 	regs.rax.x = ErrorCode;
+}
+
+
+void cr0(process::TStartBlock &procInfo)
+{
+	// do entry point work
+	procInfo.entry_point(procInfo.context);
+
+	//I'm done, notify others
+	std::lock_guard<std::mutex> lck(process_table_lock);
+	const auto pid = getPid();
+	process_table[pid]->waiting.notifyAll();
 }

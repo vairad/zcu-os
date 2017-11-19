@@ -6,8 +6,25 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include <map>
+#include <condition_variable>
+#include "waiting_queue.h"
 
+
+namespace process
+{
+	class TStartBlock
+	{
+	public:
+		kiv_os::TEntry_Point entry_point;
+		kiv_os::TRegisters context;
+
+		TStartBlock(const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
+		{
+			this->entry_point = entry_point;
+			this->context = context;
+		}
+	};
+}
 
 /// One line from process control block table
 struct PCB {
@@ -16,6 +33,7 @@ struct PCB {
 	std::string program_name;
 	std::string working_directory;
 	std::vector<kiv_os::THandle> io_devices;
+	process::waiting_queue waiting;
 };
 
 /// One line from thread control block table
@@ -43,6 +61,14 @@ bool routineWaitForProcess(kiv_os::TRegisters &context);
 bool subroutineCreateProcess(kiv_os::TRegisters & context);
 bool subroutineCreateThread(kiv_os::TRegisters & context);
 
+kiv_os::THandle waitForSingleHandle(kiv_os::THandle handle);
+
+kiv_os::THandle waitForProcess(const kiv_os::THandle handle);
+
+kiv_os::THandle waitForThread(const kiv_os::THandle handle);
+
+bool validateHandle(const kiv_os::THandle handle);
+
 //helpful subroutines
 kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context);
 kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data);
@@ -66,3 +92,6 @@ std::string getWorkingDir();
 
 // Help Routines
 void Set_Err_Process(uint16_t ErrorCode, kiv_os::TRegisters & context);
+
+
+void cr0(process::TStartBlock &procInfo);
