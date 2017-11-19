@@ -118,7 +118,7 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	std::lock_guard<std::mutex> lck(process_table_lock);
 
 	//find next free PID value
-	kiv_os::THandle pid = getNextFreePid();
+	const auto pid = getNextFreePid();
 
 	//there is no free PID
 	if (MAX_PROCESS_COUNT == pid)
@@ -128,13 +128,13 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	}
 
 	//create new process record
-	std::shared_ptr<PCB> pcb = createFreePCB(pid);
+	const auto pcb = createFreePCB(pid);
 
 	//initialise values in pcb
 	initialisePCB(pcb, (char *)context.rdx.r, (kiv_os::TProcess_Startup_Info *) context.rdi.r);
 
 	// load program entry point
-	kiv_os::TEntry_Point program = (kiv_os::TEntry_Point)GetProcAddress(User_Programs, pcb->program_name.c_str());
+	const auto program = (kiv_os::TEntry_Point)GetProcAddress(User_Programs, pcb->program_name.c_str());
 	if (!program)
 	{
 		process_table[pcb->pid] = nullptr;
@@ -143,7 +143,7 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	}
 	
 	//prepare and run thread
-	kiv_os::THandle tid = createProcessThread(pid, program, context);
+	const auto tid = createProcessThread(pid, program, context);
 	if ( -1 == tid)
 	{
 		Set_Err_Process(kiv_os::erProces_Not_Created, context);
@@ -168,7 +168,7 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 	kiv_os::TThread_Proc program = (kiv_os::TThread_Proc) context.rdx.r;
 	void *data = (void *)context.rdi.r;
 
-	kiv_os::THandle tid = createThread(pid, program, data);
+	const auto tid = createThread(pid, program, data);
 	if (-1 == tid)
 	{
 		Set_Err_Process(kiv_os::erProces_Not_Created, context);
@@ -182,7 +182,7 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kiv_os::THandle waitForSingleHandle(kiv_os::THandle handle)
+kiv_os::THandle waitForSingleHandle(const kiv_os::THandle handle)
 {
 	if (handle < BASE_TID_INDEX) {
 		return waitForProcess(handle);
@@ -239,18 +239,18 @@ bool validateHandle(const kiv_os::THandle handle)
 ///<param name='entry_point'>Entry point of process kiv_os::TEntry_Point</param>
 ///<param name='data'>Registers of processor for </param>
 /// <return>TID of created thread</return>
-kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context)
+kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context)
 {
 	std::lock_guard<std::mutex> lck(thread_table_lock);
 
 	//find next free TID value
-	kiv_os::THandle tid = getNextFreeTid();
+	const auto tid = getNextFreeTid();
 	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
 	{
 		return -1;
 	}
 	process::TStartBlock procInfo(entry_point, context);
-	std::shared_ptr<TCB> tcb = createFreeTCB(tid, pid);
+	auto tcb = createFreeTCB(tid, pid);
 
 	tcb->thread = std::thread(&cr0, procInfo);
 	std::lock_guard<std::mutex> lck2(tid_map_lock);
@@ -265,18 +265,18 @@ kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point en
 ///<param name='entry_point'>Entry point of thread kiv_os::TThread_Proc</param>
 ///<param name='data'>Pointer to data for thread entry_point</param>
 /// <return>TID of created thread</return>
-kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data)
+kiv_os::THandle createThread(const kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data)
 {
 	std::lock_guard<std::mutex> lck(thread_table_lock);
 
 	//find next free TID value
-	kiv_os::THandle tid = getNextFreeTid();
+	const auto tid = getNextFreeTid();
 	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
 	{
 		return -1;
 	}
 
-	std::shared_ptr<TCB> tcb = createFreeTCB(tid, pid);
+	auto tcb = createFreeTCB(tid, pid);
 
 	tcb->thread = std::thread(entry_point, data);
 	std::lock_guard<std::mutex> lck2(tid_map_lock);
@@ -315,7 +315,7 @@ kiv_os::THandle getNextFreeTid()
 /// TODO RVA thread safety?
 /// !!! ACCESS PCB TABLE !!!!
 /// !!! THREAD UNSAFE !!!!!
-std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid)
+std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 {
 	std::shared_ptr<PCB> empty_pcb(new PCB());
 	empty_pcb->pid = pid;
@@ -335,7 +335,7 @@ std::shared_ptr<PCB> createFreePCB(kiv_os::THandle pid)
 /// TODO RVA thread safety?
 /// !!! ACCESS TCB TABLE !!!!
 /// !!! THREAD UNSAFE !!!!!
-std::shared_ptr<TCB> createFreeTCB(kiv_os::THandle tid, kiv_os::THandle pid)
+std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THandle pid)
 {
 	std::shared_ptr<TCB> tcb(new TCB());
 	tcb->pid = pid;
@@ -363,7 +363,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	}
 
 	//fill io descriptors
-	pcb->io_devices = std::vector<kiv_os::THandle>();
+//	pcb->io_devices = std::vector<kiv_os::THandle>();
 	if(startup_info->OSstdin == kiv_os::erInvalid_Handle)
 	{
 		pcb->io_devices.push_back(kiv_os::stdInput);
@@ -398,12 +398,10 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 /// <return>TID of running process -1 if error occured</return>
 kiv_os::THandle getTid()
 {
-	//TODO RVA check retval
-	kiv_os::THandle tid = -1;
-	std::thread::id this_id = std::this_thread::get_id();
+	const auto this_id = std::this_thread::get_id();
 
 	std::lock_guard<std::mutex> lck(tid_map_lock);
-	tid = thread_to_tid[this_id];
+	const auto tid = thread_to_tid[this_id];
 
 	return tid;
 }
@@ -413,15 +411,16 @@ kiv_os::THandle getTid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getPid()
 {
-	//todo RVA check retval
-	kiv_os::THandle tid = -1 , pid = -1;
-	std::thread::id this_id = std::this_thread::get_id();
-
-	tid = getTid();
+	const auto tid = getTid();
+	
+	if(tid == kiv_os::erInvalid_Handle || tid < BASE_TID_INDEX)
+	{
+		return kiv_os::erInvalid_Handle;
+	}
 	
 	std::lock_guard<std::mutex> lck1(thread_table_lock);
 
-	pid = thread_table[tid - BASE_TID_INDEX]->pid;
+	const auto pid = thread_table[tid - BASE_TID_INDEX]->pid;
 
 	return pid;
 }
@@ -432,11 +431,15 @@ kiv_os::THandle getPid()
 /// <return>PID of running process -1 if error occured</return>
 kiv_os::THandle getParentPid()
 {
-	//todo RVA check retval
 	std::lock_guard<std::mutex> lck(process_table_lock);
-	kiv_os::THandle pid = getPid();
-	kiv_os::THandle ppid = -1;
-	ppid = process_table[pid]->parent_pid;
+	const auto pid = getPid();
+
+	if(pid == kiv_os::erInvalid_Handle)
+	{
+		return kiv_os::erInvalid_Handle;
+	}
+
+	const auto ppid = process_table[pid]->parent_pid;
 	
 	return ppid; 
 }
@@ -446,10 +449,13 @@ kiv_os::THandle getParentPid()
 /// <return>working directory of process</return>
 std::string getWorkingDir() 
 {
-	//todo RVA check retval
-	std::lock_guard<std::mutex> lck(process_table_lock);	
-	kiv_os::THandle pid = getPid();
-	std::string wd = process_table[pid]->working_directory;
+	std::lock_guard<std::mutex> lck(process_table_lock);
+	const auto pid = getPid();
+	if(pid == kiv_os::erInvalid_Handle)
+	{
+		return "";
+	}
+	auto wd = process_table[pid]->working_directory;
 
 	return wd;
 }
