@@ -19,4 +19,5 @@ namespace kiv_os_rtl {
 	//uzavre soubor identifikovany pomoci deskriptoru
 	//vraci true, kdyz vse OK
 
+	bool Create_Process(kiv_os::THandle * returned, char * args);
 }
