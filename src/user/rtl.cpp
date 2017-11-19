@@ -66,16 +66,20 @@ bool kiv_os_rtl::Close_File(const kiv_os::THandle file_handle) {
 }
 
 
-bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * args)
+bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * program)
 {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
 	kiv_os::TProcess_Startup_Info procInfo;
 	
-	//TODO handles as parameter of function
+	regs.rcx.x = kiv_os::clCreate_Process;
+
+	regs.rdx.r = uint64_t(program);
+
+	//TODO RVA handles as parameter of function
 	procInfo.OSstderr = kiv_os::erInvalid_Handle;
 	procInfo.OSstdin = kiv_os::erInvalid_Handle;
 	procInfo.OSstdout = kiv_os::erInvalid_Handle;
-	procInfo.arg = args;
+	procInfo.arg = "";
 	
 	regs.rdi.r = uint64_t(&procInfo);
 	if(Do_SysCall(regs))
