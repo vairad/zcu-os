@@ -1,5 +1,3 @@
-#include <string.h>
-#include <algorithm>
 #include <locale>
 
 #include "shell_parser.h"
