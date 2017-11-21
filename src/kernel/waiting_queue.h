@@ -1,21 +1,35 @@
 #pragma once
 
+#include "..\api\api.h"
+
 #include <mutex>
-#include <condition_variable>
+#include <list>
 
 namespace process
 {
 	
 	class waiting_queue
 	{
-		size_t waiting_count;
-		std::mutex condition_lock;
-		std::condition_variable condition_variable;
-
+		std::mutex queue_lock;
+		std::list<kiv_os::THandle> waiting_handles;
 	public:
 		waiting_queue();
-		void wait();
+		
+	//work with queue
+		/**
+		 * \brief add my handle to waiting queue for this handle
+		 * \param handle id of handle 
+		 */
+		void wait(kiv_os::THandle handle);
+		
+		/**
+		 * \brief wake up all handles from my queue
+		 */
 		void notifyAll();
+
+		/**
+		 * \brief wake up one handle from my queue
+		 */
 		void notifyOne();
 	};
 }

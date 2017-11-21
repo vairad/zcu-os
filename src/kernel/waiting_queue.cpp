@@ -1,27 +1,31 @@
 #include "waiting_queue.h"
+#include "process.h"
 
 process::waiting_queue::waiting_queue()
 {
-	waiting_count = 0;
 }
 
 void process::waiting_queue::notifyAll()
 {
-	std::unique_lock<std::mutex> lck(condition_lock);
-	condition_variable.notify_all();
-	waiting_count = 0;
+	while(!waiting_handles.empty())
+	{
+		this->notifyOne();
+	}
 }
 
 void process::waiting_queue::notifyOne()
 {
-	std::unique_lock<std::mutex> lck(condition_lock);
-	waiting_count--;
-	condition_variable.notify_one();
+	std::unique_lock<std::mutex> lck(queue_lock);
+	if(!waiting_handles.empty())
+	{
+		const auto handle = waiting_handles.front();
+		waiting_handles.pop_front();
+		process::wakeUpHandle(handle);
+	}
 }
 
-void process::waiting_queue::wait()
+void process::waiting_queue::wait(const kiv_os::THandle handle)
 {
-	std::unique_lock<std::mutex> lck(condition_lock);
-	waiting_count++;
-	condition_variable.wait(lck);
+	std::unique_lock<std::mutex> lck(queue_lock);
+	waiting_handles.push_back(handle);
 }

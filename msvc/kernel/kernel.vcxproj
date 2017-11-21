@@ -24,6 +24,7 @@
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\process.cpp" />
+    <ClCompile Include="..\..\src\kernel\thread_state.cpp" />
     <ClCompile Include="..\..\src\kernel\waiting_queue.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
     <ClInclude Include="..\..\src\kernel\process.h" />
+    <ClInclude Include="..\..\src\kernel\thread_state.h" />
     <ClInclude Include="..\..\src\kernel\waiting_queue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
