@@ -20,6 +20,7 @@ void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
 
 void Initialize_Kernel() {
 	User_Programs = LoadLibrary(L"user.dll");	
+	process::createInit();
 }
 
 void Shutdown_Kernel() {
@@ -44,6 +45,9 @@ void __stdcall Sys_Call(kiv_os::TRegisters &regs)
 
 }
 
+/**
+ * \brief Run and wait for first program
+ */
 void runFirstProgram()
 {
 	const char * programName = "shell";
@@ -59,6 +63,7 @@ void runFirstProgram()
 	procInfo.OSstderr = kiv_os::stdError;
 	procInfo.OSstdin = kiv_os::stdInput;
 	procInfo.OSstdout = kiv_os::stdOutput;
+	procInfo.arg = "";
 
 	regs.rdi.r = reinterpret_cast<uint64_t>(&procInfo);
 
@@ -66,8 +71,18 @@ void runFirstProgram()
 	
 	if(regs.flags.carry == true)
 	{
-		int i = 0; //something went terribly wrong you can add break point here
+		return; //something went terribly wrong you can add break point here
 	}
+
+	kiv_os::THandle handles[1];
+	handles[0] = regs.rax.x;
+
+	regs.rax.h = kiv_os::scProc;
+	regs.rax.l = kiv_os::scWait_For;
+	regs.rdx.r = uint64_t(handles);
+	regs.rcx.r = 1;
+
+	Sys_Call(regs);
 }
 
 /// ///////////////////////////////////////////////////////////////////

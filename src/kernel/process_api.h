@@ -51,4 +51,6 @@ namespace process
 
 	// get Working directory
 	std::string getWorkingDir();
+
+	bool createInit();
 }

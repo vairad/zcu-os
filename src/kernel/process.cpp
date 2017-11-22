@@ -543,6 +543,52 @@ std::string process::getWorkingDir()
 	return wd;
 }
 
+/**
+ * \brief Method initialise init process in process table and in thread table
+ * \return success flag
+ */
+bool process::createInit()
+{
+	std::unique_lock<std::mutex> lck(thread_table_lock);
+	std::unique_lock<std::mutex> lck1(process_table_lock);
+
+	//find next free PID value
+	const auto pid = getNextFreePid();
+
+	//there is no free PID
+	if (MAX_PROCESS_COUNT == pid)
+	{
+		return false;
+	}
+
+	//create new process record
+	const auto pcb = createFreePCB(pid);
+
+	//initialise values in pcb
+
+	kiv_os::TProcess_Startup_Info procInfo;
+	procInfo.OSstderr = kiv_os::stdError;
+	procInfo.OSstdin = kiv_os::stdInput;
+	procInfo.OSstdout = kiv_os::stdOutput;
+	procInfo.arg = "";
+
+	initialisePCB(pcb, "init", &procInfo);
+
+	//find next free TID value
+	const auto tid = getNextFreeTid();
+	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
+	{
+		return false;
+	}
+
+	auto tcb = createFreeTCB(tid, pid);
+
+	std::unique_lock<std::mutex> lck2(tid_map_lock);
+	thread_to_tid[std::this_thread::get_id()] = tid;
+
+	return true;
+}
+
 
 /**
  * \brief wakes up everything that waits on selected handle state (cond var)
