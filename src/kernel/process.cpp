@@ -1,3 +1,4 @@
+#include "process_api.h"
 #include "process.h"
 
 #include <mutex>
@@ -37,11 +38,13 @@ const std::string root_directory = "C:/";
 /// user.dll ref initialised by initialise_kernel()
 extern HMODULE User_Programs;
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Interface funnction
-/// Function handle and call routines connected with creating process
-/// <param name='context'>Processor context prepared for system call</param>
-/// <return>Success flag</return>
+
+/**
+ * \brief Interface funnction
+ * Function handle and call routines connected with creating process
+ * \param context Processor context prepared for system call
+ * \return Success flag
+ */
 bool HandleProcess(kiv_os::TRegisters &context)
 {
 		switch (context.rax.l)
@@ -59,14 +62,15 @@ bool HandleProcess(kiv_os::TRegisters &context)
 		return false;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Routine choose between createProcess and createThread
-/// depends on rcx value is equal with clCreateProcess or clCreateThread
-///
-/// <see>kiv_os::clCreateProcess</see>
-/// <see>kiv_os::clCreateThread</see>
-/// <param name='context'>Reference to processor registers</param>
-/// <return>Success flag</return>
+
+/**
+ * \brief Routine choose between createProcess and createThread
+ * depends on rcx value is equal with clCreateProcess or clCreateThread
+ * \see kiv_os::clCreateProcess
+ * \see kiv_os::clCreateThread
+ * \param context Reference to processor registers
+ * \return Success flag
+ */
 bool routineCloneProcess(kiv_os::TRegisters & context)
 {
 	switch (context.rcx.l)
@@ -85,18 +89,19 @@ bool routineCloneProcess(kiv_os::TRegisters & context)
 }
 
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Routine wait wait for another process
-///IN: rdx is pointer to array of THandle, which we are waitong for
-///    rcx is handle count
-///    returns when first handle is signalised
-///OUT:rax is signalized handle
-///
-///<param name='context'>Reference to processor registers</param>
-/// <return>Success flag</return>
+
+/**
+ * \brief  Routine wait wait for another process
+ * IN: rdx is pointer to array of THandle, which we are waitong for
+ *   rcx is handle count
+ *   returns when first handle is signalised
+ * OUT:rax is signalized handle
+ * \param context Reference to processor registers
+ * \return Success flag
+ */
 bool routineWaitForProcess(kiv_os::TRegisters & context)
 {
-	kiv_os::THandle* handles = (kiv_os::THandle*)context.rdx.r;
+	const auto handles = reinterpret_cast<kiv_os::THandle*>(context.rdx.r);
 	const size_t handlesCount = context.rcx.x;
 
 	for (size_t iter = 0; iter < handlesCount; iter++)
@@ -106,16 +111,20 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	std::unique_lock<std::mutex> lck(thread_table_lock);
 	const auto tid = process::getTid();
 	thread_table[tid - BASE_TID_INDEX]->state.sleep();
+	const auto handle = thread_table[tid - BASE_TID_INDEX]->state.get_wake_by();
+	context.rax.x = handle;
 	return false;
 }
 
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// rdx contains pointer to null-terminated string with name of running command
-/// rdi is pointer to kiv_os::TProcess_Startup_Info
-/// <see cref="kiv_os::TProcess_Startup_Info">kiv_os::TProcess_Startup_Info</see>
-/// <param name='context'>Reference to processor registers</param>
-/// <return>Success flag</return>
+/**
+ * \brief 
+ *        rdx contains pointer to null-terminated string with name of running command
+ *        rdi is pointer to kiv_os::TProcess_Startup_Info
+ * \see kiv_os::TProcess_Startup_Info
+ * \param context Reference to processor registers
+ * \return Success flag
+ */
 bool subroutineCreateProcess(kiv_os::TRegisters & context)
 {	
 	std::unique_lock<std::mutex> lck(process_table_lock);
@@ -157,11 +166,14 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	return true;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// rdx is TThreadProc -> thread entry point
-/// rdi is *data -> data for thread routine
-///<param name='context'>Reference to processor registers</param>
-/// <return>Success flag</return>
+
+/**
+ * \brief 
+ *        rdx is TThreadProc -> thread entry point
+ *        rdi is *data -> data for thread routine
+ * \param context Reference to processor registers
+ * \return Success flag
+ */
 bool subroutineCreateThread(kiv_os::TRegisters & context)
 {
 	kiv_os::THandle pid = process::getPid();
@@ -180,10 +192,13 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 	return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-kiv_os::THandle addToWaitingQueue(const kiv_os::THandle handle)
+/**
+ * \brief Add handle to waiting queue handle process
+ * \param handle handle for we are waiting
+ * \return false when some error occurs 
+ */
+bool addToWaitingQueue(const kiv_os::THandle handle)
 {
 	if (handle < BASE_TID_INDEX) {
 		return waitForProcess(handle);
@@ -193,36 +208,46 @@ kiv_os::THandle addToWaitingQueue(const kiv_os::THandle handle)
 	}
 }
 
-kiv_os::THandle waitForProcess(const kiv_os::THandle handle)
+/**
+ * \brief Add this handle to process waiting queue
+ * \param handle pid of process which we are waiting for
+ * \return success flag
+ */
+bool waitForProcess(const kiv_os::THandle handle)
 {
 	std::unique_lock<std::mutex> lck(process_table_lock);
 	if(!validateHandle(handle))
 	{
-		return -1;
+		return false;
 	}
 	const auto tid = process::getTid();
 	process_table[handle]->waiting.wait(tid);
-	//TODO RVA clean PCB table
-	return handle;
+	return true;
 }
 
-kiv_os::THandle waitForThread(const kiv_os::THandle handle)
+
+/**
+ * \brief  Add this handle to thread waiting queue
+ * \param handle tid of thread which we are waiting for
+ * \return success flag
+ */
+bool waitForThread(const kiv_os::THandle handle)
 {
 	std::unique_lock<std::mutex> lck(thread_table_lock);
 	if(!validateHandle(handle))
 	{
-		return -1;
+		return false;
 	}
 	const auto tid = process::getTid();
 	thread_table[handle - BASE_TID_INDEX]->waiting.wait(tid);
-
-	//TODO RVA clean TCB table
-	return handle;
+	return true;
 }
 
-/// //////////////////////////////////////////////////////////////////////////////////////////
-/// Function validate
-///
+/**
+ * \brief Validate if handle ID is valid process handle (PID or TID)
+ * \param handle 
+ * \return success flag
+ */
 bool validateHandle(const kiv_os::THandle handle)
 {
 	if (handle < BASE_TID_INDEX) {
@@ -233,12 +258,14 @@ bool validateHandle(const kiv_os::THandle handle)
 	}
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Routine create and run main thread for process
-///<param name='context'>PID running process</param>
-///<param name='entry_point'>Entry point of process kiv_os::TEntry_Point</param>
-///<param name='data'>Registers of processor for </param>
-/// <return>TID of created thread</return>
+
+/** 
+ * \brief  Routine create and run main thread for process
+ * \param pid PID running process
+ * \param entry_point Entry point of process kiv_os::TEntry_Point
+ * \param context Registers of processor for 
+ * \return TID of created thread or kiv_os::erInvalidHandle when error occurs
+ */
 kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context)
 {
 	std::unique_lock<std::mutex> lck(thread_table_lock);
@@ -247,7 +274,7 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
 	const auto tid = getNextFreeTid();
 	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
 	{
-		return -1;
+		return kiv_os::erInvalid_Handle;
 	}
 	process::TStartBlock procInfo(entry_point, context);
 	auto tcb = createFreeTCB(tid, pid);
@@ -259,13 +286,14 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
 	return tid;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Routine create and run new thread for process
-///<param name='context'>PID running process</param>
-///<param name='entry_point'>Entry point of thread kiv_os::TThread_Proc</param>
-///<param name='data'>Pointer to data for thread entry_point</param>
-/// <return>TID of created thread</return>
-kiv_os::THandle createThread(const kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data)
+/**
+ * \brief Routine create and run new thread for process
+ * \param pid PID running process
+ * \param entry_point Entry point of thread kiv_os::TThread_Proc
+ * \param data Pointer to data for thread entry_point
+ * \return TID of created thread or kiv_os::erInvalidHandle when error occurs
+ */
+kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Proc entry_point, void * data)
 {
 	std::unique_lock<std::mutex> lck(thread_table_lock);
 
@@ -273,7 +301,7 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, kiv_os::TThread_Proc ent
 	const auto tid = getNextFreeTid();
 	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
 	{
-		return -1;
+		return kiv_os::erInvalid_Handle;
 	}
 
 	auto tcb = createFreeTCB(tid, pid);
@@ -287,12 +315,10 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, kiv_os::TThread_Proc ent
 }
 
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// <return>Unused pid in PCB table</return>
+/**
+ * \brief THREAD UNSAFE use with lock
+ * \return Unused pid in PCB table
+ */
 kiv_os::THandle getNextFreePid()
 {
 	kiv_os::THandle pid = 0;
@@ -302,8 +328,10 @@ kiv_os::THandle getNextFreePid()
 	return pid;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// <return>Unused tid in TCB table</return>
+/**
+ * \brief THREAD UNSAFE use with lock
+ * \return Unused tid in TCB table
+ */
 kiv_os::THandle getNextFreeTid()
 {
 	kiv_os::THandle tid = 0;
@@ -313,9 +341,11 @@ kiv_os::THandle getNextFreeTid()
 	return BASE_TID_INDEX + tid;
 }
 
-/// TODO RVA thread safety?
-/// !!! ACCESS PCB TABLE !!!!
-/// !!! THREAD UNSAFE !!!!!
+/**
+ * \brief THREAD UNSAFE use with lock
+ * \param pid 
+ * \return 
+ */
 std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 {
 	std::shared_ptr<PCB> empty_pcb(new PCB());
@@ -333,9 +363,12 @@ std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 	return empty_pcb;
 }
 
-/// TODO RVA thread safety?
-/// !!! ACCESS TCB TABLE !!!!
-/// !!! THREAD UNSAFE !!!!!
+/**
+ * \brief THREAD UNSAFE use with lock
+ * \param tid 
+ * \param pid 
+ * \return 
+ */
 std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THandle pid)
 {
 	std::shared_ptr<TCB> tcb(new TCB());
@@ -348,6 +381,13 @@ std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THan
 }
 
 
+//TODO RVA comment
+/**
+ * \brief 
+ * \param pcb 
+ * \param program_name 
+ * \param startup_info 
+ */
 void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProcess_Startup_Info * startup_info)
 {
 	//fill program name
@@ -394,19 +434,67 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Function look up TID in map. Using current thread ID instead of using HW scheduler values.
-/// <return>TID of running process -1 if error occured</return>
+
+/**
+* \brief Set up error processor state
+* \param ErrorCode \see api.h and api_extensions.h
+* \param regs processor state
+*/
+void Set_Err_Process(const uint16_t ErrorCode, kiv_os::TRegisters & regs)
+{
+	regs.flags.carry = true;
+	regs.rax.x = ErrorCode;
+}
+
+/**
+* \brief Function run thread and after thread ens, it will notify all waiting processes
+* \param procInfo process startup informarion
+*/
+void process0(process::TStartBlock &procInfo)
+{
+	// do entry point work
+	procInfo.entry_point.proc(procInfo.context.proc);
+
+	//I'm done, notify others
+	const auto pid = process::getPid();
+	process_table[pid]->waiting.notifyAll();
+}
+
+/**
+* \brief Function run thread and after thread ens, it will notify all waiting processes
+* \param threadInfo thread startup information
+*/
+void thread0(process::TStartBlock& threadInfo)
+{
+	// do entry point work
+	threadInfo.entry_point.thread(threadInfo.context.thread);
+
+	//I'm done, notify others
+	const auto tid = process::getTid();
+	thread_table[tid - BASE_TID_INDEX]->waiting.notifyAll();
+}
+
+
+/**
+ * \brief Function look up TID in map. Using current thread ID instead of using HW scheduler values.
+ * \return TID of running process kiv_os::erInvalidHandle if error occured
+ */
 kiv_os::THandle process::getTid()
 {
 	const auto this_id = std::this_thread::get_id();
 	const auto tid = thread_to_tid[this_id];
+	if(tid < BASE_TID_INDEX || tid > (BASE_TID_INDEX+MAX_THREAD_COUNT))
+	{
+		return kiv_os::erInvalid_Handle;
+	}
 	return tid;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Function look up PID in map. Using current thread ID instead of using HW scheduler values.
-/// <return>PID of running process -1 if error occured</return>
+/**
+ * \brief Function look up PID in map.Using current thread ID instead of using HW scheduler values.
+ * \see getTid()
+ * \return PID of running process kiv_os::erInvalidHandle if error occured
+ */
 kiv_os::THandle process::getPid()
 {
 	const auto tid = getTid();
@@ -417,14 +505,15 @@ kiv_os::THandle process::getPid()
 	}
 
 	const auto pid = thread_table[tid - BASE_TID_INDEX]->pid;
-
 	return pid;
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Function look up Parent PID in proces table.
-/// <see>getPid()</see>
-/// <return>PID of running process -1 if error occured</return>
+
+/**
+ * \brief Function look up Parent PID in proces table.
+ * \see getPid()
+ * \return PID of running process kiv_os::erInvalidHandle if error occured
+ */
 kiv_os::THandle process::getParentPid()
 {
 	const auto pid = getPid();
@@ -439,9 +528,10 @@ kiv_os::THandle process::getParentPid()
 	return ppid; 
 }
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-/// Function look up record based on PID and return working dir of running proces
-/// <return>working directory of process</return>
+/**
+  * \brief Function look up record based on PID and return working dir of running proces
+  * \return  working directory of process
+  */
 std::string process::getWorkingDir()
 {
 	const auto pid = getPid();
@@ -454,39 +544,13 @@ std::string process::getWorkingDir()
 }
 
 
-/// /////////////////////////////////////////////////////////////////////////////////////////
-///
-void Set_Err_Process(const uint16_t ErrorCode, kiv_os::TRegisters & regs)
+/**
+ * \brief wakes up everything that waits on selected handle state (cond var)
+ * \param handle handle to wake up
+ */
+void process::wakeUpHandle(const kiv_os::THandle handle)
 {
-	regs.flags.carry = true;
-	regs.rax.x = ErrorCode;
-}
-
-
-void process0(process::TStartBlock &procInfo)
-{
-	// do entry point work
-	procInfo.entry_point.proc(procInfo.context.proc);
-
-	//I'm done, notify others
-//	std::lock_guard<std::mutex> lck(process_table_lock); // TODO RVA inspect - causing deadlock... why?
-	const auto pid = process::getPid();
-	process_table[pid]->waiting.notifyAll();
-}
-
-void thread0(process::TStartBlock& threadInfo)
-{
-	// do entry point work
-	threadInfo.entry_point.thread(threadInfo.context.thread);
-
-	//I'm done, notify others
-	//	std::lock_guard<std::mutex> lck(process_table_lock); // TODO RVA inspect - causing deadlock... why?
-	const auto tid = process::getTid();
-	thread_table[tid - BASE_TID_INDEX]->waiting.notifyAll();
-}
-
-void process::wakeUpHandle(kiv_os::THandle handle)
-{
+	//TODO RVA check if thread is created
 	const auto tid = process::getTid();
 	thread_table[handle - BASE_TID_INDEX]->state.wake_up(tid);
 }

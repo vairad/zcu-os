@@ -1,5 +1,5 @@
 #include "waiting_queue.h"
-#include "process.h"
+#include "process_api.h"
 
 process::waiting_queue::waiting_queue()
 {

@@ -59,5 +59,8 @@
     <ClInclude Include="..\..\src\kernel\waiting_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kernel\process_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
