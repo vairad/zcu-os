@@ -56,7 +56,15 @@ kiv_os::THandle setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], 
 		break;
 	case kiv_os::InOutType::PIPE:
 		// TODO: Klaus - Create new pipe.
-		*std_out = pipeHandles[0];
+		bool ok = kiv_os_rtl::Create_Pipe(pipeHandles);
+		if (ok) {
+			*std_out = pipeHandles[0];
+		} else {
+			// Error occured while creating pipe.
+			std::string error = "Error creating pipe.\n";
+			size_t written;
+			kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+		}
 		break;
 	case kiv_os::InOutType::FILE_NEW:
 		if (!params.empty()) {

@@ -108,3 +108,8 @@ bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for)
 	}
 	return false;
 }
+
+bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[])
+{
+	return false;
+}

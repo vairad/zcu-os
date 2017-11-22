@@ -21,4 +21,5 @@ namespace kiv_os_rtl {
 
 	bool Create_Process(kiv_os::THandle * returned, char * args);
 	bool Join_One_Handle(kiv_os::THandle wait_for);
+	bool Create_Pipe(kiv_os::THandle handles[]);
 }
