@@ -33,6 +33,7 @@
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
     <ClInclude Include="..\..\src\kernel\process.h" />
+    <ClInclude Include="..\..\src\kernel\process_api.h" />
     <ClInclude Include="..\..\src\kernel\thread_state.h" />
     <ClInclude Include="..\..\src\kernel\waiting_queue.h" />
   </ItemGroup>
