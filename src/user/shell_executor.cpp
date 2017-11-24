@@ -50,13 +50,14 @@ kiv_os::THandle setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], st
 kiv_os::THandle setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
 	kiv_os::THandle shell_out, kiv_os::THandle shell_err, kiv_os::THandle *std_out) {
 	bool retVal = true;
+	bool ok;
 	switch (out) {
 	case kiv_os::InOutType::STANDARD:
 		*std_out = shell_out;
 		break;
 	case kiv_os::InOutType::PIPE:
 		// TODO: Klaus - Create new pipe.
-		bool ok = kiv_os_rtl::Create_Pipe(pipeHandles);
+		ok = kiv_os_rtl::Create_Pipe(pipeHandles);
 		if (ok) {
 			*std_out = pipeHandles[0];
 		} else {
@@ -154,11 +155,23 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 		for (size_t j = 0; j < params.size(); j++) {
 			args.append(params[i]);
 		}
-		bool ok = kiv_os_rtl::Create_Process(&ce.handle, (char *)args.c_str());
+		bool ok = kiv_os_rtl::Create_Process(&ce.handle, ce.name.c_str() , args.c_str());
 		if (!ok) {
-			std::string error = "Error creating new process or thread.\n";
+			std::string errorStr;
+			const size_t error = kiv_os_rtl::Get_Last_Error();
+			switch (error)
+			{
+			case kiv_os::erFile_Not_Found:
+				errorStr = "\'" + ce.name +"\' is not recognized as an internal or external command.\n";
+				break;
+			case kiv_os::erProces_Not_Created:
+				errorStr = "Error creating new process or thread.\n";
+				break;
+			default:
+				errorStr = "Unspecified error during run program.\n";
+			}
 			size_t written;
-			kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+			kiv_os_rtl::Write_File(shell_err, errorStr.c_str(), errorStr.size(), written);
 			stopCommands(toExecute, i);
 			return;
 		}

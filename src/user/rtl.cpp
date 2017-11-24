@@ -7,7 +7,7 @@ extern "C" __declspec(dllimport) void __stdcall Sys_Call(kiv_os::TRegisters &con
 
 std::atomic<size_t> Last_Error;
 
-size_t Get_Last_Error() {
+size_t kiv_os_rtl::Get_Last_Error() {
 	return Last_Error;
 }
 
@@ -66,7 +66,7 @@ bool kiv_os_rtl::Close_File(const kiv_os::THandle file_handle) {
 }
 
 
-bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * program)
+bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args )
 {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
 	kiv_os::TProcess_Startup_Info procInfo;
@@ -79,7 +79,7 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * program)
 	procInfo.OSstderr = kiv_os::erInvalid_Handle;
 	procInfo.OSstdin = kiv_os::erInvalid_Handle;
 	procInfo.OSstdout = kiv_os::erInvalid_Handle;
-	procInfo.arg = "";
+	procInfo.arg = (char*)args; //TODO RVA should be const in api?
 	
 	regs.rdi.r = uint64_t(&procInfo);
 	if(Do_SysCall(regs))
@@ -88,6 +88,7 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, char * program)
 		return true;
 	}
 	*returned = kiv_os::erInvalid_Handle;
+	Last_Error = regs.rax.x;
 	return false;
 }
 
