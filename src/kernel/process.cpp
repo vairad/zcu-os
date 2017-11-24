@@ -103,17 +103,28 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 {
 	const auto handles = reinterpret_cast<kiv_os::THandle*>(context.rdx.r);
 	const size_t handlesCount = context.rcx.x;
+	auto tid = kiv_os::erInvalid_Handle;
 
-	for (size_t iter = 0; iter < handlesCount; iter++)
-	{
-		addToWaitingQueue(handles[iter]);
+	{ //critical section block
+		std::unique_lock<std::mutex> proc_lock(process_table_lock);
+		std::unique_lock<std::mutex> thread_lock(thread_table_lock);
+
+		for (size_t iter = 0; iter < handlesCount; iter++)
+		{
+			addToWaitingQueue(handles[iter]);
+		}
+	    tid = process::getTid();
 	}
-	std::unique_lock<std::mutex> lck(thread_table_lock);
-	const auto tid = process::getTid();
-	thread_table[tid - BASE_TID_INDEX]->state.sleep();
-	const auto handle = thread_table[tid - BASE_TID_INDEX]->state.get_wake_by();
+
+	if (tid == kiv_os::erInvalid_Handle)
+	{
+		return false;
+	}
+
+	thread_table[TidToTableIndex(tid)]->state.sleep();
+	const auto handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
 	context.rax.x = handle;
-	return false;
+	return true;
 }
 
 
@@ -127,8 +138,6 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
  */
 bool subroutineCreateProcess(kiv_os::TRegisters & context)
 {	
-	std::unique_lock<std::mutex> lck(process_table_lock);
-
 	//find next free PID value
 	const auto pid = getNextFreePid();
 
@@ -195,6 +204,7 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
 
 /**
  * \brief Add handle to waiting queue handle process
+ * parrent should have lock for processes and threads
  * \param handle handle for we are waiting
  * \return false when some error occurs 
  */
@@ -210,12 +220,12 @@ bool addToWaitingQueue(const kiv_os::THandle handle)
 
 /**
  * \brief Add this handle to process waiting queue
+ * parrent should have lock for processes
  * \param handle pid of process which we are waiting for
  * \return success flag
  */
 bool waitForProcess(const kiv_os::THandle handle)
 {
-	std::unique_lock<std::mutex> lck(process_table_lock);
 	if(!validateHandle(handle))
 	{
 		return false;
@@ -228,18 +238,18 @@ bool waitForProcess(const kiv_os::THandle handle)
 
 /**
  * \brief  Add this handle to thread waiting queue
+ * parrent should have lock for threads
  * \param handle tid of thread which we are waiting for
  * \return success flag
  */
 bool waitForThread(const kiv_os::THandle handle)
 {
-	std::unique_lock<std::mutex> lck(thread_table_lock);
 	if(!validateHandle(handle))
 	{
 		return false;
 	}
 	const auto tid = process::getTid();
-	thread_table[handle - BASE_TID_INDEX]->waiting.wait(tid);
+	thread_table[TidToTableIndex(handle)]->waiting.wait(tid);
 	return true;
 }
 
@@ -254,7 +264,7 @@ bool validateHandle(const kiv_os::THandle handle)
 		return process_table[handle] != nullptr;
 	}
 	else {
-		return thread_table[handle - BASE_TID_INDEX] != nullptr;
+		return thread_table[TidToTableIndex(handle)] != nullptr;
 	}
 }
 
@@ -276,13 +286,10 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
 	{
 		return kiv_os::erInvalid_Handle;
 	}
-	process::TStartBlock procInfo(entry_point, context);
 	auto tcb = createFreeTCB(tid, pid);
+	process::TStartBlock procInfo(tid ,entry_point, context);
 
 	tcb->thread = std::thread(&process0, procInfo);
-	std::unique_lock<std::mutex> lck2(tid_map_lock);
-	thread_to_tid[tcb->thread.get_id()] = tid;
-
 	return tid;
 }
 
@@ -305,15 +312,11 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
 	}
 
 	auto tcb = createFreeTCB(tid, pid);
-	process::TStartBlock procInfo(entry_point, data);
+	process::TStartBlock procInfo(tid, entry_point, data);
 
 	tcb->thread = std::thread(&thread0, procInfo);
-	std::unique_lock<std::mutex> lck2(tid_map_lock);
-	thread_to_tid[tcb->thread.get_id()] = tid;
-
 	return tid;
 }
-
 
 /**
  * \brief THREAD UNSAFE use with lock
@@ -339,6 +342,15 @@ kiv_os::THandle getNextFreeTid()
 		tid++;
 	}
 	return BASE_TID_INDEX + tid;
+}
+
+/**
+ * \brief Resolve TID to index to thread table
+ * \return index to thread table
+ */
+inline kiv_os::THandle TidToTableIndex(const kiv_os::THandle tid)
+{
+	return tid - BASE_TID_INDEX;
 }
 
 /**
@@ -375,7 +387,7 @@ std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THan
 	tcb->pid = pid;
 	tcb->tid = tid;
 
-	thread_table[tid - BASE_TID_INDEX] = tcb;
+	thread_table[TidToTableIndex(tid)] = tcb;
 
 	return tcb;
 }
@@ -434,6 +446,12 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 
 }
 
+void addRecordToThreadMap(const kiv_os::THandle tid)
+{
+	std::unique_lock<std::mutex> lck(tid_map_lock);
+	thread_to_tid[std::this_thread::get_id()] = tid;
+}
+
 
 /**
 * \brief Set up error processor state
@@ -452,6 +470,8 @@ void Set_Err_Process(const uint16_t ErrorCode, kiv_os::TRegisters & regs)
 */
 void process0(process::TStartBlock &procInfo)
 {
+	addRecordToThreadMap(procInfo.tid);
+
 	// do entry point work
 	procInfo.entry_point.proc(procInfo.context.proc);
 
@@ -466,12 +486,13 @@ void process0(process::TStartBlock &procInfo)
 */
 void thread0(process::TStartBlock& threadInfo)
 {
+	addRecordToThreadMap(threadInfo.tid);
 	// do entry point work
 	threadInfo.entry_point.thread(threadInfo.context.thread);
 
 	//I'm done, notify others
 	const auto tid = process::getTid();
-	thread_table[tid - BASE_TID_INDEX]->waiting.notifyAll();
+	thread_table[TidToTableIndex(tid)]->waiting.notifyAll();
 }
 
 
@@ -504,7 +525,7 @@ kiv_os::THandle process::getPid()
 		return kiv_os::erInvalid_Handle;
 	}
 
-	const auto pid = thread_table[tid - BASE_TID_INDEX]->pid;
+	const auto pid = thread_table[TidToTableIndex(tid)]->pid;
 	return pid;
 }
 
@@ -583,9 +604,8 @@ bool process::createInit()
 
 	auto tcb = createFreeTCB(tid, pid);
 
-	std::unique_lock<std::mutex> lck2(tid_map_lock);
-	thread_to_tid[std::this_thread::get_id()] = tid;
-
+	addRecordToThreadMap(tid);
+		
 	return true;
 }
 
@@ -598,5 +618,5 @@ void process::wakeUpHandle(const kiv_os::THandle handle)
 {
 	//TODO RVA check if thread is created
 	const auto tid = process::getTid();
-	thread_table[handle - BASE_TID_INDEX]->state.wake_up(tid);
+	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
 }
