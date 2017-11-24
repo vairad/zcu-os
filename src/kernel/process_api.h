@@ -12,6 +12,7 @@ namespace process
 	{
 	public:
 		bool is_process;
+		kiv_os::THandle tid;
 		union
 		{
 			kiv_os::TEntry_Point proc;
@@ -23,15 +24,17 @@ namespace process
 			void * thread;
 		} context;
 
-		TStartBlock(const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
+		TStartBlock(const kiv_os::THandle tid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
 			: is_process(true)
+			, tid(tid)
 		{
 			this->entry_point.proc = entry_point;
 			this->context.proc = context;
 		}
 
-		TStartBlock(const kiv_os::TThread_Proc entry_point, void *context)
+		TStartBlock(const kiv_os::THandle tid, const kiv_os::TThread_Proc entry_point, void *context)
 			: is_process(false)
+			, tid(tid)
 		{
 			this->entry_point.thread = entry_point;
 			this->context.thread = context;
