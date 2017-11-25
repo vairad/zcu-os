@@ -11,6 +11,7 @@
 
 #include "waiting_queue.h"
 #include "thread_state.h"
+#include "retval.h"
 
 /// One line from process control block table
 struct PCB {
@@ -19,15 +20,17 @@ struct PCB {
 	std::string program_name;
 	std::string working_directory;
 	std::vector<kiv_os::THandle> io_devices;
-	process::waiting_queue waiting;
+	process::process_waiting_queue waiting;
+	process::retval retval;
 };
 
 /// One line from thread control block table
 struct TCB {
 	kiv_os::THandle tid;
 	kiv_os::THandle pid;
-	process::waiting_queue waiting;
+	process::thread_waiting_queue waiting;
 	process::thread_state state;
+	process::retval retval;
 	std::thread thread;
 };
 
@@ -67,6 +70,10 @@ void addRecordToThreadMap(const kiv_os::THandle tid);
 void Set_Err_Process(uint16_t ErrorCode, kiv_os::TRegisters & context);
 
 
-void process0(process::TStartBlock &procInfo);
+size_t GetRetVal(kiv_os::THandle handle);
 
+void process0(process::TStartBlock &procInfo);
 void thread0(process::TStartBlock &threadInfo);
+
+void cleanProcess(const kiv_os::THandle handle);
+void cleanThread(const kiv_os::THandle table_index);

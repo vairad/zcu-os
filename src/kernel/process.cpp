@@ -103,7 +103,7 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 {
 	const auto handles = reinterpret_cast<kiv_os::THandle*>(context.rdx.r);
 	const size_t handlesCount = context.rcx.x;
-	auto tid = kiv_os::erInvalid_Handle;
+	kiv_os::THandle tid;
 
 	{ //critical section block
 		std::unique_lock<std::mutex> proc_lock(process_table_lock);
@@ -123,7 +123,9 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 
 	thread_table[TidToTableIndex(tid)]->state.sleep();
 	const auto handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
+	const auto retval = GetRetVal(handle);
 	context.rax.x = handle;
+	context.rcx.r = retval;
 	return true;
 }
 
@@ -464,6 +466,31 @@ void Set_Err_Process(const uint16_t ErrorCode, kiv_os::TRegisters & regs)
 	regs.rax.x = ErrorCode;
 }
 
+size_t GetRetVal(const kiv_os::THandle handle)
+{
+	if(handle < BASE_TID_INDEX)
+	{
+		size_t retval;
+		const auto result = process_table[handle]->retval.red_ret_val(retval);
+		if(result)
+		{
+			cleanProcess(handle);
+		}
+		return retval;
+	}
+	else
+	{
+		size_t retval;
+		const auto thread_index = TidToTableIndex(handle);
+		const auto result = thread_table[thread_index]->retval.red_ret_val(retval);
+		if (result)
+		{
+			cleanThread(thread_index);
+		}
+		return retval;
+	}
+}
+
 /**
 * \brief Function run thread and after thread ens, it will notify all waiting processes
 * \param procInfo process startup informarion
@@ -473,10 +500,14 @@ void process0(process::TStartBlock &procInfo)
 	addRecordToThreadMap(procInfo.tid);
 
 	// do entry point work
-	procInfo.entry_point.proc(procInfo.context.proc);
+	const size_t retval = procInfo.entry_point.proc(procInfo.context.proc);
 
 	//I'm done, notify others
 	const auto pid = process::getPid();
+
+	const size_t size = process_table[pid]->waiting.size();
+	process_table[pid]->retval.make_done(retval, size);
+
 	process_table[pid]->waiting.notifyAll();
 }
 
@@ -488,11 +519,29 @@ void thread0(process::TStartBlock& threadInfo)
 {
 	addRecordToThreadMap(threadInfo.tid);
 	// do entry point work
-	threadInfo.entry_point.thread(threadInfo.context.thread);
+	const size_t retval = threadInfo.entry_point.thread(threadInfo.context.thread);
 
 	//I'm done, notify others
-	const auto tid = process::getTid();
-	thread_table[TidToTableIndex(tid)]->waiting.notifyAll();
+	{
+		std::unique_lock<std::mutex> lck(thread_table_lock);
+
+		const auto threadIndex = TidToTableIndex(process::getTid());
+
+		const size_t size = thread_table[threadIndex]->waiting.size();
+		thread_table[threadIndex]->retval.make_done(retval, size);
+
+		thread_table[threadIndex]->waiting.notifyAll();
+	}
+}
+
+void cleanProcess(const kiv_os::THandle handle)
+{
+	return;
+}
+
+void cleanThread(const kiv_os::THandle table_index)
+{
+	return;
 }
 
 
@@ -614,9 +663,20 @@ bool process::createInit()
  * \brief wakes up everything that waits on selected handle state (cond var)
  * \param handle handle to wake up
  */
-void process::wakeUpHandle(const kiv_os::THandle handle)
+void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 {
 	//TODO RVA check if thread is created
 	const auto tid = process::getTid();
+	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+}
+
+/**
+* \brief wakes up everything that waits on selected handle state (cond var)
+* \param handle handle to wake up
+*/
+void process::wakeUpProcessHandle(const kiv_os::THandle handle)
+{
+	//TODO RVA check if thread is created
+	const auto tid = process::getPid();
 	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
 }
