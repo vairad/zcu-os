@@ -41,7 +41,6 @@ namespace process
 		}
 	};
 
-	void wakeUpHandle(kiv_os::THandle handle);
 
 	// get TID
 	kiv_os::THandle getTid();
@@ -56,4 +55,6 @@ namespace process
 	std::string getWorkingDir();
 
 	bool createInit();
+	void wakeUpThreadHandle(const kiv_os::THandle handle);
+	void wakeUpProcessHandle(const kiv_os::THandle handle);
 }
