@@ -31,5 +31,11 @@ namespace process
 		 * \brief wake up one handle from my queue
 		 */
 		void notifyOne();
+
+		/**
+		 * \brief return size of waiting queue 
+		 * \return count of registered waiters
+		 */
+		size_t size();
 	};
 }

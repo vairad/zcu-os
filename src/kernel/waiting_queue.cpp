@@ -24,6 +24,12 @@ void process::waiting_queue::notifyOne()
 	}
 }
 
+size_t process::waiting_queue::size()
+{
+	std::unique_lock<std::mutex> lck(queue_lock);
+	return waiting_handles.size();
+}
+
 void process::waiting_queue::wait(const kiv_os::THandle handle)
 {
 	std::unique_lock<std::mutex> lck(queue_lock);
