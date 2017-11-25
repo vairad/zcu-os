@@ -175,6 +175,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 			stopCommands(toExecute, i);
 			return;
 		}
+		toExecute[i] = ce; //hotfix issue #24 (RVA)
 	}
 
 	waitForCommands(toExecute, shell_err);
