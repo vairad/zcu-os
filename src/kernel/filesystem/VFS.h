@@ -5,23 +5,39 @@
 
 #include "../../api/api.h"
 
-typedef uint8_t filesys_id;
+namespace kiv_os_vfs {
+	typedef uint8_t filesys_id;
 
-namespace ko_vfs {
 	const uint8_t driverErr_notLoaded = 1;
 	const uint8_t driverReg_err = 1;
 	const uint8_t driverReg_noMoreRoom = 2;
 
 	const uint8_t inode_directLinks = 12;
-
 	const uint8_t dentry_fileNameLength = 128;
-
 	const uint16_t fdCount = 0xFFFF;
 
+
+	struct FileDescriptor {
+		size_t superblockId;
+		size_t inode;
+		size_t size;
+
+		uint8_t status;
+		uint64_t position;
+		uint16_t openCounter;
+	};
+
+	struct Dentry
+	{
+		char fileName[dentry_fileNameLength];
+		size_t inode;
+	};
+
+
 	struct FsDriver {
-		int(*openFile)(char *path, uint8_t flags, uint8_t attrs);
-		int(*read)(FileDescriptor *fd, uint8_t *b);
-		int(*write)(FileDescriptor *fd, uint8_t b);
+		int (*openFile)(char *path, uint8_t flags, uint8_t attrs);
+		int (*read)(FileDescriptor *fd, uint8_t *b, size_t length);
+		int (*write)(FileDescriptor *fd, uint8_t *b, size_t length);
 	};
 
 	struct Superblock {
@@ -30,7 +46,7 @@ namespace ko_vfs {
 		size_t emptyBlocks, emptyInodes;
 		size_t blockSize;
 		size_t groupBlocks, groupInodes;
-		filesys_id fsid;
+		filesys_id filesys_id;
 		size_t connections;
 	};
 
@@ -49,25 +65,8 @@ namespace ko_vfs {
 
 	};
 
-	struct FileDescriptor {
-		filesys_id fsid;
-		uint8_t status;
-		uint64_t position;
-		uint64_t size;
-		uint16_t openCounter;
 
-		void *data;
-	};
-
-	struct Dentry
-	{
-		char fileName[dentry_fileNameLength];
-		size_t inode;
-	};
-
-
-
-	int init(size_t driverCount);
+	int init(uint8_t driverCount, uint8_t fsMountCapacity);
 	int destroy();
 
 	int registerDriver(FsDriver *p_driver, filesys_id *result);

@@ -53,6 +53,9 @@ namespace kiv_os_io {
 		else regs.rax.r = GetLastError();
 	}
 
+	/*
+		IN:		rdx je pointer na null-terminated ANSI char string udavajici file_name
+	*/
 	void deleteFile(kiv_os::TRegisters &regs) {
 
 	}

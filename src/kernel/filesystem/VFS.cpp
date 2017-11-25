@@ -1,34 +1,52 @@
 #include "VFS.h"
 
-namespace ko_vfs {
+namespace kiv_os_vfs {
 
-	uint8_t _max_fs_driver_count;
+	uint8_t _fs_driver_count_max;
 	uint8_t _fs_driver_count;
 	FsDriver **_fs_drivers;
 
-	FileDescriptor files[fdCount];
+	uint8_t _fs_mount_count_max;
+	uint8_t _fs_mount_count;
+	Superblock **_superblocks;
 
-	int init(size_t driverCount) {
+
+	FileDescriptor files[fdCount];
+	
+
+	int init(uint8_t driverCount, uint8_t fsMountCapacity) {
 		_fs_drivers = new __nothrow FsDriver *[driverCount];
-		if (_fs_drivers == nullptr) {
+		_superblocks = new __nothrow Superblock *[fsMountCapacity];
+
+		if (_fs_drivers == nullptr || _superblocks == nullptr) {
 			return 2;
 		}
-		_max_fs_driver_count = driverCount;
+		_fs_driver_count_max = driverCount;
 		_fs_driver_count = 0;
+
+		_fs_mount_count_max = fsMountCapacity;
+		_fs_mount_count = 0;
 
 		return 0;
 	}
 
 	int destroy() {
-		// TODO: shutdown functionality for loaded drivers?
+		// TODO: shutdown functionality for loaded drivers and mounted drives?
 		delete[] _fs_drivers;
+		delete[] _superblocks;
+
 		_fs_drivers = nullptr;
-		_max_fs_driver_count = 0;
-		_fs_driver_count = 0;
+		_superblocks = nullptr;
+
+		_fs_driver_count_max = _fs_driver_count = 0;
+		_fs_mount_count_max = _fs_mount_count = 0;
+
+
+		return 0;
 	}
 
 	int registerDriver(FsDriver *p_driver, filesys_id *result) {
-		if (_fs_driver_count >= _max_fs_driver_count) {
+		if (_fs_driver_count >= _fs_driver_count_max) {
 			return driverReg_err;
 		}
 		_fs_drivers[_fs_driver_count] = p_driver;
@@ -39,46 +57,33 @@ namespace ko_vfs {
 
 	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
 		FileDescriptor *fDesc = files + fd;
-		FsDriver *driver = _fs_drivers[fDesc->fsid];
+
+		Superblock *superblock = _superblocks[fDesc->superblockId];
+		FsDriver *driver = _fs_drivers[superblock->filesys_id];
+		
 		if (driver == nullptr) {
 			return driverErr_notLoaded;
 		}
-
-		int status = 0;
-		uint64_t i;
-
-		for (i = 0; i < length; i++) {
-			status += (driver->read(fDesc, dest + i));
-			// todo: check for error every read call?
-		}
-
-		return status;
+		
+		return driver->read(fDesc, dest, length);
 	}
 
 	int write(kiv_os::THandle fd, uint8_t *src, uint64_t length) {
 		FileDescriptor *fDesc = files + fd;
-		FsDriver *driver = _fs_drivers[fDesc->fsid];
+
+		Superblock *superblock = _superblocks[fDesc->superblockId];
+		FsDriver *driver = _fs_drivers[superblock->filesys_id];
+
 		if (driver == nullptr) {
 			return driverErr_notLoaded;
 		}
 
-		int status = 0;
-		uint64_t i;
-
-		for (i = 0; i < length; i++) {
-			status += (driver->write(fDesc, src[i]));
-			// todo: check for error every write call?
-		}
-
-		return status;
+		
+		return driver->write(fDesc, src, length);
 	}
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
 		return kiv_os::erInvalid_Handle;
-	}
-
-	int write(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
-		return 1;
 	}
 
 	int delFile(char *path) {
@@ -106,7 +111,7 @@ namespace ko_vfs {
 		}
 
 		// todo: possibly validate position change for each case individually
-		if (newPosition > files[fd].size) {
+		if (newPosition > files[fd].size || newPosition < 0) {
 			return 4;
 		}
 
