@@ -17,7 +17,7 @@ void incorrectSyntax(kiv_os::THandle shell_err) {
 	kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
 }
 
-kiv_os::THandle setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
+bool setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
 	kiv_os::THandle shell_in, kiv_os::THandle shell_err, kiv_os::THandle *std_in) {
 	bool retVal = true;
 	switch (in) {
@@ -47,7 +47,7 @@ kiv_os::THandle setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], st
 	return retVal;
 }
 
-kiv_os::THandle setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
+bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
 	kiv_os::THandle shell_out, kiv_os::THandle shell_err, kiv_os::THandle *std_out) {
 	bool retVal = true;
 	bool ok;
@@ -64,6 +64,7 @@ kiv_os::THandle setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], 
 			std::string error = "Error creating pipe.\n";
 			size_t written;
 			kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+			retVal = false;
 		}
 		break;
 	case kiv_os::InOutType::FILE_NEW:
