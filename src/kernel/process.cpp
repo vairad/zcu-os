@@ -613,6 +613,25 @@ std::string process::getWorkingDir()
 	return wd;
 }
 
+
+/**
+ * \brief Method changes working dir of running process
+ * \param new_dir aprooved dir by VFS
+ * \return success flag (error occurs when getPID() fails)
+ */
+bool process::changeWorkingDir(const std::string new_dir)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+	const auto pid = getPid();
+	if (pid == kiv_os::erInvalid_Handle)
+	{
+		return false;
+	}
+	
+	process_table[pid]->working_directory = new_dir;
+	return true;
+}
+
 /**
  * \brief Method initialise init process in process table and in thread table
  * \return success flag

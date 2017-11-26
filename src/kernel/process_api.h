@@ -54,6 +54,9 @@ namespace process
 	// get Working directory
 	std::string getWorkingDir();
 
+	// method changes (aprooved) working directory of program
+	bool changeWorkingDir(const std::string new_dir);
+
 	bool createInit();
 	void wakeUpThreadHandle(const kiv_os::THandle handle);
 	void wakeUpProcessHandle(const kiv_os::THandle handle);
