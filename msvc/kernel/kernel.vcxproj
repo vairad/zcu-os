@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\src\kernel\dllmain.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_mem_tree.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS.cpp" />
+    <ClCompile Include="..\..\src\kernel\filesystem\VFS_startup.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
@@ -33,6 +34,7 @@
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_mem_tree.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS.h" />
+    <ClInclude Include="..\..\src\kernel\filesystem\VFS_startup.h" />
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />

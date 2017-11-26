@@ -8,9 +8,14 @@
 namespace kiv_os_vfs {
 	typedef uint8_t filesys_id;
 
+	const uint8_t mountpointLabelSize = 8;
+
 	const uint8_t driverErr_notLoaded = 1;
 	const uint8_t driverReg_err = 1;
 	const uint8_t driverReg_noMoreRoom = 2;
+
+	const int mountErr_labelTooLong = 1;
+	const int mountErr_noMoreRoom = 2;
 
 	const uint8_t inode_directLinks = 12;
 	const uint8_t dentry_fileNameLength = 128;
@@ -41,11 +46,13 @@ namespace kiv_os_vfs {
 	};
 
 	struct Superblock {
+		char label[mountpointLabelSize];
+
 		size_t inodeCount;
 		size_t blockCount;
 		size_t emptyBlocks, emptyInodes;
 		size_t blockSize;
-		size_t groupBlocks, groupInodes;
+		size_t groupBlocks, groupInodes; // unused
 		filesys_id filesys_id;
 		size_t connections;
 	};
@@ -69,14 +76,17 @@ namespace kiv_os_vfs {
 	int init(uint8_t driverCount, uint8_t fsMountCapacity);
 	int destroy();
 
-	int registerDriver(FsDriver *p_driver, filesys_id *result);
+	int registerDriver(FsDriver &p_driver, filesys_id *result);
+
+	int mountDrive(char *label, Superblock &superblock);
+
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs);
 	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length);
 	int write(kiv_os::THandle fd, uint8_t *dest, uint64_t length);
 	int delFile(char *path);
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
-	int getPos(kiv_os::THandle fd, uint8_t posType);
+	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);
 	int close(kiv_os::THandle fd);
 
 }

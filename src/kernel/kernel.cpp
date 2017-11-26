@@ -6,6 +6,8 @@
 #include "io.h"
 #include "process_api.h"
 
+#include "filesystem\VFS_startup.h"
+
 HMODULE User_Programs;
 
 void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
@@ -90,6 +92,8 @@ void runFirstProgram()
 ///
 void __stdcall Run_VM() {
 	Initialize_Kernel();
+	
+	kiv_os_vfs::startUp();
 
 	//spustime shell
 	runFirstProgram();

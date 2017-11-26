@@ -1,22 +1,50 @@
 #include "VFS.h"
 
+#include <cstring>
+
 namespace kiv_os_vfs {
 
 	uint8_t _fs_driver_count_max;
 	uint8_t _fs_driver_count;
-	FsDriver **_fs_drivers;
+	FsDriver *_fs_drivers;
 
 	uint8_t _fs_mount_count_max;
 	uint8_t _fs_mount_count;
-	Superblock **_superblocks;
+	Superblock *_superblocks;
+
+	const char *mountSeparator = ":";
 
 
 	FileDescriptor files[fdCount];
-	
+
+	Superblock *resolveSuperblock(char *path, char **pathRemainder) {
+		char *label;
+		label = strtok_s(path, mountSeparator, pathRemainder);
+
+		for (int i = 0; i < _fs_mount_count; i++) {
+			if (!strcmp(label, (_superblocks + i)->label)) {
+				return _superblocks + i;
+			}
+		}
+
+		return nullptr;
+	}
+
+	FileDescriptor *resolveFolder(const char *path) {
+		// copy path to prevent modification of original
+		char pathCpy[1024];
+		char *pathRemainder = nullptr;
+		strcpy_s(pathCpy, 1024, path);
+
+		Superblock *sb = resolveSuperblock(pathCpy, &pathRemainder);
+
+		return nullptr;
+	}
+
 
 	int init(uint8_t driverCount, uint8_t fsMountCapacity) {
-		_fs_drivers = new __nothrow FsDriver *[driverCount];
-		_superblocks = new __nothrow Superblock *[fsMountCapacity];
+		_fs_drivers = new __nothrow FsDriver[driverCount];
+		_superblocks = new __nothrow Superblock[fsMountCapacity];
 
 		if (_fs_drivers == nullptr || _superblocks == nullptr) {
 			return 2;
@@ -45,50 +73,73 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int registerDriver(FsDriver *p_driver, filesys_id *result) {
+
+	int registerDriver(FsDriver &p_driver, filesys_id *result) {
 		if (_fs_driver_count >= _fs_driver_count_max) {
 			return driverReg_err;
 		}
 		_fs_drivers[_fs_driver_count] = p_driver;
 		*result = _fs_driver_count;
 
+		_fs_driver_count++;
+
 		return 0;
 	}
+
+	int mountDrive(char *label, Superblock &sb) {
+		if (strlen(label) > mountpointLabelSize) {
+			return mountErr_labelTooLong;
+		}
+		if (_fs_mount_count >= _fs_mount_count_max) {
+			return mountErr_noMoreRoom;
+		}
+
+		strcpy_s(sb.label, label);
+
+		_superblocks[_fs_mount_count] = sb;
+		_fs_mount_count++;
+
+		return 0;
+	}
+
 
 	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
 		FileDescriptor *fDesc = files + fd;
 
-		Superblock *superblock = _superblocks[fDesc->superblockId];
-		FsDriver *driver = _fs_drivers[superblock->filesys_id];
-		
+		Superblock *superblock = _superblocks + fDesc->superblockId;
+		FsDriver *driver = _fs_drivers + superblock->filesys_id;
+
 		if (driver == nullptr) {
 			return driverErr_notLoaded;
 		}
-		
+
 		return driver->read(fDesc, dest, length);
 	}
 
 	int write(kiv_os::THandle fd, uint8_t *src, uint64_t length) {
 		FileDescriptor *fDesc = files + fd;
 
-		Superblock *superblock = _superblocks[fDesc->superblockId];
-		FsDriver *driver = _fs_drivers[superblock->filesys_id];
+		Superblock *superblock = _superblocks + fDesc->superblockId;
+		FsDriver *driver = _fs_drivers + superblock->filesys_id;
 
 		if (driver == nullptr) {
 			return driverErr_notLoaded;
 		}
 
-		
+
 		return driver->write(fDesc, src, length);
 	}
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
+		FileDescriptor *parentFolder = resolveFolder(path);
+
 		return kiv_os::erInvalid_Handle;
 	}
 
 	int delFile(char *path) {
 		return 1;
 	}
+
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType) {
 		if (fd == kiv_os::erInvalid_Handle) {
 			return 1;

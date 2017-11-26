@@ -2,6 +2,8 @@
 #include "kernel.h"
 #include "handles.h"
 
+#include "filesystem\VFS.h"
+
 namespace kiv_os_io {
 	typedef void(*IoHandle)(kiv_os::TRegisters &regs);
 
@@ -16,6 +18,7 @@ namespace kiv_os_io {
 		OUT:	ax je handle nove otevreneho souboru
 	*/
 	void createFile(kiv_os::TRegisters &regs) {
+		kiv_os_vfs::openFile((char*)regs.rdx.r, 0, 0);
 		HANDLE result = CreateFileA((char*)regs.rdx.r, GENERIC_READ | GENERIC_WRITE, (DWORD)regs.rcx.r, 0, OPEN_EXISTING, 0, 0);
 		//zde je treba podle Rxc doresit shared_read, shared_write, OPEN_EXISING, etc. podle potreby
 		regs.flags.carry = result == INVALID_HANDLE_VALUE;
