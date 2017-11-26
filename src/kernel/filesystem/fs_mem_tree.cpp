@@ -4,12 +4,25 @@
 namespace fs_mem_tree {
 
 	kiv_os_vfs::filesys_id _fsid;
-	kiv_os_vfs::FsDriver _driver;
 
-	int readBytes(kiv_os_vfs::FileDescriptor *fd, uint8_t *byte, size_t length) {
+	int openFile(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
+		// todo: locate file according to path
+		// todo: cache pointer to the found file
+
+		if (true) {
+			return 1;
+		}
+
+		fd->openCounter = 1;
+		fd->position = 0;
+
+		return 0;
+	}
+
+	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *byte, size_t length) {
 		return 1;
 	}
-	int writeBytes(kiv_os_vfs::FileDescriptor *fd, uint8_t *byte, size_t length) {
+	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *byte, size_t length) {
 		return 1;
 	}
 
@@ -26,11 +39,13 @@ namespace fs_mem_tree {
 	}
 
 	int registerDriver() {
-		int result;
-		_driver.read = readBytes;
-		_driver.write = &writeBytes;
+		kiv_os_vfs::FsDriver driver;
 
-		result = kiv_os_vfs::registerDriver(_driver, &_fsid);
+		driver.openFile = openFile;
+		driver.read = readBytes;
+		driver.write = writeBytes;
+
+		int result = kiv_os_vfs::registerDriver(driver, &_fsid);
 		if (result != 0) {
 			// clean up after unsuccessfull registration?
 		}

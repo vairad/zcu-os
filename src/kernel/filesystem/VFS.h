@@ -6,6 +6,7 @@
 #include "../../api/api.h"
 
 namespace kiv_os_vfs {
+
 	typedef uint8_t filesys_id;
 
 	const uint8_t mountpointLabelSize = 8;
@@ -19,7 +20,6 @@ namespace kiv_os_vfs {
 
 	const uint8_t inode_directLinks = 12;
 	const uint8_t dentry_fileNameLength = 128;
-	const uint16_t fdCount = 0xFFFF;
 
 
 	struct FileDescriptor {
@@ -40,9 +40,9 @@ namespace kiv_os_vfs {
 
 
 	struct FsDriver {
-		int (*openFile)(char *path, uint8_t flags, uint8_t attrs);
-		int (*read)(FileDescriptor *fd, uint8_t *b, size_t length);
-		int (*write)(FileDescriptor *fd, uint8_t *b, size_t length);
+		int (*openFile)(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
+		int (*read)(FileDescriptor *fd, void *b, size_t length);
+		int (*write)(FileDescriptor *fd, void *b, size_t length);
 	};
 
 	struct Superblock {
@@ -82,8 +82,8 @@ namespace kiv_os_vfs {
 
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs);
-	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length);
-	int write(kiv_os::THandle fd, uint8_t *dest, uint64_t length);
+	int read(kiv_os::THandle fd, void *dest, uint64_t length);
+	int write(kiv_os::THandle fd, void *dest, uint64_t length);
 	int delFile(char *path);
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);
