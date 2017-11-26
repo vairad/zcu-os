@@ -56,7 +56,6 @@ kiv_os::THandle setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], 
 		*std_out = shell_out;
 		break;
 	case kiv_os::InOutType::PIPE:
-		// TODO: Klaus - Create new pipe.
 		ok = kiv_os_rtl::Create_Pipe(pipeHandles);
 		if (ok) {
 			*std_out = pipeHandles[0];
@@ -159,8 +158,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 		if (!ok) {
 			std::string errorStr;
 			const size_t error = kiv_os_rtl::Get_Last_Error();
-			switch (error)
-			{
+			switch (error) {
 			case kiv_os::erFile_Not_Found:
 				errorStr = "\'" + ce.name +"\' is not recognized as an internal or external command.\n";
 				break;
@@ -214,7 +212,7 @@ void kiv_os::executeCommands(std::vector<kiv_os::Command> commands, kiv_os::THan
 			// Unknown command.
 			std::string error = "\'";
 			error.append(command.parameters[0]);
-			error.append("\' is not recognized command.\n");
+			error.append("\' is not recognized as an internal or external command.\n");
 			size_t written;
 			bool status = kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
 			return;
