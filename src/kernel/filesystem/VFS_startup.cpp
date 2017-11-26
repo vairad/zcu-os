@@ -1,5 +1,6 @@
 #include "VFS_startup.h"
 
+#include "fs_stdio.h"
 #include "fs_mem_tree.h"
 
 namespace kiv_os_vfs {
@@ -9,6 +10,8 @@ namespace kiv_os_vfs {
 		if (initResult != 0) {
 			return initResult;
 		}
+
+		fs_stdio::registerDriver();
 
 		fs_mem_tree::registerDriver();
 

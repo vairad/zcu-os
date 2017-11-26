@@ -18,12 +18,19 @@ namespace kiv_os_io {
 		OUT:	ax je handle nove otevreneho souboru
 	*/
 	void createFile(kiv_os::TRegisters &regs) {
-		kiv_os_vfs::openFile((char*)regs.rdx.r, 0, 0);
-		HANDLE result = CreateFileA((char*)regs.rdx.r, GENERIC_READ | GENERIC_WRITE, (DWORD)regs.rcx.r, 0, OPEN_EXISTING, 0, 0);
-		//zde je treba podle Rxc doresit shared_read, shared_write, OPEN_EXISING, etc. podle potreby
-		regs.flags.carry = result == INVALID_HANDLE_VALUE;
-		if (!regs.flags.carry) regs.rax.x = Convert_Native_Handle(result);
-		else regs.rax.r = GetLastError();
+		char *fileName = (char*)regs.rdx.r;
+		DWORD flags = (DWORD)regs.rcx.r;
+
+
+		kiv_os::THandle handle = kiv_os_vfs::openFile(fileName, 0, 0);
+
+		regs.flags.carry = handle == kiv_os::erInvalid_Handle;
+		if (!regs.flags.carry) {
+			regs.rax.x = handle;
+		}
+		else {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*
@@ -33,12 +40,21 @@ namespace kiv_os_io {
 		OUT:	rax je pocet zapsanych bytu
 	*/
 	void readFile(kiv_os::TRegisters &regs) {
-		DWORD read;
-		HANDLE hnd = Resolve_kiv_os_Handle(regs.rdx.x);
-		regs.flags.carry = hnd == INVALID_HANDLE_VALUE;
-		if (!regs.flags.carry) regs.flags.carry = !ReadFile(hnd, reinterpret_cast<void*>(regs.rdi.r), (DWORD)regs.rcx.r, &read, NULL);
-		if (!regs.flags.carry) regs.rax.r = read;
-		else regs.rax.r = GetLastError();
+		kiv_os::THandle fd = regs.rdx.x;
+		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
+		DWORD toBeRead = (DWORD)regs.rcx.r;
+
+		DWORD read = kiv_os_vfs::read(fd, buffer, toBeRead);
+
+		// error occured
+		regs.flags.carry = read == -1;
+
+		if (!regs.flags.carry || read == toBeRead) {
+			regs.rax.r = read;
+		}
+		else {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*
@@ -48,12 +64,20 @@ namespace kiv_os_io {
 		OUT:	rax je pocet prectenych bytu
 	*/
 	void writeFile(kiv_os::TRegisters &regs) {
-		DWORD written;
-		HANDLE hnd = Resolve_kiv_os_Handle(regs.rdx.x);
-		regs.flags.carry = hnd == INVALID_HANDLE_VALUE;
-		if (!regs.flags.carry) regs.flags.carry = !WriteFile(hnd, reinterpret_cast<void*>(regs.rdi.r), (DWORD)regs.rcx.r, &written, NULL);
-		if (!regs.flags.carry) regs.rax.r = written;
-		else regs.rax.r = GetLastError();
+		kiv_os::THandle fd = regs.rdx.x;
+		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
+		DWORD toBeWritten = (DWORD)regs.rcx.r;
+
+		DWORD written = kiv_os_vfs::write(fd, buffer, toBeWritten);
+
+		// error occured
+		regs.flags.carry = written == -1 || written != toBeWritten;
+		if (!regs.flags.carry) {
+			regs.rax.r = written;
+		}
+		else {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*
@@ -143,5 +167,5 @@ void HandleIO(kiv_os::TRegisters &regs) {
 	default:
 		return kiv_os_io::illegalAL(regs);
 	}
-	
+
 }

@@ -4,6 +4,12 @@
 
 namespace kiv_os_vfs {
 
+	const char *mountSeparator = ":";
+	const char *pathSeparator = "/";
+
+	const size_t pathBufferSize = 1024;
+
+
 	uint8_t _fs_driver_count_max;
 	uint8_t _fs_driver_count;
 	FsDriver *_fs_drivers;
@@ -12,14 +18,12 @@ namespace kiv_os_vfs {
 	uint8_t _fs_mount_count;
 	Superblock *_superblocks;
 
-	const char *mountSeparator = ":";
-
-
+	const kiv_os::THandle fdCount = 0xFFFF;
 	FileDescriptor files[fdCount];
 
-	Superblock *resolveSuperblock(char *path, char **pathRemainder) {
-		char *label;
-		label = strtok_s(path, mountSeparator, pathRemainder);
+	Superblock *resolveSuperblock(char *path) {
+		char *label = nullptr, *rest = nullptr;
+		label = strtok_s(path, mountSeparator, &rest);
 
 		for (int i = 0; i < _fs_mount_count; i++) {
 			if (!strcmp(label, (_superblocks + i)->label)) {
@@ -30,15 +34,25 @@ namespace kiv_os_vfs {
 		return nullptr;
 	}
 
-	FileDescriptor *resolveFolder(const char *path) {
-		// copy path to prevent modification of original
-		char pathCpy[1024];
-		char *pathRemainder = nullptr;
-		strcpy_s(pathCpy, 1024, path);
+	int resolveFolder(char **path, Superblock **sb) {
+		char *mountSeparatorPos = strstr(*path, mountSeparator);
 
-		Superblock *sb = resolveSuperblock(pathCpy, &pathRemainder);
+		if (mountSeparatorPos == nullptr) {
+			*sb = _superblocks;
+			return 0;
+		}
 
-		return nullptr;
+		*sb = resolveSuperblock(*path);
+		if (sb == nullptr) {
+			return 1;
+		}
+
+		*path += strnlen((*sb)->label, mountpointLabelSize);
+		if (**path == '/') {
+			*path += 1;
+		}
+
+		return 0;
 	}
 
 
@@ -103,37 +117,75 @@ namespace kiv_os_vfs {
 	}
 
 
-	int read(kiv_os::THandle fd, uint8_t *dest, uint64_t length) {
+	int read(kiv_os::THandle fd, void *dest, uint64_t length) {
+		// todo: tweak error state checking
+
 		FileDescriptor *fDesc = files + fd;
+		if (fDesc->openCounter < 1) {
+			return -1;
+		}
 
 		Superblock *superblock = _superblocks + fDesc->superblockId;
-		FsDriver *driver = _fs_drivers + superblock->filesys_id;
-
-		if (driver == nullptr) {
-			return driverErr_notLoaded;
+		if (superblock->connections < 1) {
+			return -1;
 		}
+		FsDriver *driver = _fs_drivers + superblock->filesys_id;
 
 		return driver->read(fDesc, dest, length);
 	}
 
-	int write(kiv_os::THandle fd, uint8_t *src, uint64_t length) {
+	int write(kiv_os::THandle fd, void *src, uint64_t length) {
+		// todo: tweak error state checking
+
 		FileDescriptor *fDesc = files + fd;
-
-		Superblock *superblock = _superblocks + fDesc->superblockId;
-		FsDriver *driver = _fs_drivers + superblock->filesys_id;
-
-		if (driver == nullptr) {
-			return driverErr_notLoaded;
+		if (fDesc->openCounter < 1) {
+			return -1;
 		}
 
+		Superblock *superblock = _superblocks + fDesc->superblockId;
+		if (superblock->connections < 1) {
+			return -1;
+		}
+		FsDriver *driver = _fs_drivers + superblock->filesys_id;
 
 		return driver->write(fDesc, src, length);
 	}
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
-		FileDescriptor *parentFolder = resolveFolder(path);
+		// copy path to prevent modification of original
 
-		return kiv_os::erInvalid_Handle;
+		char pathCpy[pathBufferSize];
+		strcpy_s(pathCpy, pathBufferSize, path);
+
+		char *pathCpyP = (char *)pathCpy;
+		char **remainingPath = &pathCpyP;
+
+		Superblock *sb;
+		if (resolveFolder(remainingPath, &sb)) {
+			return kiv_os::erInvalid_Handle;
+		}
+
+		kiv_os::THandle fd = kiv_os::erInvalid_Handle;
+		for (kiv_os::THandle i = 0; i < fdCount; i++) {
+			if ((files + i)->openCounter < 1) {
+				fd = i;
+				break;
+			}
+		}
+
+		if (fd == kiv_os::erInvalid_Handle) {
+			return fd;
+		}
+		int result = (_fs_drivers + sb->filesys_id)->openFile(*remainingPath, flags, attrs, files + fd);
+
+		// if opening failed, mark this fd as unopened, usable
+		if (result != 0) {
+			(files + fd)->openCounter = 0;
+			return kiv_os::erInvalid_Handle;
+		}
+		sb->connections++;
+
+		return fd;
 	}
 
 	int delFile(char *path) {
