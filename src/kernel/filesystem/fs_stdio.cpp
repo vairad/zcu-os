@@ -1,7 +1,7 @@
 #include "VFS.h"
 #include "fs_stdio.h"
 
-#include "../handles.h"
+#include <Windows.h>
 
 namespace fs_stdio {
 

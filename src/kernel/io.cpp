@@ -1,6 +1,7 @@
 #include "io.h"
 #include "kernel.h"
-#include "handles.h"
+#include "../api/api.h"
+#include <Windows.h>
 
 #include "filesystem\VFS.h"
 
@@ -19,7 +20,7 @@ namespace kiv_os_io {
 	*/
 	void createFile(kiv_os::TRegisters &regs) {
 		char *fileName = (char*)regs.rdx.r;
-		DWORD flags = (DWORD)regs.rcx.r;
+		uint64_t flags = regs.rcx.r;
 		uint8_t attrs = regs.rdi.e;
 
 
@@ -43,9 +44,9 @@ namespace kiv_os_io {
 	void readFile(kiv_os::TRegisters &regs) {
 		kiv_os::THandle fd = regs.rdx.x;
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
-		DWORD toBeRead = (DWORD)regs.rcx.r;
+		uint64_t toBeRead = regs.rcx.r;
 
-		DWORD read = kiv_os_vfs::read(fd, buffer, toBeRead);
+		uint64_t read = kiv_os_vfs::read(fd, buffer, toBeRead);
 
 		// error occured
 		regs.flags.carry = read == -1;
@@ -67,9 +68,9 @@ namespace kiv_os_io {
 	void writeFile(kiv_os::TRegisters &regs) {
 		kiv_os::THandle fd = regs.rdx.x;
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
-		DWORD toBeWritten = (DWORD)regs.rcx.r;
+		uint64_t toBeWritten = regs.rcx.r;
 
-		DWORD written = kiv_os_vfs::write(fd, buffer, toBeWritten);
+		uint64_t written = kiv_os_vfs::write(fd, buffer, toBeWritten);
 
 		// error occured
 		regs.flags.carry = written == -1 || written != toBeWritten;
