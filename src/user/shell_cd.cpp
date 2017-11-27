@@ -14,9 +14,14 @@ bool kiv_os::cd(kiv_os::CommandExecute command, std::string args) {
 		wd[read] = 0; // Terminate the line.
 		size_t written;
 		kiv_os_rtl::Write_File(std_out, wd, strlen(wd), written);
-	} else {
+	} else if (params.size() == 1) {
 		retVal = kiv_os_rtl::Change_Working_Dir(args.c_str());
 		// TODO: Klaus - Handle error.
+	} else {
+		std::string errorStr = "Invalid parameters.";
+		size_t written;
+		kiv_os_rtl::Write_File(command.std_err, errorStr.c_str(), errorStr.size(), written);
+		retVal = false;
 	}
 	return retVal;
 }
