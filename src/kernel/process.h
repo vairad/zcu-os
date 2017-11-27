@@ -45,11 +45,11 @@ bool routineWaitForProcess(kiv_os::TRegisters &context);
 bool subroutineCreateProcess(kiv_os::TRegisters & context);
 bool subroutineCreateThread(kiv_os::TRegisters & context);
 
-bool addToWaitingQueue(kiv_os::THandle handle);
+bool addToWaitingQueue(kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done);
 
-bool waitForProcess(const kiv_os::THandle handle);
+bool waitForProcess(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done);
 
-bool waitForThread(const kiv_os::THandle handle);
+bool waitForThread(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done);
 
 bool validateHandle(const kiv_os::THandle handle);
 

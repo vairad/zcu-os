@@ -21,7 +21,8 @@ bool process::retval::red_ret_val(size_t &returned)
 		readers.wait(lock);
 	}
 	returned = return_value;
-	waiters--;
+
+	waiters > 0 ? waiters-- : waiters ;
 
 	if(waiters == 0)
 	{

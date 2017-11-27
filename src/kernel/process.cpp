@@ -104,14 +104,14 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	const auto handles = reinterpret_cast<kiv_os::THandle*>(context.rdx.r);
 	const size_t handlesCount = context.rcx.x;
 	kiv_os::THandle tid;
-
+	std::vector<kiv_os::THandle> already_done;
 	{ //critical section block
 		std::unique_lock<std::mutex> proc_lock(process_table_lock);
 		std::unique_lock<std::mutex> thread_lock(thread_table_lock);
 
 		for (size_t iter = 0; iter < handlesCount; iter++)
 		{
-			addToWaitingQueue(handles[iter]);
+			addToWaitingQueue(handles[iter], already_done);
 		}
 	    tid = process::getTid();
 	}
@@ -120,10 +120,20 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	{
 		return false;
 	}
-
-	thread_table[TidToTableIndex(tid)]->state.sleep();
-	const auto handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
-	const auto retval = GetRetVal(handle);
+	kiv_os::THandle handle;
+	size_t retval;
+	if(already_done.empty())
+	{
+		thread_table[TidToTableIndex(tid)]->state.sleep();
+		handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
+		retval = GetRetVal(handle);
+	}
+	else
+	{
+		handle = already_done.back();
+		retval = GetRetVal(handle);
+	}
+	
 	context.rax.x = handle;
 	context.rcx.r = retval;
 	return true;
@@ -210,13 +220,13 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
  * \param handle handle for we are waiting
  * \return false when some error occurs 
  */
-bool addToWaitingQueue(const kiv_os::THandle handle)
+bool addToWaitingQueue(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if (handle < BASE_TID_INDEX) {
-		return waitForProcess(handle);
+		return waitForProcess(handle, already_done);
 	}
 	else {
-		return waitForThread(handle);
+		return waitForThread(handle, already_done);
 	}
 }
 
@@ -226,14 +236,15 @@ bool addToWaitingQueue(const kiv_os::THandle handle)
  * \param handle pid of process which we are waiting for
  * \return success flag
  */
-bool waitForProcess(const kiv_os::THandle handle)
+bool waitForProcess(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if(!validateHandle(handle))
 	{
 		return false;
 	}
 	const auto tid = process::getTid();
-	process_table[handle]->waiting.wait(tid);
+	const auto to_block = process_table[handle]->waiting.wait(tid);
+	if (!to_block) { already_done.push_back(handle); }
 	return true;
 }
 
@@ -244,14 +255,15 @@ bool waitForProcess(const kiv_os::THandle handle)
  * \param handle tid of thread which we are waiting for
  * \return success flag
  */
-bool waitForThread(const kiv_os::THandle handle)
+bool waitForThread(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if(!validateHandle(handle))
 	{
 		return false;
 	}
 	const auto tid = process::getTid();
-	thread_table[TidToTableIndex(handle)]->waiting.wait(tid);
+	const auto to_block = thread_table[TidToTableIndex(handle)]->waiting.wait(tid);
+	if (!to_block) { already_done.push_back(handle); }
 	return true;
 }
 
@@ -504,13 +516,17 @@ void process0(process::TStartBlock &procInfo)
 	// do entry point work
 	const size_t retval = procInfo.entry_point.proc(procInfo.context.proc);
 
-	//I'm done, notify others
-	const auto pid = process::getPid();
+	{
+		std::lock_guard<std::mutex> lock(process_table_lock);
+		//I'm done, notify others
+		const auto pid = process::getPid();
 
-	const size_t size = process_table[pid]->waiting.size();
-	process_table[pid]->retval.make_done(retval, size);
+		const size_t size = process_table[pid]->waiting.size();
+		process_table[pid]->retval.make_done(retval, size);
 
-	process_table[pid]->waiting.notifyAll();
+		process_table[pid]->waiting.close();
+		process_table[pid]->waiting.notifyAll();
+	}
 }
 
 /**
@@ -532,6 +548,7 @@ void thread0(process::TStartBlock& threadInfo)
 		const size_t size = thread_table[threadIndex]->waiting.size();
 		thread_table[threadIndex]->retval.make_done(retval, size);
 
+		thread_table[threadIndex]->waiting.close();
 		thread_table[threadIndex]->waiting.notifyAll();
 	}
 }
