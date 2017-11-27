@@ -166,7 +166,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 				// TODO: Klaus - Error during cd.
 			}
 		} else {
-			bool ok = kiv_os_rtl::Create_Process(&ce->handle, ce->name.c_str(), args.c_str());
+			bool ok = kiv_os_rtl::Create_Process(&ce->handle, ce->name.c_str(), args.c_str(), ce->std_in, ce->std_out, ce->std_err);
 			if (!ok) {
 				std::string errorStr;
 				const size_t error = kiv_os_rtl::Get_Last_Error();

@@ -71,7 +71,11 @@ bool kiv_os_rtl::Close_File(const kiv_os::THandle file_handle) {
 }
 
 
-bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args) {
+bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args
+								, const kiv_os::THandle in_stream
+								, const kiv_os::THandle out_stream
+								, const kiv_os::THandle err_stream) 
+{
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
 	kiv_os::TProcess_Startup_Info procInfo;
 	
@@ -79,10 +83,9 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 
 	regs.rdx.r = uint64_t(program);
 
-	//TODO RVA handles as parameter of function
-	procInfo.stderr = kiv_os::erInvalid_Handle;
-	procInfo.stdin = kiv_os::erInvalid_Handle;
-	procInfo.stdout = kiv_os::erInvalid_Handle;
+	procInfo.stderr = err_stream;
+	procInfo.stdin = in_stream;
+	procInfo.stdout = out_stream;
 	procInfo.arg = (char*)args; //TODO RVA should be const in api?
 	
 	regs.rdi.r = uint64_t(&procInfo);
