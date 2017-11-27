@@ -404,10 +404,10 @@ std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THan
  */
 void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProcess_Startup_Info * startup_info)
 {
-	//fill program name
+//fill program name
 	pcb->program_name = std::string(program_name);
 
-	//fill working directory
+//fill working directory
 	if (pcb->pid == 0)
 	{
 		pcb->working_directory = root_directory;
@@ -417,35 +417,37 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 		pcb->working_directory = process_table[process::getPid()]->working_directory;
 	}
 
-	//fill io descriptors
-//	pcb->io_devices = std::vector<kiv_os::THandle>();
+//fill io descriptors
+	pcb->io_devices.resize(4); // Hard coded size for max index of std handler 3
+	//IN
 	if(startup_info->OSstdin == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdInput);
+		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstdin);
+		pcb->io_devices[kiv_os::stdInput] = startup_info->OSstdin; //TODO Call io open FD
 	}
 
-	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	//ERR
+	if (startup_info->OSstderr == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdOutput);
+		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstdout);
+		pcb->io_devices[kiv_os::stdError] = startup_info->OSstdout; //TODO Call io open FD
 	}
 
-	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	//OUT
+	if (startup_info->OSstdout == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdError);
+		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstderr);
+		pcb->io_devices[kiv_os::stdOutput] = startup_info->OSstdout; //TODO Call io open FD
 	}
-
 }
 
 void addRecordToThreadMap(const kiv_os::THandle tid)
