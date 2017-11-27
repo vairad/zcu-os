@@ -66,9 +66,9 @@ void runFirstProgram()
 	regs.rdx.r = reinterpret_cast<uint64_t>(programName);
 
 	kiv_os::TProcess_Startup_Info procInfo;
-	procInfo.stderr = kiv_os::stdError;
-	procInfo.stdin = kiv_os::stdInput;
-	procInfo.stdout = kiv_os::stdOutput;
+	procInfo.stderr = kiv_os::stdError;  //todo RVA open console
+	procInfo.stdin = kiv_os::stdInput;  //todo RVA open console
+	procInfo.stdout = kiv_os::stdOutput;  //todo RVA open console
 	procInfo.arg = "";
 
 	regs.rdi.r = reinterpret_cast<uint64_t>(&procInfo);

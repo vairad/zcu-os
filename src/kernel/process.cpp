@@ -110,6 +110,7 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	const size_t handlesCount = context.rcx.x;
 	kiv_os::THandle tid;
 	std::vector<kiv_os::THandle> already_done;
+	
 	{ //critical section block
 		std::unique_lock<std::mutex> proc_lock(process_table_lock);
 		std::unique_lock<std::mutex> thread_lock(thread_table_lock);
@@ -439,7 +440,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//IN
 	if(startup_info->stdin == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput);
+		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput); //TODO Call io open FD
 	}
 	else
 	{
@@ -449,7 +450,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//ERR
 	if (startup_info->stderr == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError);
+		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError); //TODO Call io open FD
 	}
 	else
 	{
@@ -459,7 +460,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//OUT
 	if (startup_info->stdout == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput);
+		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput); //TODO Call io open FD
 	}
 	else
 	{
@@ -467,6 +468,11 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	}
 }
 
+
+/**
+ * \brief Method add record to map where value is simulated thread id and key is std::this_thread.get_id()
+ * \param tid thread id to pair with this thread
+ */
 void addRecordToThreadMap(const kiv_os::THandle tid)
 {
 	std::unique_lock<std::mutex> lck(tid_map_lock);
