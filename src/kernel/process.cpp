@@ -395,12 +395,12 @@ std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THan
 }
 
 
-//TODO RVA comment
+
 /**
- * \brief 
- * \param pcb 
- * \param program_name 
- * \param startup_info 
+ * \brief Method initialise PCB structure by gived values
+ * \param pcb smart pointer to created PCB
+ * \param program_name name of program
+ * \param startup_info info about std streams
  */
 void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProcess_Startup_Info * startup_info)
 {
