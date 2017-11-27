@@ -97,7 +97,7 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 }
 
 
-bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for) {
+bool kiv_os_rtl::Join_One_Handle(const kiv_os::THandle wait_for) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scWait_For);
 	
 	kiv_os::THandle handles[1];
