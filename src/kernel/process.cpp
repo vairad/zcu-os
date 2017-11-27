@@ -714,9 +714,13 @@ bool process::createInit()
  */
 void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 {
-	//TODO RVA check if thread is created
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+
 	const auto tid = process::getTid();
-	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	if (thread_table[TidToTableIndex(handle)] && tid < BASE_TID_INDEX + MAX_THREAD_COUNT)
+	{
+		thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	}
 }
 
 /**
@@ -725,9 +729,13 @@ void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 */
 void process::wakeUpProcessHandle(const kiv_os::THandle handle)
 {
-	//TODO RVA check if thread is created
-	const auto tid = process::getPid();
-	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+
+	const auto pid = process::getPid();
+	if (thread_table[TidToTableIndex(handle)] && pid < MAX_THREAD_COUNT)
+	{
+		thread_table[TidToTableIndex(handle)]->state.wake_up(pid);
+	}
 }
 
 
