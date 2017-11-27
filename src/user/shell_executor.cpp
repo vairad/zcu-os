@@ -150,25 +150,25 @@ void waitForCommands(std::vector<kiv_os::CommandExecute> toWait, kiv_os::THandle
 
 void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle shell_err) {
 	for (size_t i = 0; i < toExecute.size(); i++) {
-		kiv_os::CommandExecute ce = toExecute[i];
-		std::vector<std::string> params = ce.parameters;
+		kiv_os::CommandExecute *ce = &toExecute[i];
+		std::vector<std::string> params = ce->parameters;
 		std::string args = "";
 		for (size_t j = 0; j < params.size(); j++) {
 			args.append(params[i]);
 		}
-		if (ce.name == "cd") {
-			bool ok = kiv_os::cd(ce, args);
+		if (ce->name == "cd") {
+			bool ok = kiv_os::cd(*ce, args);
 			if (!ok) {
 				// TODO: Klaus - Error during cd.
 			}
 		} else {
-			bool ok = kiv_os_rtl::Create_Process(&ce.handle, ce.name.c_str(), args.c_str());
+			bool ok = kiv_os_rtl::Create_Process(&ce->handle, ce->name.c_str(), args.c_str());
 			if (!ok) {
 				std::string errorStr;
 				const size_t error = kiv_os_rtl::Get_Last_Error();
 				switch (error) {
 				case kiv_os::erFile_Not_Found:
-					errorStr = "\'" + ce.name + "\' is not recognized as an internal or external command.\n";
+					errorStr = "\'" + ce->name + "\' is not recognized as an internal or external command.\n";
 					break;
 				case kiv_os::erProces_Not_Created:
 					errorStr = "Error creating new process or thread.\n";
@@ -181,8 +181,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 				stopCommands(toExecute, i);
 				return;
 			}
-			toExecute[i] = ce; //hotfix issue #24 (RVA)
-			// TODO: Klaus - Close handle if needed.
+			// TODO: Klaus - Close handles if needed.
 		}
 	}
 
