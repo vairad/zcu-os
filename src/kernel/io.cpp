@@ -20,9 +20,10 @@ namespace kiv_os_io {
 	void createFile(kiv_os::TRegisters &regs) {
 		char *fileName = (char*)regs.rdx.r;
 		DWORD flags = (DWORD)regs.rcx.r;
+		uint8_t attrs = regs.rdi.e;
 
 
-		kiv_os::THandle handle = kiv_os_vfs::openFile(fileName, 0, 0);
+		kiv_os::THandle handle = kiv_os_vfs::openFile(fileName, flags, attrs);
 
 		regs.flags.carry = handle == kiv_os::erInvalid_Handle;
 		if (!regs.flags.carry) {

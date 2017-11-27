@@ -15,7 +15,7 @@ namespace fs_stdio {
 	int openFile(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		int freeInode = -1;
 		for (int i = 0; i < inodeCapacity; i++) {
-			if (inodeToHandle[i] != INVALID_HANDLE_VALUE) {
+			if (inodeToHandle[i] == INVALID_HANDLE_VALUE) {
 				freeInode = i;
 				break;
 			}
@@ -86,6 +86,10 @@ namespace fs_stdio {
 			return 1;
 		}
 		_registered = 1;
+
+		for (int i = 0; i < inodeCapacity; i++) {
+			inodeToHandle[i] = INVALID_HANDLE_VALUE;
+		}
 
 		kiv_os_vfs::FsDriver driver;
 
