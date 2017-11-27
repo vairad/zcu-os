@@ -3,6 +3,10 @@
 
 #include <Windows.h>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace fs_stdio {
 
 	const int inodeCapacity = 128;

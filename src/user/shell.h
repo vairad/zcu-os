@@ -1,5 +1,9 @@
 #pragma once
 
+
+#undef stdin
+#undef stderr
+#undef stdout
 #include "..\api\api.h"
 
 extern "C" size_t __stdcall shell(const kiv_os::TRegisters &regs);

@@ -1,9 +1,14 @@
 #pragma once
 
-#include "..\api\api.h"
-
 #include <mutex>
 #include <list>
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "..\api\api.h"
+
+
 
 namespace process
 {

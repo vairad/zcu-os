@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace fs_mem_tree {
 
 	int registerDriver();

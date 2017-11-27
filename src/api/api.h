@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace kiv_os {
 
 
@@ -54,7 +58,7 @@ struct TDir_Entry {
 
 struct TProcess_Startup_Info {
 	char *arg;			//pointer na parametry
-	THandle OSstdin, OSstdout, OSstderr;	//kazdy, ktery bude erInvalid_Handle, bude mit vychozi hodnotu
+	THandle stdin, stdout, stderr;	//kazdy, ktery bude erInvalid_Handle, bude mit vychozi hodnotu
 };
 
 /*

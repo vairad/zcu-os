@@ -6,6 +6,11 @@
 #include <map>
 #include <Windows.h>
 
+
+#undef stdin
+#undef stderr
+#undef stdout
+
 // THandle 1 - 65535 
 //    - 0 - 1024 PID
 //    - 1024 - 2048 TID
@@ -432,33 +437,33 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 //fill io descriptors
 	pcb->io_devices.resize(4); // Hard coded size for max index of std handler 3
 	//IN
-	if(startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	if(startup_info->stdin == kiv_os::erInvalid_Handle)
 	{
 		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput);
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdInput] = startup_info->OSstdin; //TODO Call io open FD
+		pcb->io_devices[kiv_os::stdInput] = startup_info->stdin; //TODO Call io open FD
 	}
 
 	//ERR
-	if (startup_info->OSstderr == kiv_os::erInvalid_Handle)
+	if (startup_info->stderr == kiv_os::erInvalid_Handle)
 	{
 		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError);
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdError] = startup_info->OSstdout; //TODO Call io open FD
+		pcb->io_devices[kiv_os::stdError] = startup_info->stdout; //TODO Call io open FD
 	}
 
 	//OUT
-	if (startup_info->OSstdout == kiv_os::erInvalid_Handle)
+	if (startup_info->stdout == kiv_os::erInvalid_Handle)
 	{
 		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput);
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdOutput] = startup_info->OSstdout; //TODO Call io open FD
+		pcb->io_devices[kiv_os::stdOutput] = startup_info->stdout; //TODO Call io open FD
 	}
 }
 
@@ -675,9 +680,9 @@ bool process::createInit()
 	//initialise values in pcb
 
 	kiv_os::TProcess_Startup_Info procInfo;
-	procInfo.OSstderr = kiv_os::stdError;
-	procInfo.OSstdin = kiv_os::stdInput;
-	procInfo.OSstdout = kiv_os::stdOutput;
+	procInfo.stderr = kiv_os::stdError; //TODO call open console io
+	procInfo.stdin = kiv_os::stdInput; //TODO call open console io
+	procInfo.stdout = kiv_os::stdOutput; //TODO call open console io
 	procInfo.arg = "";
 
 	initialisePCB(pcb, "init", &procInfo);

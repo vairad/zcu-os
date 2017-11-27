@@ -1,6 +1,10 @@
 #include "VFS.h"
 #include "fs_mem_tree.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace fs_mem_tree {
 
 	kiv_os_vfs::filesys_id _fsid;

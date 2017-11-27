@@ -1,5 +1,10 @@
 #pragma once
 
+
+
+#undef stdin
+#undef stderr
+#undef stdout
 #include "..\api\api.h"
 
 void Set_Error(const bool failed, kiv_os::TRegisters &regs);

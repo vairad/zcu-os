@@ -1,17 +1,19 @@
 #pragma once
 
-#include "../api/api.h"
-
 #include <vector>
 #include <string>
 #include <mutex>
 #include <condition_variable>
 
 #include "process_api.h"
-
 #include "waiting_queue.h"
 #include "thread_state.h"
 #include "retval.h"
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "../api/api.h"
 
 /// One line from process control block table
 struct PCB {

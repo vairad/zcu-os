@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <cstdlib>
 
+#undef stdin
+#undef stderr
+#undef stdout
 #include "../../api/api.h"
 
 namespace kiv_os_vfs {

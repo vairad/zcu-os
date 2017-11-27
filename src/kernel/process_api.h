@@ -1,8 +1,13 @@
 #pragma once
 
-#include "../api/api.h"
 
 #include <string>
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "../api/api.h"
+
 
 bool HandleProcess(kiv_os::TRegisters &context);
 

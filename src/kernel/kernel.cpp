@@ -8,6 +8,10 @@
 
 #include "filesystem\VFS_startup.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 HMODULE User_Programs;
 
 void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
@@ -62,9 +66,9 @@ void runFirstProgram()
 	regs.rdx.r = reinterpret_cast<uint64_t>(programName);
 
 	kiv_os::TProcess_Startup_Info procInfo;
-	procInfo.OSstderr = kiv_os::stdError;
-	procInfo.OSstdin = kiv_os::stdInput;
-	procInfo.OSstdout = kiv_os::stdOutput;
+	procInfo.stderr = kiv_os::stdError;
+	procInfo.stdin = kiv_os::stdInput;
+	procInfo.stdout = kiv_os::stdOutput;
 	procInfo.arg = "";
 
 	regs.rdi.r = reinterpret_cast<uint64_t>(&procInfo);

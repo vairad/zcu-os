@@ -1,6 +1,10 @@
 #include "shell_cd.h"
 #include "rtl.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 bool kiv_os::cd(kiv_os::CommandExecute command, std::string args) {
 	std::vector<std::string> params = command.parameters;
 	kiv_os::THandle std_out = command.std_out;

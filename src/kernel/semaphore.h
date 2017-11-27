@@ -1,6 +1,10 @@
 #pragma once
 #include <condition_variable>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace semaphore
 {
 	class semaphore

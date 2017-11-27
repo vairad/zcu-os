@@ -3,6 +3,10 @@
 #include <mutex>
 #include <condition_variable>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace process
 {
 	class retval

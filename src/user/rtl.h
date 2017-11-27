@@ -1,5 +1,9 @@
 #pragma once
 
+
+#undef stdin
+#undef stderr
+#undef stdout
 #include "..\api\api.h"
 
 namespace kiv_os_rtl {

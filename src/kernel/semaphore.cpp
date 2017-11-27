@@ -1,5 +1,9 @@
 #include "semaphore.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 semaphore::semaphore::semaphore(const size_t initialValue)
 		: waiting_count(0)
 		, semaphore_value(initialValue)

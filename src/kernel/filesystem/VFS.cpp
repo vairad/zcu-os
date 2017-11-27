@@ -2,6 +2,10 @@
 
 #include <cstring>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace kiv_os_vfs {
 
 	const char *mountSeparator = ":";

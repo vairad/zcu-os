@@ -1,7 +1,11 @@
-#include "..\api\api.h"
 #include "shell_executor.h"
 #include "shell_cd.h"
 #include "rtl.h"
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "..\api\api.h"
 
 bool checkName(std::string name) {
 	bool retVal = true;

@@ -2,6 +2,11 @@
 
 #include <atomic>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
+
 extern "C" __declspec(dllimport) void __stdcall Sys_Call(kiv_os::TRegisters &context);
 
 
@@ -75,9 +80,9 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 	regs.rdx.r = uint64_t(program);
 
 	//TODO RVA handles as parameter of function
-	procInfo.OSstderr = kiv_os::erInvalid_Handle;
-	procInfo.OSstdin = kiv_os::erInvalid_Handle;
-	procInfo.OSstdout = kiv_os::erInvalid_Handle;
+	procInfo.stderr = kiv_os::erInvalid_Handle;
+	procInfo.stdin = kiv_os::erInvalid_Handle;
+	procInfo.stdout = kiv_os::erInvalid_Handle;
 	procInfo.arg = (char*)args; //TODO RVA should be const in api?
 	
 	regs.rdi.r = uint64_t(&procInfo);

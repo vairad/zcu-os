@@ -2,6 +2,10 @@
 
 #include "shell_parser.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 kiv_os::Command createCommand(std::string command, std::vector<std::string> parameters, kiv_os::InOutType *in, kiv_os::InOutType *out, kiv_os::InOutType *err) {
 	kiv_os::Command retVal;
 	retVal.name = command;

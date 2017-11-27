@@ -1,6 +1,10 @@
 #include "waiting_queue.h"
 #include "process_api.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 process::base_waiting_queue::base_waiting_queue(const bool is_process)
 	: is_process(is_process)
 	, is_locked(false)

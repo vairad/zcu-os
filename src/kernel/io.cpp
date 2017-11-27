@@ -1,9 +1,13 @@
-#include "io.h"
-#include "kernel.h"
-#include "../api/api.h"
 #include <Windows.h>
 
+#include "io.h"
+#include "kernel.h"
 #include "filesystem\VFS.h"
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "../api/api.h"
 
 namespace kiv_os_io {
 	typedef void(*IoHandle)(kiv_os::TRegisters &regs);

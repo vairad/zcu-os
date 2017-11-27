@@ -1,5 +1,9 @@
 #include "retval.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 void process::retval::make_done(const size_t returned, const size_t waiters_count)
 {
 	std::unique_lock<std::mutex> lock(access_lock);

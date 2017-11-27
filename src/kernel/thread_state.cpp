@@ -1,5 +1,9 @@
 #include "thread_state.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 process::thread_state::thread_state(): waked_by(kiv_os::erInvalid_Handle)
 {
 	state = runable;

@@ -3,6 +3,10 @@
 #include <vector>
 #include <string>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 namespace kiv_os {
 
 	enum class InOutType {
