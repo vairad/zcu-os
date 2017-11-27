@@ -14,15 +14,18 @@ namespace process
 		std::mutex queue_lock;
 		std::list<kiv_os::THandle> waiting_handles;
 		bool is_process;
+		bool is_locked;
+
 	public:
 		base_waiting_queue(const bool isProcess);
 
 	//work with queue
 		/**
 		 * \brief add my handle to waiting queue for this handle
-		 * \param handle id of handle 
+		 * \param handle id of handle
+		 * \return if thread is still running and caller should be blocked 
 		 */
-		void wait(kiv_os::THandle handle);
+		bool wait(kiv_os::THandle handle);
 
 		/**
 		 * \brief wake up all handles from my queue
@@ -39,6 +42,11 @@ namespace process
 		 * \return count of registered waiters
 		 */
 		size_t size();
+
+		/**
+		 * \brief Method close queue. Next calls of wait will not sleep calling thread.
+		 */
+		void close();
 	};
 
 //============================================================================================

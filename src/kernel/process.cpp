@@ -104,14 +104,14 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	const auto handles = reinterpret_cast<kiv_os::THandle*>(context.rdx.r);
 	const size_t handlesCount = context.rcx.x;
 	kiv_os::THandle tid;
-
+	std::vector<kiv_os::THandle> already_done;
 	{ //critical section block
 		std::unique_lock<std::mutex> proc_lock(process_table_lock);
 		std::unique_lock<std::mutex> thread_lock(thread_table_lock);
 
 		for (size_t iter = 0; iter < handlesCount; iter++)
 		{
-			addToWaitingQueue(handles[iter]);
+			addToWaitingQueue(handles[iter], already_done);
 		}
 	    tid = process::getTid();
 	}
@@ -120,10 +120,20 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	{
 		return false;
 	}
-
-	thread_table[TidToTableIndex(tid)]->state.sleep();
-	const auto handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
-	const auto retval = GetRetVal(handle);
+	kiv_os::THandle handle;
+	size_t retval;
+	if(already_done.empty())
+	{
+		thread_table[TidToTableIndex(tid)]->state.sleep();
+		handle = thread_table[TidToTableIndex(tid)]->state.get_wake_by();
+		retval = GetRetVal(handle);
+	}
+	else
+	{
+		handle = already_done.back();
+		retval = GetRetVal(handle);
+	}
+	
 	context.rax.x = handle;
 	context.rcx.r = retval;
 	return true;
@@ -210,13 +220,13 @@ bool subroutineCreateThread(kiv_os::TRegisters & context)
  * \param handle handle for we are waiting
  * \return false when some error occurs 
  */
-bool addToWaitingQueue(const kiv_os::THandle handle)
+bool addToWaitingQueue(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if (handle < BASE_TID_INDEX) {
-		return waitForProcess(handle);
+		return waitForProcess(handle, already_done);
 	}
 	else {
-		return waitForThread(handle);
+		return waitForThread(handle, already_done);
 	}
 }
 
@@ -226,14 +236,15 @@ bool addToWaitingQueue(const kiv_os::THandle handle)
  * \param handle pid of process which we are waiting for
  * \return success flag
  */
-bool waitForProcess(const kiv_os::THandle handle)
+bool waitForProcess(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if(!validateHandle(handle))
 	{
 		return false;
 	}
 	const auto tid = process::getTid();
-	process_table[handle]->waiting.wait(tid);
+	const auto to_block = process_table[handle]->waiting.wait(tid);
+	if (!to_block) { already_done.push_back(handle); }
 	return true;
 }
 
@@ -244,14 +255,15 @@ bool waitForProcess(const kiv_os::THandle handle)
  * \param handle tid of thread which we are waiting for
  * \return success flag
  */
-bool waitForThread(const kiv_os::THandle handle)
+bool waitForThread(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done)
 {
 	if(!validateHandle(handle))
 	{
 		return false;
 	}
 	const auto tid = process::getTid();
-	thread_table[TidToTableIndex(handle)]->waiting.wait(tid);
+	const auto to_block = thread_table[TidToTableIndex(handle)]->waiting.wait(tid);
+	if (!to_block) { already_done.push_back(handle); }
 	return true;
 }
 
@@ -272,7 +284,7 @@ bool validateHandle(const kiv_os::THandle handle)
 
 
 /** 
- * \brief  Routine create and run main thread for process
+ * \brief Routine create and run main thread for process
  * \param pid PID running process
  * \param entry_point Entry point of process kiv_os::TEntry_Point
  * \param context Registers of processor for 
@@ -321,7 +333,7 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
+ * \brief Method finds first empty slot in process table WARNING USE WITH LOCK FOR THREAD TABLE
  * \return Unused pid in PCB table
  */
 kiv_os::THandle getNextFreePid()
@@ -334,7 +346,7 @@ kiv_os::THandle getNextFreePid()
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
+ * \brief Method finds first empty slot in thread table WARNING USE WITH LOCK FOR THREAD TABLE
  * \return Unused tid in TCB table
  */
 kiv_os::THandle getNextFreeTid()
@@ -356,9 +368,9 @@ inline kiv_os::THandle TidToTableIndex(const kiv_os::THandle tid)
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
- * \param pid 
- * \return 
+ * \brief Create free PCB structure WARNING USE WITH LOCKED LOCKS
+ * \param pid process id of creating process
+ * \return smart poiner of new structutre
  */
 std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 {
@@ -378,10 +390,10 @@ std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
- * \param tid 
- * \param pid 
- * \return 
+ * \brief Create free TCB structure WARNING USE WITH LOCKED LOCKS
+ * \param tid thread id of new thread
+ * \param pid process id of creating process
+ * \return smart pointer of new structure
  */
 std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THandle pid)
 {
@@ -395,19 +407,19 @@ std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THan
 }
 
 
-//TODO RVA comment
+
 /**
- * \brief 
- * \param pcb 
- * \param program_name 
- * \param startup_info 
+ * \brief Method initialise PCB structure by gived values
+ * \param pcb smart pointer to created PCB
+ * \param program_name name of program
+ * \param startup_info info about std streams
  */
 void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProcess_Startup_Info * startup_info)
 {
-	//fill program name
+//fill program name
 	pcb->program_name = std::string(program_name);
 
-	//fill working directory
+//fill working directory
 	if (pcb->pid == 0)
 	{
 		pcb->working_directory = root_directory;
@@ -417,35 +429,37 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 		pcb->working_directory = process_table[process::getPid()]->working_directory;
 	}
 
-	//fill io descriptors
-//	pcb->io_devices = std::vector<kiv_os::THandle>();
+//fill io descriptors
+	pcb->io_devices.resize(4); // Hard coded size for max index of std handler 3
+	//IN
 	if(startup_info->OSstdin == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdInput);
+		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstdin);
+		pcb->io_devices[kiv_os::stdInput] = startup_info->OSstdin; //TODO Call io open FD
 	}
 
-	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	//ERR
+	if (startup_info->OSstderr == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdOutput);
+		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstdout);
+		pcb->io_devices[kiv_os::stdError] = startup_info->OSstdout; //TODO Call io open FD
 	}
 
-	if (startup_info->OSstdin == kiv_os::erInvalid_Handle)
+	//OUT
+	if (startup_info->OSstdout == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices.push_back(kiv_os::stdError);
+		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput);
 	}
 	else
 	{
-		pcb->io_devices.push_back(startup_info->OSstderr);
+		pcb->io_devices[kiv_os::stdOutput] = startup_info->OSstdout; //TODO Call io open FD
 	}
-
 }
 
 void addRecordToThreadMap(const kiv_os::THandle tid)
@@ -502,13 +516,17 @@ void process0(process::TStartBlock &procInfo)
 	// do entry point work
 	const size_t retval = procInfo.entry_point.proc(procInfo.context.proc);
 
-	//I'm done, notify others
-	const auto pid = process::getPid();
+	{
+		std::lock_guard<std::mutex> lock(process_table_lock);
+		//I'm done, notify others
+		const auto pid = process::getPid();
 
-	const size_t size = process_table[pid]->waiting.size();
-	process_table[pid]->retval.make_done(retval, size);
+		const size_t size = process_table[pid]->waiting.size();
+		process_table[pid]->retval.make_done(retval, size);
 
-	process_table[pid]->waiting.notifyAll();
+		process_table[pid]->waiting.close();
+		process_table[pid]->waiting.notifyAll();
+	}
 }
 
 /**
@@ -530,6 +548,7 @@ void thread0(process::TStartBlock& threadInfo)
 		const size_t size = thread_table[threadIndex]->waiting.size();
 		thread_table[threadIndex]->retval.make_done(retval, size);
 
+		thread_table[threadIndex]->waiting.close();
 		thread_table[threadIndex]->waiting.notifyAll();
 	}
 }
@@ -613,6 +632,25 @@ std::string process::getWorkingDir()
 	return wd;
 }
 
+
+/**
+ * \brief Method changes working dir of running process
+ * \param new_dir aprooved dir by VFS
+ * \return success flag (error occurs when getPID() fails)
+ */
+bool process::changeWorkingDir(const std::string new_dir)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+	const auto pid = getPid();
+	if (pid == kiv_os::erInvalid_Handle)
+	{
+		return false;
+	}
+	
+	process_table[pid]->working_directory = new_dir;
+	return true;
+}
+
 /**
  * \brief Method initialise init process in process table and in thread table
  * \return success flag
@@ -679,4 +717,61 @@ void process::wakeUpProcessHandle(const kiv_os::THandle handle)
 	//TODO RVA check if thread is created
 	const auto tid = process::getPid();
 	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+}
+
+
+/**
+ * \brief Method returns value of system FD on position defined by program handler
+ * When error occurs returns invalid handler
+ * \param program_handle index to program FD array
+ * \return System FD or kiv_os::erInvalid_Handler when error occurs 
+ */
+kiv_os::THandle process::getSystemFD(const kiv_os::THandle program_handle)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	const auto pid = process::getPid();
+	kiv_os::THandle sys_handle;
+	try
+	{
+		sys_handle = process_table[pid]->io_devices.at(program_handle);
+	}
+	catch (std::out_of_range)
+	{
+		sys_handle = kiv_os::erInvalid_Handle;
+	}
+	return sys_handle;
+}
+
+/**
+* \brief Method add value of system FD and return value of program handler
+* When error occurs returns invalid handler
+* \param system_handle index to system FD array
+* \return Program FD or kiv_os::erInvalid_Handler when error occurs
+*/
+kiv_os::THandle process::setNewFD(const kiv_os::THandle system_handle)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	const auto pid = process::getPid();
+	kiv_os::THandle pr_handle;
+	try
+	{
+		process_table[pid]->io_devices.push_back(system_handle);
+		const auto new_index = ( process_table[pid]->io_devices.size() - 1 ) ; //decrement size by  ... vec is indexed from zero
+		if(new_index >= kiv_os::erInvalid_Handle)
+		{
+			pr_handle = kiv_os::erInvalid_Handle;
+		}else
+		{
+			pr_handle = kiv_os::THandle(new_index);
+		}
+	 
+
+	}
+	catch (std::exception) // undefined problems with call push_back
+	{
+		pr_handle = kiv_os::erInvalid_Handle;
+	}
+	return pr_handle;
 }
