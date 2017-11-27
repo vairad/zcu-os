@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\process.cpp" />
     <ClCompile Include="..\..\src\kernel\retval.cpp" />
+    <ClCompile Include="..\..\src\kernel\semaphore.cpp" />
     <ClCompile Include="..\..\src\kernel\thread_state.cpp" />
     <ClCompile Include="..\..\src\kernel\waiting_queue.cpp" />
   </ItemGroup>
@@ -44,6 +45,7 @@
     <ClInclude Include="..\..\src\kernel\process.h" />
     <ClInclude Include="..\..\src\kernel\process_api.h" />
     <ClInclude Include="..\..\src\kernel\retval.h" />
+    <ClInclude Include="..\..\src\kernel\semaphore.h" />
     <ClInclude Include="..\..\src\kernel\thread_state.h" />
     <ClInclude Include="..\..\src\kernel\waiting_queue.h" />
   </ItemGroup>
