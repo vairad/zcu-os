@@ -272,7 +272,7 @@ bool validateHandle(const kiv_os::THandle handle)
 
 
 /** 
- * \brief  Routine create and run main thread for process
+ * \brief Routine create and run main thread for process
  * \param pid PID running process
  * \param entry_point Entry point of process kiv_os::TEntry_Point
  * \param context Registers of processor for 
@@ -321,7 +321,7 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
+ * \brief Method finds first empty slot in process table WARNING USE WITH LOCK FOR THREAD TABLE
  * \return Unused pid in PCB table
  */
 kiv_os::THandle getNextFreePid()
@@ -334,7 +334,7 @@ kiv_os::THandle getNextFreePid()
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
+ * \brief Method finds first empty slot in thread table WARNING USE WITH LOCK FOR THREAD TABLE
  * \return Unused tid in TCB table
  */
 kiv_os::THandle getNextFreeTid()
