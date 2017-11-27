@@ -16,10 +16,11 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 	bool run = true;
 	while (run) {
 		std::string line;
-		char readLine[256];
+		char readLine[256]; // TODO: Klaus - What size should the buffer be?
 		size_t read;
-		bool status = kiv_os_rtl::Read_File(std_in, &readLine, sizeof(readLine) - 1 /*TODO: Klaus - What size should the buffer be?*/, read);
-		readLine[read] = 0; // Terminate the line
+		// TODO: Klaus - Handle bad read.
+		bool ok = kiv_os_rtl::Read_File(std_in, &readLine, sizeof(readLine) - 1, read);
+		readLine[read] = 0; // Terminate the line.
 		line = readLine;
 		std::vector<kiv_os::Command> commands = kiv_os::parseLine(line);
 		kiv_os::executeCommands(commands, std_in, std_out, std_err);

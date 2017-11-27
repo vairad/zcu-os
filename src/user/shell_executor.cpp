@@ -1,5 +1,6 @@
 #include "..\api\api.h"
 #include "shell_executor.h"
+#include "shell_cd.h"
 #include "rtl.h"
 
 bool checkName(std::string name) {
@@ -155,26 +156,34 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 		for (size_t j = 0; j < params.size(); j++) {
 			args.append(params[i]);
 		}
-		bool ok = kiv_os_rtl::Create_Process(&ce.handle, ce.name.c_str() , args.c_str());
-		if (!ok) {
-			std::string errorStr;
-			const size_t error = kiv_os_rtl::Get_Last_Error();
-			switch (error) {
-			case kiv_os::erFile_Not_Found:
-				errorStr = "\'" + ce.name +"\' is not recognized as an internal or external command.\n";
-				break;
-			case kiv_os::erProces_Not_Created:
-				errorStr = "Error creating new process or thread.\n";
-				break;
-			default:
-				errorStr = "Unspecified error during run program.\n";
+		if (ce.name == "cd") {
+			bool ok = kiv_os::cd(ce, args);
+			if (!ok) {
+				// TODO: Klaus - Error during cd.
 			}
-			size_t written;
-			kiv_os_rtl::Write_File(shell_err, errorStr.c_str(), errorStr.size(), written);
-			stopCommands(toExecute, i);
-			return;
+		} else {
+			bool ok = kiv_os_rtl::Create_Process(&ce.handle, ce.name.c_str(), args.c_str());
+			if (!ok) {
+				std::string errorStr;
+				const size_t error = kiv_os_rtl::Get_Last_Error();
+				switch (error) {
+				case kiv_os::erFile_Not_Found:
+					errorStr = "\'" + ce.name + "\' is not recognized as an internal or external command.\n";
+					break;
+				case kiv_os::erProces_Not_Created:
+					errorStr = "Error creating new process or thread.\n";
+					break;
+				default:
+					errorStr = "Unspecified error during run program.\n";
+				}
+				size_t written;
+				kiv_os_rtl::Write_File(shell_err, errorStr.c_str(), errorStr.size(), written);
+				stopCommands(toExecute, i);
+				return;
+			}
+			toExecute[i] = ce; //hotfix issue #24 (RVA)
+			// TODO: Klaus - Close handle if needed.
 		}
-		toExecute[i] = ce; //hotfix issue #24 (RVA)
 	}
 
 	waitForCommands(toExecute, shell_err);

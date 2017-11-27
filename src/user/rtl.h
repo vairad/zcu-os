@@ -22,4 +22,7 @@ namespace kiv_os_rtl {
 	bool Create_Process(kiv_os::THandle* returned, const char* program, const char* args);
 	bool Join_One_Handle(kiv_os::THandle wait_for);
 	bool Create_Pipe(kiv_os::THandle handles[]);
+	bool Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read);
+	bool Change_Working_Dir(const void *path);
+
 }

@@ -28,6 +28,7 @@
     <ClCompile Include="..\..\src\user\rgen.cpp" />
     <ClCompile Include="..\..\src\user\rtl.cpp" />
     <ClCompile Include="..\..\src\user\shell.cpp" />
+    <ClCompile Include="..\..\src\user\shell_cd.cpp" />
     <ClCompile Include="..\..\src\user\shell_executor.cpp" />
     <ClCompile Include="..\..\src\user\shell_parser.cpp" />
     <ClCompile Include="..\..\src\user\shutdown.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\user\rtl.h" />
     <ClInclude Include="..\..\src\user\shell.h" />
+    <ClInclude Include="..\..\src\user\shell_cd.h" />
     <ClInclude Include="..\..\src\user\shell_executor.h" />
     <ClInclude Include="..\..\src\user\shell_parser.h" />
   </ItemGroup>

@@ -66,8 +66,7 @@ bool kiv_os_rtl::Close_File(const kiv_os::THandle file_handle) {
 }
 
 
-bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args )
-{
+bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
 	kiv_os::TProcess_Startup_Info procInfo;
 	
@@ -93,8 +92,7 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 }
 
 
-bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for)
-{
+bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scWait_For);
 	
 	kiv_os::THandle handles[1];
@@ -110,7 +108,28 @@ bool kiv_os_rtl::Join_One_Handle(kiv_os::THandle wait_for)
 	return false;
 }
 
-bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[])
-{
+bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[]) {
+	// TODO: Klaus - Implement.
 	return false;
+}
+
+bool kiv_os_rtl::Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read) {
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scGet_Current_Directory);
+
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(wd);
+	regs.rcx.r = wd_size;
+
+	const bool result = Do_SysCall(regs);
+	read = regs.rax.r;
+	return result;
+}
+
+bool kiv_os_rtl::Change_Working_Dir(const void  *path)
+{
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scSet_Current_Directory);
+
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(path);	
+
+	const bool result = Do_SysCall(regs);
+	return result;
 }
