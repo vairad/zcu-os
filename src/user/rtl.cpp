@@ -113,13 +113,23 @@ bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[]) {
 	return false;
 }
 
-bool Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read) {
+bool kiv_os_rtl::Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scGet_Current_Directory);
 
-	regs.rdx.x = reinterpret_cast<decltype(regs.rdx.r)>(wd);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(wd);
 	regs.rcx.r = wd_size;
 
 	const bool result = Do_SysCall(regs);
 	read = regs.rax.r;
+	return result;
+}
+
+bool kiv_os_rtl::Change_Working_Dir(const void  *path)
+{
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scSet_Current_Directory);
+
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(path);	
+
+	const bool result = Do_SysCall(regs);
 	return result;
 }
