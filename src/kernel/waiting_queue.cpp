@@ -3,6 +3,7 @@
 
 process::base_waiting_queue::base_waiting_queue(const bool is_process)
 	: is_process(is_process)
+	, is_locked(false)
 {
 }
 
@@ -39,10 +40,21 @@ size_t process::base_waiting_queue::size()
 	return waiting_handles.size();
 }
 
-void process::base_waiting_queue::wait(const kiv_os::THandle handle)
+void process::base_waiting_queue::close()
 {
 	std::unique_lock<std::mutex> lck(queue_lock);
+	is_locked = true;
+}
+
+; bool process::base_waiting_queue::wait(const kiv_os::THandle handle)
+{
+	std::unique_lock<std::mutex> lck(queue_lock);
+	if(is_locked)
+	{
+		return false;
+	}
 	waiting_handles.push_back(handle);
+	return true;
 }
 
 
