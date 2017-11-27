@@ -55,6 +55,25 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
+	int resolveOpenedFd(kiv_os::THandle fd, FileDescriptor **fDesc, Superblock **sb, FsDriver **driver) {
+		// todo: tweak error state checking
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+
+		*fDesc = files + fd;
+		if ((*fDesc)->openCounter < 1) {
+			return 2;
+		}
+
+		*sb = _superblocks + (*fDesc)->superblockId;
+		if ((*sb)->connections < 1) {
+			return 3;
+		}
+		*driver = _fs_drivers + (*sb)->filesys_id;
+
+		return 0;
+	}
 
 	int init(uint8_t driverCount, uint8_t fsMountCapacity) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
@@ -118,35 +137,25 @@ namespace kiv_os_vfs {
 
 
 	int read(kiv_os::THandle fd, void *dest, uint64_t length) {
-		// todo: tweak error state checking
+		FileDescriptor *fDesc;
+		Superblock *superblock;
+		FsDriver *driver;
 
-		FileDescriptor *fDesc = files + fd;
-		if (fDesc->openCounter < 1) {
+		if (resolveOpenedFd(fd, &fDesc, &superblock, &driver)) {
 			return -1;
 		}
-
-		Superblock *superblock = _superblocks + fDesc->superblockId;
-		if (superblock->connections < 1) {
-			return -1;
-		}
-		FsDriver *driver = _fs_drivers + superblock->filesys_id;
 
 		return driver->read(fDesc, dest, length);
 	}
 
 	int write(kiv_os::THandle fd, void *src, uint64_t length) {
-		// todo: tweak error state checking
+		FileDescriptor *fDesc;
+		Superblock *superblock;
+		FsDriver *driver;
 
-		FileDescriptor *fDesc = files + fd;
-		if (fDesc->openCounter < 1) {
+		if (resolveOpenedFd(fd, &fDesc, &superblock, &driver)) {
 			return -1;
 		}
-
-		Superblock *superblock = _superblocks + fDesc->superblockId;
-		if (superblock->connections < 1) {
-			return -1;
-		}
-		FsDriver *driver = _fs_drivers + superblock->filesys_id;
 
 		return driver->write(fDesc, src, length);
 	}
@@ -240,18 +249,24 @@ namespace kiv_os_vfs {
 		}
 		return 0;
 	}
+
 	int close(kiv_os::THandle fd) {
-		if (fd == kiv_os::erInvalid_Handle) {
+		FileDescriptor *fDesc;
+		Superblock *superblock;
+		FsDriver *driver;
+
+		if (resolveOpenedFd(fd, &fDesc, &superblock, &driver)) {
 			return 1;
 		}
-		if (files[fd].openCounter > 1) {
-			files[fd].openCounter--;
-		}
-		if (files[fd].status != 0) {
+
+		int error = driver->closeDescriptor(fDesc);
+		if (error) {
 			return 2;
 		}
-		// todo: possibly use better closed signalization
-		files[fd].status = 0;
+
+		if (fDesc->openCounter < 1) {
+			// cleanup after fDescriptor
+		}
 
 		return 0;
 	}

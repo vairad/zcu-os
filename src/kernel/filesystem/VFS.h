@@ -40,9 +40,10 @@ namespace kiv_os_vfs {
 
 
 	struct FsDriver {
-		int (*openFile)(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
-		int (*read)(FileDescriptor *fd, void *b, size_t length);
-		int (*write)(FileDescriptor *fd, void *b, size_t length);
+		int(*openFile)(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
+		int(*read)(FileDescriptor *fd, void *b, size_t length);
+		int(*write)(FileDescriptor *fd, void *b, size_t length);
+		int(*closeDescriptor)(FileDescriptor *fd);
 	};
 
 	struct Superblock {
@@ -59,7 +60,7 @@ namespace kiv_os_vfs {
 
 	struct Inode {
 		uint8_t mode;
-		uint16_t refCount;	
+		uint16_t refCount;
 		uint16_t owner, group; // unused
 		size_t size;
 		uint32_t atime, mtime, ctime; // unused

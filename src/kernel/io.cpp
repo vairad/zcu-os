@@ -112,10 +112,13 @@ namespace kiv_os_io {
 		IN:		dx  je handle libovolneho typu k zavreni
 	*/
 	void closeHandle(kiv_os::TRegisters &regs) {
-		HANDLE hnd = Resolve_kiv_os_Handle(regs.rdx.x);
-		regs.flags.carry = !CloseHandle(hnd);
-		if (!regs.flags.carry) Remove_Handle(regs.rdx.x);
-		else regs.rax.r = GetLastError();
+		kiv_os::THandle handle = regs.rdx.x;
+
+		int error = kiv_os_vfs::close(handle);
+
+		if (regs.flags.carry = error) {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*

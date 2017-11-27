@@ -65,6 +65,20 @@ namespace fs_stdio {
 		return written;
 	}
 
+	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {
+		if (fd->openCounter < 1) {
+			return 1;
+		}
+		
+		HANDLE h = inodeToHandle[fd->inode];
+		if (!CloseHandle(h)) {
+			return 2;
+		}
+
+		inodeToHandle[fd->inode] = INVALID_HANDLE_VALUE;
+		return 0;
+	}
+
 	int mountStdio(kiv_os_vfs::filesys_id fs_id) {
 		kiv_os_vfs::Superblock sb;
 
