@@ -699,3 +699,60 @@ void process::wakeUpProcessHandle(const kiv_os::THandle handle)
 	const auto tid = process::getPid();
 	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
 }
+
+
+/**
+ * \brief Method returns value of system FD on position defined by program handler
+ * When error occurs returns invalid handler
+ * \param program_handle index to program FD array
+ * \return System FD or kiv_os::erInvalid_Handler when error occurs 
+ */
+kiv_os::THandle process::getSystemFD(const kiv_os::THandle program_handle)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	const auto pid = process::getPid();
+	kiv_os::THandle sys_handle;
+	try
+	{
+		sys_handle = process_table[pid]->io_devices.at(program_handle);
+	}
+	catch (std::out_of_range)
+	{
+		sys_handle = kiv_os::erInvalid_Handle;
+	}
+	return sys_handle;
+}
+
+/**
+* \brief Method add value of system FD and return value of program handler
+* When error occurs returns invalid handler
+* \param system_handle index to system FD array
+* \return Program FD or kiv_os::erInvalid_Handler when error occurs
+*/
+kiv_os::THandle process::setNewFD(const kiv_os::THandle system_handle)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	const auto pid = process::getPid();
+	kiv_os::THandle pr_handle;
+	try
+	{
+		process_table[pid]->io_devices.push_back(system_handle);
+		const auto new_index = ( process_table[pid]->io_devices.size() - 1 ) ; //decrement size by  ... vec is indexed from zero
+		if(new_index >= kiv_os::erInvalid_Handle)
+		{
+			pr_handle = kiv_os::erInvalid_Handle;
+		}else
+		{
+			pr_handle = kiv_os::THandle(new_index);
+		}
+	 
+
+	}
+	catch (std::exception) // undefined problems with call push_back
+	{
+		pr_handle = kiv_os::erInvalid_Handle;
+	}
+	return pr_handle;
+}

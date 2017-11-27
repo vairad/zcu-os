@@ -60,4 +60,7 @@ namespace process
 	bool createInit();
 	void wakeUpThreadHandle(const kiv_os::THandle handle);
 	void wakeUpProcessHandle(const kiv_os::THandle handle);
+
+	kiv_os::THandle getSystemFD(const kiv_os::THandle program_handle);
+	kiv_os::THandle setNewFD(const kiv_os::THandle system_handle);
 }
