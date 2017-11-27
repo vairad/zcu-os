@@ -356,9 +356,9 @@ inline kiv_os::THandle TidToTableIndex(const kiv_os::THandle tid)
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
- * \param pid 
- * \return 
+ * \brief Create free PCB structure WARNING USE WITH LOCKED LOCKS
+ * \param pid process id of creating process
+ * \return smart poiner of new structutre
  */
 std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 {
@@ -378,10 +378,10 @@ std::shared_ptr<PCB> createFreePCB(const kiv_os::THandle pid)
 }
 
 /**
- * \brief THREAD UNSAFE use with lock
- * \param tid 
- * \param pid 
- * \return 
+ * \brief Create free TCB structure WARNING USE WITH LOCKED LOCKS
+ * \param tid thread id of new thread
+ * \param pid process id of creating process
+ * \return smart pointer of new structure
  */
 std::shared_ptr<TCB> createFreeTCB(const kiv_os::THandle tid, const kiv_os::THandle pid)
 {
