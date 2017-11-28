@@ -126,7 +126,7 @@ namespace fs_stdio {
 		return 0;
 	}
 
-	int registerDriver() {
+	int registerAndMount() {
 		if (_registered) {
 			return 1;
 		}

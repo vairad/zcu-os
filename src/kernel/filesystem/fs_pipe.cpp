@@ -108,7 +108,7 @@ namespace fs_pipe {
 		return 0;
 	}
 
-	int registerDriver() {
+	int registerAndMount() {
 		kiv_os_vfs::FsDriver driver;
 
 		driver.openFile = nullptr;
