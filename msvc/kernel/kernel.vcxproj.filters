@@ -57,6 +57,9 @@
     <ClCompile Include="..\..\src\kernel\pipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\kernel\filesystem\fs_pipe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\kernel\io.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\kernel\pipe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kernel\filesystem\fs_pipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -54,7 +54,7 @@ namespace kiv_os_vfs {
 		}
 
 		*path += strnlen((*sb)->label, mountpointLabelSize);
-		if (**path == '/') {
+		if (**path == *pathSeparator) {
 			*path += 1;
 		}
 
@@ -285,6 +285,7 @@ namespace kiv_os_vfs {
 
 		fDesc->openCounter--;
 		if (fDesc->openCounter > 0) {
+		  // descriptor had multiple references, do nothing
 			return 0;
 		}
 
