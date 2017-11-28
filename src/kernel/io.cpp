@@ -121,7 +121,7 @@ namespace kiv_os_io {
 
 		int error = kiv_os_vfs::close(handle);
 
-		if (regs.flags.carry = error) {
+		if (regs.flags.carry == error) {
 			regs.rax.r = GetLastError();
 		}
 	}
