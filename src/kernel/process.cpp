@@ -40,6 +40,13 @@ std::shared_ptr<TCB> thread_table[MAX_THREAD_COUNT];
 const std::string root_directory = "C:/";
 
 
+/// next PID value
+kiv_os::THandle next_avaliable_pid = 0;
+
+/// next TID value
+kiv_os::THandle next_avaliable_tid = 0;
+
+
 /// user.dll ref initialised by initialise_kernel()
 extern HMODULE User_Programs;
 
@@ -344,10 +351,21 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
  */
 kiv_os::THandle getNextFreePid()
 {
-	kiv_os::THandle pid = 0;
+	kiv_os::THandle pid = next_avaliable_pid;
+	size_t counter = 0;
+
 	while (process_table[pid] != nullptr && pid < MAX_PROCESS_COUNT) {
-		pid++;
+		pid = ++pid % MAX_PROCESS_COUNT;
+
+		if(counter > MAX_PROCESS_COUNT) // in case PCB table is full
+		{
+			pid = kiv_os::erInvalid_Handle;
+			next_avaliable_pid = 0;
+			return pid;
+		}
+		counter++;
 	}
+	next_avaliable_pid = pid;
 	return pid;
 }
 
@@ -357,10 +375,22 @@ kiv_os::THandle getNextFreePid()
  */
 kiv_os::THandle getNextFreeTid()
 {
-	kiv_os::THandle tid = 0;
+	kiv_os::THandle tid = next_avaliable_tid;
+	size_t counter = 0;
+
 	while (thread_table[tid] != nullptr && tid < MAX_THREAD_COUNT) {
-		tid++;
+		tid = ++tid % MAX_THREAD_COUNT;
+
+		if (counter > MAX_THREAD_COUNT) // in case PCB table is full
+		{
+			tid = kiv_os::erInvalid_Handle;
+			next_avaliable_tid = 0;
+			return tid;
+		}
+		counter++;
 	}
+
+	next_avaliable_tid = tid;
 	return BASE_TID_INDEX + tid;
 }
 
@@ -517,6 +547,49 @@ size_t GetRetVal(const kiv_os::THandle handle)
 }
 
 /**
+ * \brief Method recognize if Handle is thread or proces and pass handle to correct routine to process 
+ * \param handle handle tid/pid to stop
+ * \return success flag
+ */
+bool stopHandle(const kiv_os::THandle handle)
+{
+	if(!validateHandle(handle))
+	{
+		return false;
+	}
+	if(handle < BASE_TID_INDEX)
+	{
+		return stopProcess(handle);
+	}
+	else
+	{
+		return stopThread(handle);
+	}
+}
+
+
+/**
+* \brief Method stop thread, clean its structures and release tid
+* \param tid handle tid to stop
+* \return success flag
+*/
+bool stopThread(const kiv_os::THandle tid)
+{
+	return false; //TODO RVA implement kill algorithm
+}
+
+
+/**
+* \brief Method stop all process threads and clean its structures and release tid
+* \param pid handle pid to stop
+* \return success flag
+*/
+bool stopProcess(const kiv_os::THandle pid)
+{
+	return false; //TODO RVA implement kill algorithm
+}
+
+/**
 * \brief Function run thread and after thread ens, it will notify all waiting processes
 * \param procInfo process startup informarion
 */
@@ -566,12 +639,40 @@ void thread0(process::TStartBlock& threadInfo)
 
 void cleanProcess(const kiv_os::THandle handle)
 {
-	return;
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+
+	//check stop and clean all threads
+	for (size_t index = 0; index < MAX_THREAD_COUNT; index++)
+	{
+		if(thread_table[index]!= nullptr && thread_table[index]->pid == handle)
+		{
+			cleanThread(kiv_os::THandle(index));
+		}
+	}
+
+	//close all open handles TODO RVA
+
+	//notify waiting
+	process_table[handle]->waiting.notifyAll();
+
+	//clean pcb table - release record memory and release pid
+	std::shared_ptr<PCB> pcb = process_table[handle];
+	process_table[handle] = nullptr;
+
 }
 
 void cleanThread(const kiv_os::THandle table_index)
 {
-	return;
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+	
+	//notify waiting
+	thread_table[table_index]->waiting.notifyAll();
+	
+	//clean pcb table - release record memory and release pid
+	std::shared_ptr<TCB> tcb = thread_table[table_index];
+	tcb->thread.detach();
+	thread_table[table_index] = nullptr;
 }
 
 

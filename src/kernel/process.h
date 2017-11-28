@@ -47,6 +47,10 @@ bool waitForProcess(const kiv_os::THandle handle, std::vector<kiv_os::THandle> &
 bool waitForThread(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done);
 size_t GetRetVal(kiv_os::THandle handle);
 
+bool stopHandle(const kiv_os::THandle handle);
+bool stopThread(const kiv_os::THandle tid);
+bool stopProcess(const kiv_os::THandle pid);
+
 //helpful subroutines - create process
 kiv_os::THandle createProcessThread(kiv_os::THandle pid, kiv_os::TEntry_Point entry_point, kiv_os::TRegisters context);
 kiv_os::THandle createThread(kiv_os::THandle pid, kiv_os::TThread_Proc entry_point, void * data);
