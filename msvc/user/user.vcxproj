@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
+    <ClInclude Include="..\..\src\api\api_extension.h" />
     <ClInclude Include="..\..\src\user\rtl.h" />
     <ClInclude Include="..\..\src\user\shell.h" />
     <ClInclude Include="..\..\src\user\shell_cd.h" />

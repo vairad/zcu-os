@@ -83,6 +83,9 @@
     <ClInclude Include="..\..\src\user\shell_cd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\api\api_extension.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\user\user.def">

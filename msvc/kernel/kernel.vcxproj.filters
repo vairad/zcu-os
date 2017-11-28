@@ -98,5 +98,8 @@
     <ClInclude Include="..\..\src\kernel\retval.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\api\api_extension.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
