@@ -40,6 +40,13 @@ std::shared_ptr<TCB> thread_table[MAX_THREAD_COUNT];
 const std::string root_directory = "C:/";
 
 
+/// next PID value
+kiv_os::THandle next_avaliable_pid = 0;
+
+/// next TID value
+kiv_os::THandle next_avaliable_tid = 0;
+
+
 /// user.dll ref initialised by initialise_kernel()
 extern HMODULE User_Programs;
 
@@ -110,6 +117,7 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	const size_t handlesCount = context.rcx.x;
 	kiv_os::THandle tid;
 	std::vector<kiv_os::THandle> already_done;
+	
 	{ //critical section block
 		std::unique_lock<std::mutex> proc_lock(process_table_lock);
 		std::unique_lock<std::mutex> thread_lock(thread_table_lock);
@@ -343,10 +351,21 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
  */
 kiv_os::THandle getNextFreePid()
 {
-	kiv_os::THandle pid = 0;
+	kiv_os::THandle pid = next_avaliable_pid;
+	size_t counter = 0;
+
 	while (process_table[pid] != nullptr && pid < MAX_PROCESS_COUNT) {
-		pid++;
+		pid = ++pid % MAX_PROCESS_COUNT;
+
+		if(counter > MAX_PROCESS_COUNT) // in case PCB table is full
+		{
+			pid = kiv_os::erInvalid_Handle;
+			next_avaliable_pid = 0;
+			return pid;
+		}
+		counter++;
 	}
+	next_avaliable_pid = pid;
 	return pid;
 }
 
@@ -356,10 +375,22 @@ kiv_os::THandle getNextFreePid()
  */
 kiv_os::THandle getNextFreeTid()
 {
-	kiv_os::THandle tid = 0;
+	kiv_os::THandle tid = next_avaliable_tid;
+	size_t counter = 0;
+
 	while (thread_table[tid] != nullptr && tid < MAX_THREAD_COUNT) {
-		tid++;
+		tid = ++tid % MAX_THREAD_COUNT;
+
+		if (counter > MAX_THREAD_COUNT) // in case PCB table is full
+		{
+			tid = kiv_os::erInvalid_Handle;
+			next_avaliable_tid = 0;
+			return tid;
+		}
+		counter++;
 	}
+
+	next_avaliable_tid = tid;
 	return BASE_TID_INDEX + tid;
 }
 
@@ -439,7 +470,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//IN
 	if(startup_info->stdin == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput);
+		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput); //TODO Call io open FD
 	}
 	else
 	{
@@ -449,7 +480,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//ERR
 	if (startup_info->stderr == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError);
+		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError); //TODO Call io open FD
 	}
 	else
 	{
@@ -459,7 +490,7 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	//OUT
 	if (startup_info->stdout == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput);
+		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput); //TODO Call io open FD
 	}
 	else
 	{
@@ -467,6 +498,11 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 	}
 }
 
+
+/**
+ * \brief Method add record to map where value is simulated thread id and key is std::this_thread.get_id()
+ * \param tid thread id to pair with this thread
+ */
 void addRecordToThreadMap(const kiv_os::THandle tid)
 {
 	std::unique_lock<std::mutex> lck(tid_map_lock);
@@ -508,6 +544,49 @@ size_t GetRetVal(const kiv_os::THandle handle)
 		}
 		return retval;
 	}
+}
+
+/**
+ * \brief Method recognize if Handle is thread or proces and pass handle to correct routine to process 
+ * \param handle handle tid/pid to stop
+ * \return success flag
+ */
+bool stopHandle(const kiv_os::THandle handle)
+{
+	if(!validateHandle(handle))
+	{
+		return false;
+	}
+	if(handle < BASE_TID_INDEX)
+	{
+		return stopProcess(handle);
+	}
+	else
+	{
+		return stopThread(handle);
+	}
+}
+
+
+/**
+* \brief Method stop thread, clean its structures and release tid
+* \param tid handle tid to stop
+* \return success flag
+*/
+bool stopThread(const kiv_os::THandle tid)
+{
+	return false; //TODO RVA implement kill algorithm
+}
+
+
+/**
+* \brief Method stop all process threads and clean its structures and release tid
+* \param pid handle pid to stop
+* \return success flag
+*/
+bool stopProcess(const kiv_os::THandle pid)
+{
+	return false; //TODO RVA implement kill algorithm
 }
 
 /**
@@ -560,12 +639,40 @@ void thread0(process::TStartBlock& threadInfo)
 
 void cleanProcess(const kiv_os::THandle handle)
 {
-	return;
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+
+	//check stop and clean all threads
+	for (size_t index = 0; index < MAX_THREAD_COUNT; index++)
+	{
+		if(thread_table[index]!= nullptr && thread_table[index]->pid == handle)
+		{
+			cleanThread(kiv_os::THandle(index));
+		}
+	}
+
+	//close all open handles TODO RVA
+
+	//notify waiting
+	process_table[handle]->waiting.notifyAll();
+
+	//clean pcb table - release record memory and release pid
+	std::shared_ptr<PCB> pcb = process_table[handle];
+	process_table[handle] = nullptr;
+
 }
 
 void cleanThread(const kiv_os::THandle table_index)
 {
-	return;
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+	
+	//notify waiting
+	thread_table[table_index]->waiting.notifyAll();
+	
+	//clean pcb table - release record memory and release pid
+	std::shared_ptr<TCB> tcb = thread_table[table_index];
+	tcb->thread.detach();
+	thread_table[table_index] = nullptr;
 }
 
 
@@ -708,9 +815,13 @@ bool process::createInit()
  */
 void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 {
-	//TODO RVA check if thread is created
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+
 	const auto tid = process::getTid();
-	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	if (thread_table[TidToTableIndex(handle)] && tid < BASE_TID_INDEX + MAX_THREAD_COUNT)
+	{
+		thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	}
 }
 
 /**
@@ -719,9 +830,13 @@ void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 */
 void process::wakeUpProcessHandle(const kiv_os::THandle handle)
 {
-	//TODO RVA check if thread is created
-	const auto tid = process::getPid();
-	thread_table[TidToTableIndex(handle)]->state.wake_up(tid);
+	std::lock_guard<std::mutex> lock(thread_table_lock);
+
+	const auto pid = process::getPid();
+	if (thread_table[TidToTableIndex(handle)] && pid < MAX_THREAD_COUNT)
+	{
+		thread_table[TidToTableIndex(handle)]->state.wake_up(pid);
+	}
 }
 
 

@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
+    <ClInclude Include="..\..\src\api\api_extension.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_mem_tree.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_stdio.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS.h" />
