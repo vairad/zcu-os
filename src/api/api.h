@@ -2,10 +2,6 @@
 
 #include <cstdint>
 
-#undef stdin
-#undef stderr
-#undef stdout
-
 namespace kiv_os {
 
 
