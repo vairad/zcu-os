@@ -365,7 +365,7 @@ kiv_os::THandle getNextFreePid()
 		}
 		counter++;
 	}
-	next_avaliable_pid = pid;
+	next_avaliable_pid = ++pid % MAX_PROCESS_COUNT;
 	return pid;
 }
 
@@ -390,7 +390,7 @@ kiv_os::THandle getNextFreeTid()
 		counter++;
 	}
 
-	next_avaliable_tid = tid;
+	next_avaliable_tid = ++tid % MAX_THREAD_COUNT;
 	return BASE_TID_INDEX + tid;
 }
 
