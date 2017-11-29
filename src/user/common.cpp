@@ -6,7 +6,7 @@
 #undef stderr
 #undef stdout
 
-char **kiv_os::getArgs(kiv_os::TRegisters &context, int *argc) {
+char **kiv_os::getArgs(const kiv_os::TRegisters &context, int *argc) {
 	kiv_os::TProcess_Startup_Info *info = (kiv_os::TProcess_Startup_Info *)context.rdi.r;
 	std::string line = info->arg;
 	std::vector<std::string> parts = parseLine(line);
