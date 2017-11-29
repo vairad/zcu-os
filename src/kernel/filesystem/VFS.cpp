@@ -25,6 +25,8 @@ namespace kiv_os_vfs {
 	const kiv_os::THandle fdCount = 0xFFFF;
 	FileDescriptor files[fdCount];
 
+	//		VFS PRIVATE FUNCTIONS
+
 	Superblock *resolveSuperblock(char *path) {
 		char *label = nullptr, *rest = nullptr;
 		label = strtok_s(path, mountSeparator, &rest);
@@ -79,6 +81,8 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
+	//		VFS STATE FUNCTIONS
+
 	int init(uint8_t driverCount, uint8_t fsMountCapacity) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
 		_superblocks = new __nothrow Superblock[fsMountCapacity];
@@ -95,7 +99,7 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int destroy() {
+	int shutdown() {
 		// TODO: shutdown functionality for loaded drivers and mounted drives?
 		delete[] _fs_drivers;
 		delete[] _superblocks;
@@ -138,6 +142,22 @@ namespace kiv_os_vfs {
 
 		return 0;
 	}
+
+	int increaseFDescOpenCounter(kiv_os::THandle fd) {
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+
+		FileDescriptor *fDesc = files + fd;
+		if (fDesc->openCounter < 1) {
+			return 2;
+		}
+
+		fDesc->openCounter++;
+		return 0;
+	}
+
+	//		SYSCALL FUNCTIONS
 
 
 	int read(kiv_os::THandle fd, void *dest, uint64_t length) {

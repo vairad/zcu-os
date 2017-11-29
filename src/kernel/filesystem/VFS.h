@@ -76,14 +76,39 @@ namespace kiv_os_vfs {
 
 	};
 
+	/*
+		Allocates resources for required number of drivers and mounting points
 
+		Returns error value
+	*/
 	int init(uint8_t driverCount, uint8_t fsMountCapacity);
-	int destroy();
+	/*
+		Performs shutdown tasks
 
+		Returns error value
+	*/
+	int shutdown();
+
+	/*
+		Adds given filesystem driver
+
+		Returns error value
+	*/
 	int registerDriver(FsDriver &p_driver, filesys_id *result);
 
+	/*
+		Registers given filesystem under desired label if that label is not taken yet
+
+		Returns error value
+	*/
 	int mountDrive(char *label, Superblock &superblock);
 
+	/*
+		Looks up coresponding file descriptor and increases its  open counter
+
+		Returns error value
+	*/
+	int increaseFDescOpenCounter(kiv_os::THandle fd);
 
 	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs);
 	int read(kiv_os::THandle fd, void *dest, uint64_t length);

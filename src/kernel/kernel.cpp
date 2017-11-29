@@ -25,7 +25,8 @@ void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
 
 
 void Initialize_Kernel() {
-	User_Programs = LoadLibrary(L"user.dll");	
+	User_Programs = LoadLibrary(L"user.dll");
+	kiv_os_vfs::startUp();
 	process::createInit();
 }
 
@@ -33,6 +34,7 @@ void Shutdown_Kernel() {
 
 	//TODO RVA kill all processes
 	// process::killAll();
+	kiv_os_vfs::shutdown();
 	FreeLibrary(User_Programs);
 }
 
@@ -96,8 +98,6 @@ void runFirstProgram()
 ///
 void __stdcall Run_VM() {
 	Initialize_Kernel();
-	
-	kiv_os_vfs::startUp();
 
 	//spustime shell
 	runFirstProgram();
