@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\user\common.cpp" />
     <ClCompile Include="..\..\src\user\dllmain.cpp" />
     <ClCompile Include="..\..\src\user\echo.cpp" />
     <ClCompile Include="..\..\src\user\freq.cpp" />
@@ -39,6 +40,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\api\api_extension.h" />
+    <ClInclude Include="..\..\src\user\common.h" />
     <ClInclude Include="..\..\src\user\rtl.h" />
     <ClInclude Include="..\..\src\user\shell.h" />
     <ClInclude Include="..\..\src\user\shell_cd.h" />
