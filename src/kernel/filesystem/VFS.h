@@ -11,6 +11,8 @@
 namespace kiv_os_vfs {
 
 	typedef uint8_t filesys_id;
+	
+	typedef uint8_t sblock;
 
 	const uint8_t mountpointLabelSize = 8;
 
@@ -26,7 +28,7 @@ namespace kiv_os_vfs {
 
 
 	struct FileDescriptor {
-		size_t superblockId;
+		sblock superblockId;
 		size_t inode;
 		size_t size;
 
@@ -81,7 +83,7 @@ namespace kiv_os_vfs {
 
 		Returns error value
 	*/
-	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out));
+	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
 	
 	/*
 		Performs shutdown tasks
@@ -102,7 +104,7 @@ namespace kiv_os_vfs {
 
 		Returns error value
 	*/
-	int mountDrive(char *label, Superblock &superblock);
+	int mountDrive(char *label, Superblock &superblock, sblock *mountpoint = nullptr);
 
 	/*
 		Looks up coresponding file descriptor and increases its  open counter
@@ -118,5 +120,7 @@ namespace kiv_os_vfs {
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);
 	int close(kiv_os::THandle fd);
+
+	int openPipe(kiv_os::THandle *fd_in, kiv_os::THandle *fd_out);
 
 }

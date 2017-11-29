@@ -1,10 +1,10 @@
-#include "VFS.h"
-
 #include <cstring>
 
 #undef stdin
 #undef stderr
 #undef stdout
+
+#include "VFS.h"
 
 namespace kiv_os_vfs {
 
@@ -95,12 +95,11 @@ namespace kiv_os_vfs {
 	}
 //		VFS STATE FUNCTIONS
 
-	
-	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
+	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
 		_superblocks = new __nothrow Superblock[fsMountCapacity];
 
-		_fs_createPipe = _fs_createPipe;
+		_fs_createPipe = createPipe;
 
 		if (_fs_drivers == nullptr || _superblocks == nullptr) {
 			return 2;
@@ -142,7 +141,7 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int mountDrive(char *label, Superblock &sb) {
+	int mountDrive(char *label, Superblock &sb, sblock *sb_id) {
 		if (strlen(label) > mountpointLabelSize) {
 			return mountErr_labelTooLong;
 		}
@@ -153,6 +152,10 @@ namespace kiv_os_vfs {
 		strcpy_s(sb.label, label);
 
 		_superblocks[_fs_mount_count] = sb;
+		if (sb_id != nullptr) {
+			*sb_id = _fs_mount_count;
+		}
+
 		_fs_mount_count++;
 
 		return 0;

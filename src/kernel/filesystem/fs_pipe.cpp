@@ -7,10 +7,12 @@ namespace fs_pipe {
 
 	int _registered = 0;
 
+	kiv_os_vfs::sblock superblock;
+
 	pipe *pipes[pipeCapacity];
 
 	int createPipe(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out) {
-		int freePipe = -1;
+		size_t freePipe = -1;
 		for (size_t i = 0; i < pipeCapacity; i++) {
 			if (pipes[i] == nullptr) {
 				freePipe = i;
@@ -23,11 +25,13 @@ namespace fs_pipe {
 
 		pipes[freePipe] = new pipe();
 
+		fd_in->superblockId = superblock;
 		fd_in->position = 0;
 		fd_in->openCounter = 1;
 		fd_in->status = pipe::status_open_write;
 		fd_in->inode = freePipe;
 
+		fd_out->superblockId = superblock;
 		fd_out->position = 0;
 		fd_out->openCounter = 1;
 		fd_out->status = pipe::status_open_read;
@@ -100,7 +104,7 @@ namespace fs_pipe {
 
 		sb.inodeCount = sb.emptyInodes = pipeCapacity;
 
-		int result = kiv_os_vfs::mountDrive("", sb);
+		int result = kiv_os_vfs::mountDrive("", sb, &superblock);
 		if (result) {
 			return result;
 		}

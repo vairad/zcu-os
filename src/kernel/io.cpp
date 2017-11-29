@@ -221,7 +221,10 @@ namespace kiv_os_io {
 		IN:		rdx je pointer na pole dvou Thandle - prvni zapis a druhy pro cteni z pipy
 	*/
 	void createPipe(kiv_os::TRegisters &regs) {
+		kiv_os::THandle *handles = reinterpret_cast<kiv_os::THandle *>(regs.rdx.r);
 
+		int err = kiv_os_vfs::openPipe(handles, handles + 1);
+		regs.flags.carry = !!err;
 	}
 }
 

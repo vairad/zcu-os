@@ -117,8 +117,12 @@ bool kiv_os_rtl::Join_One_Handle(const kiv_os::THandle wait_for) {
 }
 
 bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[]) {
-	// TODO: Klaus - Implement.
-	return false;
+	// TODO: Klaus - Check implementation.
+	
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scCreate_Pipe);
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(handles);
+
+	return Do_SysCall(regs);
 }
 
 bool kiv_os_rtl::Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read) {
