@@ -11,6 +11,7 @@ class pipe
 
 	static const size_t PIPE_SIZE = 1024;
 
+	std::mutex read_lock, write_lock;
 	semaphore::semaphore empty;
 	semaphore::semaphore full;
 
@@ -61,4 +62,8 @@ public:
 	* \return zero readed bytes
 	*/
 	//size_t write_out(const uint8_t* buf, const size_t nbytes) const;
+
+	bool isOpenWrite();
+	bool isOpenRead();
+	bool isEmpty();
 };
