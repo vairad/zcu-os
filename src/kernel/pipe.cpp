@@ -23,10 +23,6 @@ pipe::pipe()
 	status = pipe::status_open;
 }
 
-pipe::~pipe() {
-	status = pipe::status_idle;
-}
-
 /*size_t pipe::read_in(uint8_t* buf, const size_t nbytes) const
 {
 	return 0;

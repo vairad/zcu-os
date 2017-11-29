@@ -48,7 +48,7 @@ namespace fs_pipe {
 
 		uint64_t read = pipe->read_out((uint8_t *)buffer, length);
 		// todo: verify read amount / errors
-		return read;
+		return (int)read;
 	}
 
 	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
@@ -63,7 +63,7 @@ namespace fs_pipe {
 
 		uint64_t written = pipe->read_out((uint8_t *)buffer, length);
 		// todo: verify write amount / errors
-		return written;
+		return (int)written;
 	}
 
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {

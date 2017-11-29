@@ -9,8 +9,9 @@
 #undef stdout
 
 namespace kiv_os_vfs {
-	bool startUp() {
-		const int initResult = init(42, 255);
+
+	int startUp() {
+		int initResult = init(42, 255, fs_pipe::createPipe);
 		if (initResult != 0) {
 			return false;
 		}

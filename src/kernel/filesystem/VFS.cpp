@@ -13,6 +13,8 @@ namespace kiv_os_vfs {
 
 	const size_t pathBufferSize = 1024;
 
+	int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out);
+
 
 	uint8_t _fs_driver_count_max;
 	uint8_t _fs_driver_count;
@@ -81,11 +83,24 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	//		VFS STATE FUNCTIONS
+	kiv_os::THandle getFreeDescriptorIndex(kiv_os::THandle searchStart = 0) {
+		for (kiv_os::THandle i = searchStart; i < fdCount; i++) {
+			if (files[i].openCounter > 0) {
+				continue;
+			}
+			return i;
+		}
 
-	int init(uint8_t driverCount, uint8_t fsMountCapacity) {
+		return kiv_os::erInvalid_Handle;
+	}
+//		VFS STATE FUNCTIONS
+
+	
+	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
 		_superblocks = new __nothrow Superblock[fsMountCapacity];
+
+		_fs_createPipe = _fs_createPipe;
 
 		if (_fs_drivers == nullptr || _superblocks == nullptr) {
 			return 2;
@@ -198,13 +213,7 @@ namespace kiv_os_vfs {
 			return kiv_os::erInvalid_Handle;
 		}
 
-		kiv_os::THandle fd = kiv_os::erInvalid_Handle;
-		for (kiv_os::THandle i = 0; i < fdCount; i++) {
-			if ((files + i)->openCounter < 1) {
-				fd = i;
-				break;
-			}
-		}
+		kiv_os::THandle fd = getFreeDescriptorIndex();
 
 		if (fd == kiv_os::erInvalid_Handle) {
 			return fd;
@@ -295,6 +304,25 @@ namespace kiv_os_vfs {
 				return 2;
 			}
 		}
+
+		return 0;
+	}
+
+	int openPipe(kiv_os::THandle *fd_in, kiv_os::THandle *fd_out) {
+		kiv_os::THandle i_in = getFreeDescriptorIndex();
+		kiv_os::THandle i_out = getFreeDescriptorIndex(i_in + 1);
+
+		if (i_in == kiv_os::erInvalid_Handle || i_out == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+
+		int error = _fs_createPipe(files + i_in, files + i_out);
+		if (error) {
+			return 2;
+		}
+
+		*fd_in = i_in;
+		*fd_out = i_out;
 
 		return 0;
 	}

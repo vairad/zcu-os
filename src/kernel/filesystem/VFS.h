@@ -81,7 +81,8 @@ namespace kiv_os_vfs {
 
 		Returns error value
 	*/
-	int init(uint8_t driverCount, uint8_t fsMountCapacity);
+	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out));
+	
 	/*
 		Performs shutdown tasks
 
