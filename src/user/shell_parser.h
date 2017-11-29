@@ -24,6 +24,6 @@ namespace kiv_os {
 		InOutType std_err;
 	} Command;
 
-	std::vector<kiv_os::Command> parseLine(std::string line);
+	std::vector<kiv_os::Command> parseCommands(std::string line);
 
 }

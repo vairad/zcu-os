@@ -23,7 +23,7 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 		bool ok = kiv_os_rtl::Read_File(kiv_os::stdInput, &readLine, sizeof(readLine) - 1, read);
 		readLine[read] = 0; // Terminate the line.
 		line = readLine;
-		std::vector<kiv_os::Command> commands = kiv_os::parseLine(line);
+		std::vector<kiv_os::Command> commands = kiv_os::parseCommands(line);
 		kiv_os::executeCommands(commands, kiv_os::stdInput, kiv_os::stdOutput, kiv_os::stdError);
 	}
 

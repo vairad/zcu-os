@@ -158,6 +158,9 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 		std::vector<std::string> params = ce->parameters;
 		std::string args = "";
 		for (size_t j = 0; j < params.size(); j++) {
+			if (j != 0) {
+				args.append(" ");
+			}
 			args.append(params[i]);
 		}
 		if (ce->name == "cd") {
