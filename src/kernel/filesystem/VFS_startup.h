@@ -8,6 +8,5 @@
 #undef stdout
 
 namespace kiv_os_vfs {
-
-	int startUp();
+	bool startUp();
 }
