@@ -66,19 +66,19 @@ namespace fs_stdio {
 		}
 		
 		strcpy_s((char *)buffer, length, readed.c_str());
-		int read = strnlen_s((char *)buffer, length);
+		size_t read = strnlen_s((char *)buffer, length);
 
 		bool error = false;
 		if (error)
 			return -1;
 
-		return read;
+		return int(read);
 	}
 
 	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		stream_type type = inodeToStream[fd->inode];
 		std::string to_write = (char *)buffer;
-		const int written = to_write.size();
+		const size_t written = to_write.size();
 
 		switch (type)
 		{
@@ -88,7 +88,7 @@ namespace fs_stdio {
 			return -1;
 		}
 
-		return written;
+		return int(written);
 	}
 
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {
