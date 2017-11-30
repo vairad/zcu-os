@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "shell.h"
-#include "rtl.h"
+#include "common.h"
 #include "shell_parser.h"
 #include "shell_executor.h"
 
@@ -17,10 +17,9 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 	bool run = true;
 	while (run) {
 		std::string line;
-		char readLine[256]; // TODO: Klaus - What size should the buffer be?
-		size_t read;
+		char readLine[1024];
 		// TODO: Klaus - Handle bad read.
-		bool ok = kiv_os_rtl::Read_File(kiv_os::stdInput, &readLine, sizeof(readLine) - 1, read);
+		size_t read = kiv_os::read(readLine, sizeof(readLine) - 1);
 		readLine[read] = 0; // Terminate the line.
 		line = readLine;
 		std::vector<kiv_os::Command> commands = kiv_os::parseCommands(line);
