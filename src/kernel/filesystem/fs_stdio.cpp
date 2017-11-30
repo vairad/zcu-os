@@ -1,8 +1,10 @@
 #include "VFS.h"
 #include "fs_stdio.h"
 
-#include <Windows.h>
 #include "fs_mem_tree.h"
+#include <string>
+#include <iostream>
+#include <string.h>
 
 #undef stdin
 #undef stderr
@@ -10,17 +12,22 @@
 
 namespace fs_stdio {
 
+	enum stream_type
+	{
+		in, out, none
+	};
+
 	const int inodeCapacity = 128;
 
 	int _registered = 0;
 
-	HANDLE inodeToHandle[inodeCapacity];
+	stream_type inodeToStream[inodeCapacity];
 
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		int freeInode = -1;
 		for (int i = 0; i < inodeCapacity; i++) {
-			if (inodeToHandle[i] == INVALID_HANDLE_VALUE) {
+			if (inodeToStream[i] == none) {
 				freeInode = i;
 				break;
 			}
@@ -35,20 +42,33 @@ namespace fs_stdio {
 
 		// todo:? zde je treba podle Rxc doresit shared_read, shared_write, OPEN_EXISING, etc. podle potreby
 
-		inodeToHandle[freeInode] = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, (DWORD)flags, 0, OPEN_EXISTING, 0, 0);
-
+		if(strcmp(path, "CONIN$") == 0)
+		{
+			inodeToStream[freeInode] = in;
+		}
+		else
+		{
+			inodeToStream[freeInode] = out;
+		}
 		return 0;
 	}
 
 	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
-		HANDLE hnd = inodeToHandle[fd->inode];
-
-		DWORD read;
-		if (hnd == INVALID_HANDLE_VALUE) {
+		stream_type type = inodeToStream[fd->inode];
+		std::string readed = "";
+		
+		switch (type) 
+		{
+		case in: getline(std::cin, readed);
+			break;
+		default: //none and out is fault
 			return -1;
 		}
+		
+		strcpy_s((char *)buffer, length, readed.c_str());
+		int read = strnlen_s((char *)buffer, length);
 
-		bool error = !ReadFile(hnd, buffer, (DWORD)length, &read, NULL);
+		bool error = false;
 		if (error)
 			return -1;
 
@@ -56,16 +76,17 @@ namespace fs_stdio {
 	}
 
 	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
-		HANDLE hnd = inodeToHandle[fd->inode];
+		stream_type type = inodeToStream[fd->inode];
+		std::string to_write = (char *)buffer;
+		const int written = to_write.size();
 
-		DWORD written;
-		if (hnd == INVALID_HANDLE_VALUE) {
+		switch (type)
+		{
+		case out: std::cout << to_write;
+			break;
+		default: //none and in is fault
 			return -1;
 		}
-
-		bool error = !WriteFile(hnd, buffer, (DWORD)length, &written, NULL);
-		if (error)
-			return -1;
 
 		return written;
 	}
@@ -80,12 +101,7 @@ namespace fs_stdio {
 			return 0;
 		}
 
-		HANDLE h = inodeToHandle[fd->inode];
-		if (!CloseHandle(h)) {
-			return 2;
-		}
-
-		inodeToHandle[fd->inode] = INVALID_HANDLE_VALUE;
+		inodeToStream[fd->inode] = none;
 		return 0;
 	}
 
@@ -112,7 +128,7 @@ namespace fs_stdio {
 		_registered = 1;
 
 		for (int i = 0; i < inodeCapacity; i++) {
-			inodeToHandle[i] = INVALID_HANDLE_VALUE;
+			inodeToStream[i] = none;
 		}
 
 		kiv_os_vfs::FsDriver driver;
@@ -128,7 +144,6 @@ namespace fs_stdio {
 		if (result != 0) {
 			return 1;
 		}
-
 
 		return mountStdio(fs_id);
 	}
