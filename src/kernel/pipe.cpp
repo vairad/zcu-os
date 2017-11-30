@@ -74,6 +74,28 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 	return 0;
 }*/
 
+bool pipe::statusContains(PipeStatus s) {
+	return !!(status & s);
+}
+
+bool pipe::close(PipeStatus s) {
+	bool currentStatus = status & s;
+
+	if (!currentStatus) {
+		return 0;
+	}
+	if (s == pipe::status_open_read) {
+		// todo: wake waiting writers
+	}
+	else if (s == pipe::status_open_write) {
+		// todo: wake waiting readers
+	}
+
+	status = status & ~s;
+
+	return 0;
+}
+
 bool pipe::isOpenWrite() {
 	return status & pipe::status_open_write;
 }
@@ -85,3 +107,5 @@ bool pipe::isOpenRead() {
 bool pipe::isEmpty() {
 	return read_index == write_index;
 }
+
+

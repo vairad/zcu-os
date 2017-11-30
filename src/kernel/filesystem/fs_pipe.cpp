@@ -46,8 +46,8 @@ namespace fs_pipe {
 		if (fd->status != pipe::status_open_read) {
 			return -1; // file descriptor is not open for reading
 		}
-		if (!(pipe->status & fd->status)) {
-			return -1; // pipe is not open for reading
+		if (!pipe->isOpenRead()) {
+			return -1; 
 		}
 
 		uint64_t read = pipe->read_out((uint8_t *)buffer, length);
@@ -61,8 +61,8 @@ namespace fs_pipe {
 		if (fd->status != pipe::status_open_write) {
 			return -1; // file descriptor is not open for reading
 		}
-		if (!(pipe->status & fd->status)) {
-			return -1; // pipe is not open for reading
+		if (!pipe->isOpenWrite()) {
+			return -1;
 		}
 
 		uint64_t written = pipe->read_out((uint8_t *)buffer, length);
@@ -73,26 +73,17 @@ namespace fs_pipe {
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {
 		pipe *pipe = pipes[fd->inode];
 
-		if (!(pipe->status & fd->status)) {
+		if (!pipe->statusContains(fd->status)) {
 			return -1; // pipe is already closed from this end
 		}
 
-		// 
-		pipe->status = (~fd->status & pipe->status);
+		pipe->close(fd->status);
 
-		if (fd->status == pipe::status_open_read) {
-			// if we are closing read end, notify possible waiting writer
-			// todo
-		}
-		else if(fd->status == pipe::status_open_write) {
-			// if we are closing write end, put EOF in
-		}
-		
-		if (pipe->status == pipe::status_both_closed) {
+		if (!pipe->isOpenRead() && !pipe->isOpenWrite()) {
 			delete pipes[fd->inode];
 			pipes[fd->inode] = nullptr;
 		}
-		
+
 		return 0;
 	}
 

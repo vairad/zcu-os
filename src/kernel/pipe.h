@@ -19,6 +19,8 @@ class pipe
 	size_t read_index = 0;
 	size_t write_index = 0;
 
+	PipeStatus status = status_idle;
+
 	size_t getReadIndex();
 	size_t getWriteIndex();
 
@@ -33,8 +35,6 @@ public:
 	static const PipeStatus status_open_write = 4;
 	// Pipe is fully open
 	static const PipeStatus status_open = status_both_closed | status_open_read | status_open_write;
-
-	PipeStatus status = status_idle;
 
 	pipe();
 	
@@ -66,4 +66,8 @@ public:
 	bool isOpenWrite();
 	bool isOpenRead();
 	bool isEmpty();
+
+	bool statusContains(PipeStatus ps);
+	bool close(PipeStatus ps);
+
 };
