@@ -1,5 +1,6 @@
 #include "shell_cd.h"
 #include "rtl.h"
+#include "common.h"
 
 #undef stdin
 #undef stderr
@@ -16,15 +17,13 @@ bool kiv_os::cd(kiv_os::CommandExecute command, std::string args) {
 		// TODO: Klaus - Handle bad read.
 		retVal = kiv_os_rtl::Get_Working_Dir(wd, sizeof(wd) - 1, read);
 		wd[read] = 0; // Terminate the line.
-		size_t written;
-		kiv_os_rtl::Write_File(std_out, wd, strlen(wd), written);
+		kiv_os::print(wd, strlen(wd));
 	} else if (params.size() == 1) {
 		retVal = kiv_os_rtl::Change_Working_Dir(args.c_str());
 		// TODO: Klaus - Handle error.
 	} else {
-		std::string errorStr = "Invalid parameters.";
-		size_t written;
-		kiv_os_rtl::Write_File(command.std_err, errorStr.c_str(), errorStr.size(), written);
+		std::string error = "Invalid parameters.";
+		kiv_os::printErr(error.c_str(), error.length());
 		retVal = false;
 	}
 	return retVal;

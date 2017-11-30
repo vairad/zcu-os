@@ -1,6 +1,7 @@
 #include <locale>
 
 #include "shell_parser.h"
+#include "common.h"
 
 #undef stdin
 #undef stderr
@@ -67,39 +68,8 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 	return retVal;
 }
 
-std::vector<kiv_os::Command> kiv_os::parseLine(std::string line) {
-	std::vector<std::string> parts = std::vector<std::string>();
-	std::string token = "";
-	bool inQuotes = false;
-	for (size_t i = 0; i < line.length(); i++) {
-		char c = line[i];
-		if (!inQuotes) {
-			if (c == ' ') {
-				parts.push_back(token);
-				token = "";
-			} else if (isspace(c, std::locale{})) {
-				continue;
-			} else if (c == '\"') {
-				token.append(1, c);
-				inQuotes = true;
-			} else {
-				token.append(1, c);
-			}
-		} else {
-			if (isspace(c, std::locale{}) && c != ' ') {
-				continue;
-			} else if (c == '\"') {
-				token.append(1, c);
-				inQuotes = false;
-			} else {
-				token.append(1, c);
-			}
-		}
-	}
-	// Push last part to vector
-	if (!line.empty()) {
-		parts.push_back(token);
-	}
+std::vector<kiv_os::Command> kiv_os::parseCommands(std::string line) {
+	std::vector<std::string> parts = kiv_os::parseLine(line);
 
 	return splitToCommands(parts);
 }
