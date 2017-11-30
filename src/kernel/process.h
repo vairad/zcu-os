@@ -65,6 +65,7 @@ void Set_Err_Process(uint16_t ErrorCode, kiv_os::TRegisters & context);
 bool validateHandle(const kiv_os::THandle handle);
 kiv_os::THandle TidToTableIndex(const kiv_os::THandle tid);
 void addRecordToThreadMap(const kiv_os::THandle tid);
+void resolveFileHandlers(kiv_os::TProcess_Startup_Info *startupInfo);
 
 //wrapper for run thread/process
 void process0(process::TStartBlock &procInfo);

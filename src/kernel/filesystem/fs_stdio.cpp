@@ -2,6 +2,7 @@
 #include "fs_stdio.h"
 
 #include <Windows.h>
+#include "fs_mem_tree.h"
 
 #undef stdin
 #undef stderr
@@ -74,6 +75,11 @@ namespace fs_stdio {
 			return 1;
 		}
 		
+		if (fd->openCounter > 1) { //TODO review
+			fd->openCounter--;
+			return 0;
+		}
+
 		HANDLE h = inodeToHandle[fd->inode];
 		if (!CloseHandle(h)) {
 			return 2;
@@ -114,6 +120,7 @@ namespace fs_stdio {
 		driver.openFile = openFile;
 		driver.read = readBytes;
 		driver.write = writeBytes;
+		driver.closeDescriptor = closeDescriptor;
 
 		kiv_os_vfs::filesys_id fs_id;
 

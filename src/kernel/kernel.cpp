@@ -25,8 +25,10 @@ void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
 
 
 void Initialize_Kernel() {
-	User_Programs = LoadLibrary(L"user.dll");
+	User_Programs = LoadLibrary(L"user.dll");	
+
 	kiv_os_vfs::startUp();
+
 	process::createInit();
 }
 

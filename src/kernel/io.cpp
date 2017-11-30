@@ -3,6 +3,7 @@
 #include "io.h"
 #include "kernel.h"
 #include "filesystem\VFS.h"
+#include "process_api.h"
 
 #undef stdin
 #undef stderr
@@ -32,7 +33,16 @@ namespace kiv_os_io {
 
 		regs.flags.carry = handle == kiv_os::erInvalid_Handle;
 		if (!regs.flags.carry) {
-			regs.rax.x = handle;
+
+			const auto proc_handle = process::setNewFD(handle);
+			regs.flags.carry = proc_handle == kiv_os::erInvalid_Handle;
+			if (!regs.flags.carry) {
+				regs.rax.x = handle;
+			}
+			else {
+				regs.rax.r = GetLastError();
+			}
+			
 		}
 		else {
 			regs.rax.r = GetLastError();
@@ -47,6 +57,8 @@ namespace kiv_os_io {
 	*/
 	void readFile(kiv_os::TRegisters &regs) {
 		kiv_os::THandle fd = regs.rdx.x;
+		fd = process::getSystemFD(fd);
+
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
 		uint64_t toBeRead = regs.rcx.r;
 
@@ -71,6 +83,8 @@ namespace kiv_os_io {
 	*/
 	void writeFile(kiv_os::TRegisters &regs) {
 		kiv_os::THandle fd = regs.rdx.x;
+		fd = process::getSystemFD(fd);
+
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
 		uint64_t toBeWritten = regs.rcx.r;
 
@@ -118,13 +132,16 @@ namespace kiv_os_io {
 	*/
 	void closeHandle(kiv_os::TRegisters &regs) {
 		kiv_os::THandle handle = regs.rdx.x;
+		const auto sys_handle = process::getSystemFD(handle);
 
-		int error = kiv_os_vfs::close(handle);
+		int error = kiv_os_vfs::close(sys_handle);
 
 		regs.flags.carry = error;
 		if (error) {
 			regs.rax.r = GetLastError();
 		}
+
+		process::removeProcessFD(handle);
 	}
 
 	/*
