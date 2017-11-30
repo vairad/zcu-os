@@ -193,13 +193,21 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute) {
 	waitForCommands(toExecute);
 }
 
-void kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
+/**
+ * \brief Method execute commands parsed by shell_parser
+ * \param commands vector of kiv_os::Command structes
+ * \return flag if shell should continue in readinng (true) or false if shell should end
+ */
+bool kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
 	THandle pipeHandles[2] = {NULL, NULL};
 	std::vector<CommandExecute> toExecute = std::vector<CommandExecute>();
 	for (size_t i = 0; i < commands.size(); i++) {
 		Command command = commands[i];
 		std::string name = command.name;
 		if (checkName(name)) {
+
+			if(name == "exit"){ return false;}
+
 			InOutType in = command.std_in;
 			InOutType out = command.std_out;
 			InOutType err = command.std_err;
@@ -212,7 +220,7 @@ void kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
 			ok = ok && setStdOut(out, pipeHandles, params, &std_out);
 			ok = ok && setStdErr(err, pipeHandles, params, &std_err);
 			if (!ok) {
-				return;
+				return true;
 			}
 
 			CommandExecute ce;
@@ -228,9 +236,10 @@ void kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
 			error.append(command.parameters[0]);
 			error.append("\' is not recognized as an internal or external command.\n");
 			kiv_os::printErr(error.c_str(), error.length());
-			return;
+			return true;
 		}
 	}
 
 	runCommands(toExecute);
+	return true;
 }

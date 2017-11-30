@@ -698,6 +698,11 @@ void cleanThread(const kiv_os::THandle table_index)
 	
 	//clean pcb table - release record memory and release pid
 	std::shared_ptr<TCB> tcb = thread_table[table_index];
+	void cleanProcess(const kiv_os::THandle handle);
+	if(table_index == 0)
+	{
+		return; //init has no record in thread structure
+	}
 	tcb->thread.detach();
 	thread_table[table_index] = nullptr;
 }
@@ -831,6 +836,13 @@ bool process::createInit()
 
 	addRecordToThreadMap(tid);
 		
+	return true;
+}
+
+bool process::destructInit()
+{
+	const auto pid = getPid();
+	cleanProcess(pid);
 	return true;
 }
 

@@ -34,6 +34,8 @@ void Shutdown_Kernel() {
 
 	//TODO RVA kill all processes
 	// process::killAll();
+
+	process::destructInit();
 	kiv_os_vfs::shutdown();
 	FreeLibrary(User_Programs);
 }
