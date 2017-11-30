@@ -36,7 +36,7 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 
 	for (int i = 0; i < size; i++) {
 		std::string p = parts[i];
-		if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc" || p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown") {
+		if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc" || p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown" || p == "shell") {
 			if (i != 0) {
 				retVal.push_back(createCommand(command, params, &in, &out, &err));
 				params.clear();
