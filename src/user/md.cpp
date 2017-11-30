@@ -13,7 +13,7 @@ size_t md_main(int argc, char **argv) {
 		// TODO: Klaus - Check for error in all application where creating file.
 	} else {
 		// Error - wrong number of parameters.
-		std::string error = "Wrong number of arguments, expecting one.";
+		std::string error = "The syntax of the command is incorrect.";
 		kiv_os::printErr(error.c_str(), error.length());
 	}
 
