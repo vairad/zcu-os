@@ -1,7 +1,5 @@
 #pragma once
 
-#include "rtl.h"
-
 #include <string>
 #include <vector>
 

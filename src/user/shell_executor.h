@@ -19,6 +19,6 @@ namespace kiv_os {
 		kiv_os::THandle handle = erInvalid_Handle;
 	} CommandExecute;
 
-	void executeCommands(std::vector<kiv_os::Command> commands, kiv_os::THandle shell_in, kiv_os::THandle shell_out, kiv_os::THandle shell_err);
+	void executeCommands(std::vector<kiv_os::Command> commands);
 
 }

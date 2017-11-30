@@ -1,6 +1,7 @@
 #include "shell_executor.h"
 #include "shell_cd.h"
 #include "rtl.h"
+#include "common.h"
 
 #undef stdin
 #undef stderr
@@ -16,24 +17,23 @@ bool checkName(std::string name) {
 	return retVal;
 }
 
-void incorrectSyntax(kiv_os::THandle shell_err) {
+void incorrectSyntax() {
 	std::string error = "The syntax of the command is incorrect.\n";
-	size_t written;
-	kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+	kiv_os::printErr(error.c_str(), error.length());
 }
 
 bool setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
-	kiv_os::THandle shell_in, kiv_os::THandle shell_err, kiv_os::THandle *std_in) {
+	kiv_os::THandle *std_in) {
 	bool retVal = true;
 	switch (in) {
 	case kiv_os::InOutType::STANDARD:
-		*std_in = shell_in;
+		*std_in = kiv_os::stdInput;
 		break;
 	case kiv_os::InOutType::PIPE:
 		*std_in = pipeHandles[1];
 		if (*std_in == NULL) {
 			// Missing pipe.
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -43,7 +43,7 @@ bool setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<s
 			*std_in = kiv_os_rtl::Create_File(filename.c_str(), 0);
 		} else {
 			// Missing argument (filename).
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -53,12 +53,12 @@ bool setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<s
 }
 
 bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
-	kiv_os::THandle shell_out, kiv_os::THandle shell_err, kiv_os::THandle *std_out) {
+	kiv_os::THandle *std_out) {
 	bool retVal = true;
 	bool ok;
 	switch (out) {
 	case kiv_os::InOutType::STANDARD:
-		*std_out = shell_out;
+		*std_out = kiv_os::stdOutput;
 		break;
 	case kiv_os::InOutType::PIPE:
 		ok = kiv_os_rtl::Create_Pipe(pipeHandles);
@@ -67,8 +67,7 @@ bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector
 		} else {
 			// Error occured while creating pipe.
 			std::string error = "Error creating pipe.\n";
-			size_t written;
-			kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+			kiv_os::printErr(error.c_str(), error.length());
 			retVal = false;
 		}
 		break;
@@ -78,7 +77,7 @@ bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector
 			*std_out = kiv_os_rtl::Create_File(filename.c_str(), 0);
 		} else {
 			// Missing argument (filename).
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -89,7 +88,7 @@ bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector
 			// TODO: Klaus - We need to set position to the end of the file.
 		} else {
 			// Missing argument (filename).
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -99,11 +98,11 @@ bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector
 }
 
 bool setStdErr(kiv_os::InOutType err, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
-	kiv_os::THandle shell_err, kiv_os::THandle *std_err) {
+	kiv_os::THandle *std_err) {
 	bool retVal = true;
 	switch (err) {
 	case kiv_os::InOutType::STANDARD:
-		*std_err = shell_err;
+		*std_err = kiv_os::stdError;
 		break;
 	case kiv_os::InOutType::FILE_NEW:
 		if (!params.empty()) {
@@ -111,7 +110,7 @@ bool setStdErr(kiv_os::InOutType err, kiv_os::THandle pipeHandles[], std::vector
 			*std_err = kiv_os_rtl::Create_File(filename.c_str(), 0);
 		} else {
 			// Missing argument (filename).
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -122,7 +121,7 @@ bool setStdErr(kiv_os::InOutType err, kiv_os::THandle pipeHandles[], std::vector
 			// TODO: Klaus - We need to set position to the end of the file.
 		} else {
 			// Missing argument (filename).
-			incorrectSyntax(shell_err);
+			incorrectSyntax();
 			retVal = false;
 		}
 		break;
@@ -137,7 +136,7 @@ void stopCommands(std::vector<kiv_os::CommandExecute> commands, size_t num) {
 	}
 }
 
-void waitForCommands(std::vector<kiv_os::CommandExecute> toWait, kiv_os::THandle shell_err) {
+void waitForCommands(std::vector<kiv_os::CommandExecute> toWait) {
 	for (size_t i = 0; i < toWait.size(); i++) {
 		bool ok = kiv_os_rtl::Join_One_Handle(toWait[i].handle);
 		if (!ok) {
@@ -145,14 +144,14 @@ void waitForCommands(std::vector<kiv_os::CommandExecute> toWait, kiv_os::THandle
 
 			/*std::string error = "Error waiting for process or thread.\n";
 			size_t written;
-			kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+			kiv_os::printErr(error.c_str(), error.length());
 			stopCommands(toWait, toWait.size());
 			return;*/
 		}
 	}
 }
 
-void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle shell_err) {
+void runCommands(std::vector<kiv_os::CommandExecute> toExecute) {
 	for (size_t i = 0; i < toExecute.size(); i++) {
 		kiv_os::CommandExecute *ce = &toExecute[i];
 		std::vector<std::string> params = ce->parameters;
@@ -183,8 +182,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 				default:
 					errorStr = "Unspecified error during run program.\n";
 				}
-				size_t written;
-				kiv_os_rtl::Write_File(shell_err, errorStr.c_str(), errorStr.size(), written);
+				kiv_os::printErr(errorStr.c_str(), errorStr.length());
 				stopCommands(toExecute, i);
 				return;
 			}
@@ -192,10 +190,10 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute, kiv_os::THandle 
 		}
 	}
 
-	waitForCommands(toExecute, shell_err);
+	waitForCommands(toExecute);
 }
 
-void kiv_os::executeCommands(std::vector<kiv_os::Command> commands, kiv_os::THandle shell_in, kiv_os::THandle shell_out, kiv_os::THandle shell_err) {
+void kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
 	THandle pipeHandles[2] = {NULL, NULL};
 	std::vector<CommandExecute> toExecute = std::vector<CommandExecute>();
 	for (size_t i = 0; i < commands.size(); i++) {
@@ -210,9 +208,9 @@ void kiv_os::executeCommands(std::vector<kiv_os::Command> commands, kiv_os::THan
 			THandle std_in;
 			THandle std_out;
 			THandle std_err;
-			bool ok = setStdIn(in, pipeHandles, params, shell_in, shell_err, &std_in);
-			ok = ok && setStdOut(out, pipeHandles, params, shell_out, shell_err, &std_out);
-			ok = ok && setStdErr(err, pipeHandles, params, shell_err, &std_err);
+			bool ok = setStdIn(in, pipeHandles, params, &std_in);
+			ok = ok && setStdOut(out, pipeHandles, params, &std_out);
+			ok = ok && setStdErr(err, pipeHandles, params, &std_err);
 			if (!ok) {
 				return;
 			}
@@ -229,11 +227,10 @@ void kiv_os::executeCommands(std::vector<kiv_os::Command> commands, kiv_os::THan
 			std::string error = "\'";
 			error.append(command.parameters[0]);
 			error.append("\' is not recognized as an internal or external command.\n");
-			size_t written;
-			bool status = kiv_os_rtl::Write_File(shell_err, error.c_str(), error.size(), written);
+			kiv_os::printErr(error.c_str(), error.length());
 			return;
 		}
 	}
 
-	runCommands(toExecute, shell_err);
+	runCommands(toExecute);
 }

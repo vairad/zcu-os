@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rtl.h"
 
 #include <locale>
 
@@ -58,13 +59,22 @@ std::vector<std::string> kiv_os::parseLine(std::string line) {
 }
 
 size_t kiv_os::read(const char *buffer, size_t buffer_size) {
-	return size_t();
+	size_t read = -1;
+	// TODO: Klaus - Handle bad read.
+	bool ok = kiv_os_rtl::Read_File(kiv_os::stdInput, buffer, buffer_size, read);
+	return read;
 }
 
 size_t kiv_os::print(const char *buffer, size_t buffer_size) {
-	return size_t();
+	size_t written = -1;
+	// TODO: Klaus - Handle bad write.
+	bool ok = kiv_os_rtl::Write_File(kiv_os::stdOutput, buffer, buffer_size, written);
+	return written;
 }
 
 size_t kiv_os::printErr(const char *buffer, size_t buffer_size) {
-	return size_t();
+	size_t written = -1;
+	// TODO: Klaus - Handle bad write.
+	bool ok = kiv_os_rtl::Write_File(kiv_os::stdError, buffer, buffer_size, written);
+	return written;
 }
