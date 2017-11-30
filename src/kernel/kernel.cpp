@@ -12,6 +12,11 @@
 #undef stderr
 #undef stdout
 
+#define CREATE_INIT_ERROR 11
+#define INITIALISE_VFS_ERROR 12
+#define USER_DLL_ERROR 13
+#define WAITING_SHELL_ERROR 14
+
 HMODULE User_Programs;
 
 void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
@@ -26,8 +31,21 @@ void Set_Error(const bool failed, kiv_os::TRegisters &regs) {
 
 void Initialize_Kernel() {
 	User_Programs = LoadLibrary(L"user.dll");
-	kiv_os_vfs::startUp();
-	process::createInit();
+
+	if (!User_Programs)
+	{
+		exit(USER_DLL_ERROR);
+	}
+
+	if( !kiv_os_vfs::startUp() )
+	{
+		exit(INITIALISE_VFS_ERROR);
+	}
+
+	if( !process::createInit() )
+	{
+		exit(CREATE_INIT_ERROR);
+	}
 }
 
 void Shutdown_Kernel() {
@@ -70,9 +88,9 @@ void runFirstProgram()
 	regs.rdx.r = reinterpret_cast<uint64_t>(programName);
 
 	kiv_os::TProcess_Startup_Info procInfo;
-	procInfo.stderr = kiv_os::stdError;  //todo RVA open console
-	procInfo.stdin = kiv_os::stdInput;  //todo RVA open console
-	procInfo.stdout = kiv_os::stdOutput;  //todo RVA open console
+	procInfo.stderr = kiv_os::stdError; 
+	procInfo.stdin = kiv_os::stdInput; 
+	procInfo.stdout = kiv_os::stdOutput; 
 	procInfo.arg = "";
 
 	regs.rdi.r = reinterpret_cast<uint64_t>(&procInfo);
@@ -81,7 +99,8 @@ void runFirstProgram()
 	
 	if(regs.flags.carry == true)
 	{
-		return; //something went terribly wrong you can add break point here
+		//return; //something went terribly wrong you can add break point here
+		exit(WAITING_SHELL_ERROR);
 	}
 
 	kiv_os::THandle handles[1];

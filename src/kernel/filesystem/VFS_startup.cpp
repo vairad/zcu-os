@@ -8,11 +8,10 @@
 #undef stdout
 
 namespace kiv_os_vfs {
-
-	int startUp() {
-		int initResult = init(42, 255);
+	bool startUp() {
+		const int initResult = init(42, 255);
 		if (initResult != 0) {
-			return initResult;
+			return false;
 		}
 
 		fs_stdio::registerDriver();
@@ -22,6 +21,6 @@ namespace kiv_os_vfs {
 		// hardcoded fstab
 		fs_mem_tree::mountDrive("C", 256, 1024, 1024);
 
-		return 0;
+		return true;
 	}
 }
