@@ -43,7 +43,7 @@ namespace kiv_os_vfs {
 
 
 	struct FsDriver {
-		int(*openFile)(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
+		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
 		int(*read)(FileDescriptor *fd, void *b, size_t length);
 		int(*write)(FileDescriptor *fd, void *b, size_t length);
 		int(*closeDescriptor)(FileDescriptor *fd);
@@ -110,7 +110,7 @@ namespace kiv_os_vfs {
 	*/
 	int increaseFDescOpenCounter(kiv_os::THandle fd);
 
-	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs);
+	kiv_os::THandle openFile(char *path, uint64_t flags, uint8_t attrs);
 	int read(kiv_os::THandle fd, void *dest, uint64_t length);
 	int write(kiv_os::THandle fd, void *dest, uint64_t length);
 	int delFile(char *path);

@@ -184,7 +184,7 @@ namespace kiv_os_vfs {
 		return driver->write(fDesc, src, length);
 	}
 
-	kiv_os::THandle openFile(char *path, uint8_t flags, uint8_t attrs) {
+	kiv_os::THandle openFile(char *path, uint64_t flags, uint8_t attrs) {
 		// copy path to prevent modification of original
 
 		char pathCpy[pathBufferSize];

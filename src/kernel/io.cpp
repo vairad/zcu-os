@@ -2,6 +2,8 @@
 
 #include "io.h"
 #include "kernel.h"
+#include "process_api.h"
+
 #include "filesystem\VFS.h"
 
 #undef stdin
@@ -28,11 +30,30 @@ namespace kiv_os_io {
 		uint8_t attrs = regs.rdi.e;
 
 
-		kiv_os::THandle handle = kiv_os_vfs::openFile(fileName, flags, attrs);
+		kiv_os::THandle vfsHandle = kiv_os_vfs::openFile(fileName, flags, attrs);
 
-		regs.flags.carry = handle == kiv_os::erInvalid_Handle;
+		kiv_os::THandle processHandle = vfsHandle; // todo: use process handle mapping = process::setNewFD(vfsHandle);
+
+
+		regs.flags.carry = processHandle == kiv_os::erInvalid_Handle;
 		if (!regs.flags.carry) {
-			regs.rax.x = handle;
+			regs.rax.x = processHandle;
+		}
+		else {
+			regs.rax.r = GetLastError();
+		}
+	}
+
+	/*
+	IN:		rdx je pointer na null-terminated ANSI char string udavajici file_name
+	*/
+	void deleteFile(kiv_os::TRegisters &regs) {
+		char *fileName = (char*)regs.rdx.r;
+		int error = kiv_os_vfs::delFile(fileName);
+
+		regs.flags.carry = error;
+		if (error) {
+			regs.rax.r = error;
 		}
 		else {
 			regs.rax.r = GetLastError();
@@ -46,11 +67,13 @@ namespace kiv_os_io {
 		OUT:	rax je pocet zapsanych bytu
 	*/
 	void readFile(kiv_os::TRegisters &regs) {
-		kiv_os::THandle fd = regs.rdx.x;
+		kiv_os::THandle processFd = regs.rdx.x;
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
 		uint64_t toBeRead = regs.rcx.r;
 
-		uint64_t read = kiv_os_vfs::read(fd, buffer, toBeRead);
+		kiv_os::THandle vfsFd = process::getSystemFD(processFd);
+
+		uint64_t read = kiv_os_vfs::read(vfsFd, buffer, toBeRead);
 
 		// error occured
 		regs.flags.carry = read == -1;
@@ -70,11 +93,13 @@ namespace kiv_os_io {
 		OUT:	rax je pocet prectenych bytu
 	*/
 	void writeFile(kiv_os::TRegisters &regs) {
-		kiv_os::THandle fd = regs.rdx.x;
+		kiv_os::THandle processFd = regs.rdx.x;
 		void *buffer = reinterpret_cast<void *>(regs.rdi.r);
 		uint64_t toBeWritten = regs.rcx.r;
 
-		uint64_t written = kiv_os_vfs::write(fd, buffer, toBeWritten);
+		kiv_os::THandle vfsFd = process::getSystemFD(processFd);
+
+		uint64_t written = kiv_os_vfs::write(vfsFd, buffer, toBeWritten);
 
 		// error occured
 		regs.flags.carry = written == -1 || written != toBeWritten;
@@ -87,13 +112,6 @@ namespace kiv_os_io {
 	}
 
 	/*
-		IN:		rdx je pointer na null-terminated ANSI char string udavajici file_name
-	*/
-	void deleteFile(kiv_os::TRegisters &regs) {
-
-	}
-
-	/*
 		IN:		dx je handle souboru
 				rdi je nova pozice v souboru
 				cl konstatna je typ pozice [fsBeginning|fsCurrent|fsEnd],
@@ -101,7 +119,20 @@ namespace kiv_os_io {
 				ch == 1 nastav pozici a nastav velikost souboru na tuto pozici (fsSet_Size)
 	*/
 	void setFilePos(kiv_os::TRegisters &regs) {
+		kiv_os::THandle processFd = regs.rdx.x;
+		size_t position = regs.rdi.r;
+		uint8_t posType = regs.rcx.l;
+		uint8_t setSize = regs.rcx.h;
 
+
+		kiv_os::THandle vfsFd = process::getSystemFD(processFd);
+
+		int error = kiv_os_vfs::setPos(vfsFd, position, posType, setSize);
+
+		regs.flags.carry = error;
+		if (error) {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*
@@ -110,7 +141,21 @@ namespace kiv_os_io {
 		OUT:	rax je pozice v souboru
 	*/
 	void getFilePos(kiv_os::TRegisters &regs) {
+		kiv_os::THandle processFd = regs.rdx.x;
+		uint8_t posType = regs.rcx.l;
 
+		kiv_os::THandle vfsFd = process::getSystemFD(processFd);
+
+		size_t position;
+		int error = kiv_os_vfs::getPos(vfsFd, &position, posType);
+
+		regs.flags.carry = error;
+		if (!error) {
+			regs.rax.r = position;
+		}
+		else {
+			regs.rax.r = GetLastError();
+		}
 	}
 
 	/*

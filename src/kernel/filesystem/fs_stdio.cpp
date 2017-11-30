@@ -16,7 +16,7 @@ namespace fs_stdio {
 	HANDLE inodeToHandle[inodeCapacity];
 
 
-	int openFile(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
+	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		int freeInode = -1;
 		for (int i = 0; i < inodeCapacity; i++) {
 			if (inodeToHandle[i] == INVALID_HANDLE_VALUE) {
@@ -34,7 +34,7 @@ namespace fs_stdio {
 
 		// todo:? zde je treba podle Rxc doresit shared_read, shared_write, OPEN_EXISING, etc. podle potreby
 
-		inodeToHandle[freeInode] = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, flags, 0, OPEN_EXISTING, 0, 0);
+		inodeToHandle[freeInode] = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, (DWORD)flags, 0, OPEN_EXISTING, 0, 0);
 
 		return 0;
 	}
@@ -114,6 +114,7 @@ namespace fs_stdio {
 		driver.openFile = openFile;
 		driver.read = readBytes;
 		driver.write = writeBytes;
+		driver.closeDescriptor = closeDescriptor;
 
 		kiv_os_vfs::filesys_id fs_id;
 

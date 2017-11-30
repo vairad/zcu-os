@@ -9,7 +9,7 @@ namespace fs_mem_tree {
 
 	kiv_os_vfs::filesys_id _fsid;
 
-	int openFile(char *path, uint8_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
+	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		// todo: locate file according to path
 		// todo: cache pointer to the found file
 
