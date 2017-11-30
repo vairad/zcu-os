@@ -141,3 +141,12 @@ bool kiv_os_rtl::Change_Working_Dir(const void  *path)
 	const bool result = Do_SysCall(regs);
 	return result;
 }
+
+bool kiv_os_rtl::Delete_File(const void *file) {
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scDelete_File);
+
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file);
+
+	const bool result = Do_SysCall(regs);
+	return result;
+}
