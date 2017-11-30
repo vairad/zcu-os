@@ -66,6 +66,8 @@ namespace process
 	void wakeUpThreadHandle(const kiv_os::THandle handle);
 	void wakeUpProcessHandle(const kiv_os::THandle handle);
 
+	//FD interface for io
 	kiv_os::THandle getSystemFD(const kiv_os::THandle program_handle);
 	kiv_os::THandle setNewFD(const kiv_os::THandle system_handle);
+	void removeProcessFD(const kiv_os::THandle program_handle);
 }

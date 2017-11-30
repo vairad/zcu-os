@@ -2,9 +2,8 @@
 
 #include "io.h"
 #include "kernel.h"
-#include "process_api.h"
-
 #include "filesystem\VFS.h"
+#include "process_api.h"
 
 #undef stdin
 #undef stderr
@@ -37,7 +36,16 @@ namespace kiv_os_io {
 
 		regs.flags.carry = processHandle == kiv_os::erInvalid_Handle;
 		if (!regs.flags.carry) {
-			regs.rax.x = processHandle;
+
+			const auto proc_handle = process::setNewFD(vfsHandle);
+			regs.flags.carry = proc_handle == kiv_os::erInvalid_Handle;
+			if (!regs.flags.carry) {
+				regs.rax.x = proc_handle;
+			}
+			else {
+				regs.rax.r = GetLastError();
+			}
+			
 		}
 		else {
 			regs.rax.r = GetLastError();
@@ -163,13 +171,16 @@ namespace kiv_os_io {
 	*/
 	void closeHandle(kiv_os::TRegisters &regs) {
 		kiv_os::THandle handle = regs.rdx.x;
+		const auto sys_handle = process::getSystemFD(handle);
 
-		int error = kiv_os_vfs::close(handle);
+		int error = kiv_os_vfs::close(sys_handle);
 
 		regs.flags.carry = error;
 		if (error) {
 			regs.rax.r = GetLastError();
 		}
+
+		process::removeProcessFD(handle);
 	}
 
 	/*

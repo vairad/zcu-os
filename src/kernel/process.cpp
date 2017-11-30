@@ -6,6 +6,7 @@
 #include <map>
 #include <Windows.h>
 
+#include "filesystem/VFS.h"
 
 #undef stdin
 #undef stderr
@@ -176,8 +177,10 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 	//create new process record
 	const auto pcb = createFreePCB(pid);
 
+	kiv_os::TProcess_Startup_Info * startupInfo = (kiv_os::TProcess_Startup_Info *) context.rdi.r;
+	resolveFileHandlers(startupInfo);
 	//initialise values in pcb
-	initialisePCB(pcb, (char *)context.rdx.r, (kiv_os::TProcess_Startup_Info *) context.rdi.r);
+	initialisePCB(pcb, (char *)context.rdx.r, startupInfo);
 
 	// load program entry point
 	const auto program = (kiv_os::TEntry_Point)GetProcAddress(User_Programs, pcb->program_name.c_str());
@@ -365,7 +368,7 @@ kiv_os::THandle getNextFreePid()
 		}
 		counter++;
 	}
-	next_avaliable_pid = pid;
+	next_avaliable_pid = (pid + 1) % MAX_PROCESS_COUNT;
 	return pid;
 }
 
@@ -390,7 +393,7 @@ kiv_os::THandle getNextFreeTid()
 		counter++;
 	}
 
-	next_avaliable_tid = tid;
+	next_avaliable_tid = (tid + 1) % MAX_THREAD_COUNT;
 	return BASE_TID_INDEX + tid;
 }
 
@@ -467,35 +470,44 @@ void initialisePCB(std::shared_ptr<PCB> pcb, char * program_name, kiv_os::TProce
 
 //fill io descriptors
 	pcb->io_devices.resize(4); // Hard coded size for max index of std handler 3
+	std::fill(pcb->io_devices.begin(), pcb->io_devices.end(), kiv_os::erInvalid_Handle); // make all handles invalid
+	
+	kiv_os::THandle handle;
 	//IN
 	if(startup_info->stdin == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdInput] = process::getSystemFD(kiv_os::stdInput); //TODO Call io open FD
+		handle = process::getSystemFD(kiv_os::stdInput);
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdInput] = startup_info->stdin; //TODO Call io open FD
+		handle = startup_info->stdin;
 	}
+	kiv_os_vfs::increaseFDescOpenCounter(handle);
+	pcb->io_devices[kiv_os::stdInput] = handle; 
 
 	//ERR
 	if (startup_info->stderr == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdError] = process::getSystemFD(kiv_os::stdError); //TODO Call io open FD
+		handle = process::getSystemFD(kiv_os::stdError); 
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdError] = startup_info->stdout; //TODO Call io open FD
+		handle = startup_info->stdout; 
 	}
+	kiv_os_vfs::increaseFDescOpenCounter(handle);
+	pcb->io_devices[kiv_os::stdError] = handle; 
 
 	//OUT
 	if (startup_info->stdout == kiv_os::erInvalid_Handle)
 	{
-		pcb->io_devices[kiv_os::stdOutput] = process::getSystemFD(kiv_os::stdOutput); //TODO Call io open FD
+		handle = process::getSystemFD(kiv_os::stdOutput); 
 	}
 	else
 	{
-		pcb->io_devices[kiv_os::stdOutput] = startup_info->stdout; //TODO Call io open FD
+		handle = startup_info->stdout; 
 	}
+	kiv_os_vfs::increaseFDescOpenCounter(handle);
+	pcb->io_devices[kiv_os::stdOutput] = handle; 
 }
 
 
@@ -507,6 +519,18 @@ void addRecordToThreadMap(const kiv_os::THandle tid)
 {
 	std::unique_lock<std::mutex> lck(tid_map_lock);
 	thread_to_tid[std::this_thread::get_id()] = tid;
+}
+
+
+/**
+ * \brief Method resolve program based file descriptors to system based file descriptors
+ * \param startupInfo pointer to startup structure
+ */
+void resolveFileHandlers(kiv_os::TProcess_Startup_Info* startupInfo)
+{
+	startupInfo->stderr = process::getSystemFD(startupInfo->stderr);
+	startupInfo->stdin = process::getSystemFD(startupInfo->stdin);
+	startupInfo->stdout = process::getSystemFD(startupInfo->stdout);
 }
 
 
@@ -641,7 +665,6 @@ void cleanProcess(const kiv_os::THandle handle)
 {
 	std::lock_guard<std::mutex> lock(process_table_lock);
 
-
 	//check stop and clean all threads
 	for (size_t index = 0; index < MAX_THREAD_COUNT; index++)
 	{
@@ -651,7 +674,12 @@ void cleanProcess(const kiv_os::THandle handle)
 		}
 	}
 
-	//close all open handles TODO RVA
+	//close all open handles 
+	for (auto iterator = process_table[handle]->io_devices.begin(); iterator != process_table[handle]->io_devices.end(); ++iterator) 
+	{
+		const auto fd_index = *iterator;
+		kiv_os_vfs::close(fd_index);
+	}
 
 	//notify waiting
 	process_table[handle]->waiting.notifyAll();
@@ -659,7 +687,6 @@ void cleanProcess(const kiv_os::THandle handle)
 	//clean pcb table - release record memory and release pid
 	std::shared_ptr<PCB> pcb = process_table[handle];
 	process_table[handle] = nullptr;
-
 }
 
 void cleanThread(const kiv_os::THandle table_index)
@@ -785,11 +812,10 @@ bool process::createInit()
 	const auto pcb = createFreePCB(pid);
 
 	//initialise values in pcb
-
 	kiv_os::TProcess_Startup_Info procInfo;
-	procInfo.stderr = kiv_os::stdError; //TODO call open console io
-	procInfo.stdin = kiv_os::stdInput; //TODO call open console io
-	procInfo.stdout = kiv_os::stdOutput; //TODO call open console io
+	procInfo.stdin = kiv_os_vfs::openFile("CONIN$", 1, 0);
+	procInfo.stderr = kiv_os_vfs::openFile("CONOUT$", 1, 0 );
+	procInfo.stdout = kiv_os_vfs::openFile("CONOUT$", 1, 0);
 	procInfo.arg = "";
 
 	initialisePCB(pcb, "init", &procInfo);
@@ -894,4 +920,18 @@ kiv_os::THandle process::setNewFD(const kiv_os::THandle system_handle)
 		pr_handle = kiv_os::erInvalid_Handle;
 	}
 	return pr_handle;
+}
+
+
+/**
+ * \brief Method disable program FD at specified index
+ * \param program_handle index of program FD
+ * \return success flag
+ */
+void process::removeProcessFD(const kiv_os::THandle program_handle)
+{
+	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	const auto pid = process::getPid();
+	process_table[pid]->io_devices.at(program_handle) = kiv_os::erInvalid_Handle;
 }
