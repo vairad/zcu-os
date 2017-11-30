@@ -283,13 +283,16 @@ namespace kiv_os_vfs {
 			return 1;
 		}
 
-		int error = driver->closeDescriptor(fDesc);
-		if (error) {
-			return 2;
+		fDesc->openCounter--;
+		if (fDesc->openCounter > 0) {
+			return 0;
 		}
 
-		if (fDesc->openCounter < 1) {
-			// cleanup after fDescriptor
+		if (driver->cleanupDescriptor != nullptr) {
+			int error = driver->cleanupDescriptor(fDesc);
+			if (error) {
+				return 2;
+			}
 		}
 
 		return 0;

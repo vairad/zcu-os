@@ -48,6 +48,7 @@ namespace fs_mem_tree {
 		driver.openFile = openFile;
 		driver.read = readBytes;
 		driver.write = writeBytes;
+		driver.cleanupDescriptor = nullptr;
 
 		int result = kiv_os_vfs::registerDriver(driver, &_fsid);
 		if (result != 0) {

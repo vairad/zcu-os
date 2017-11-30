@@ -46,7 +46,7 @@ namespace kiv_os_vfs {
 		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
 		int(*read)(FileDescriptor *fd, void *b, size_t length);
 		int(*write)(FileDescriptor *fd, void *b, size_t length);
-		int(*closeDescriptor)(FileDescriptor *fd);
+		int(*cleanupDescriptor)(FileDescriptor *fd);
 	};
 
 	struct Superblock {

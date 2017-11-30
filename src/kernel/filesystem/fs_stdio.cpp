@@ -95,11 +95,6 @@ namespace fs_stdio {
 		if (fd->openCounter < 1) {
 			return 1;
 		}
-		
-		if (fd->openCounter > 1) { //TODO review
-			fd->openCounter--;
-			return 0;
-		}
 
 		inodeToStream[fd->inode] = none;
 		return 0;
@@ -136,7 +131,7 @@ namespace fs_stdio {
 		driver.openFile = openFile;
 		driver.read = readBytes;
 		driver.write = writeBytes;
-		driver.closeDescriptor = closeDescriptor;
+		driver.cleanupDescriptor = closeDescriptor;
 
 		kiv_os_vfs::filesys_id fs_id;
 
