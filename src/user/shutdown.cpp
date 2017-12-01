@@ -25,7 +25,7 @@ size_t shutdown_main(int argc, char **argv) {
 size_t __stdcall shutdown(const kiv_os::TRegisters &regs) 
 {
 	int argc;
-	char **argv = kiv_os::getArgs(regs, &argc);
+	char **argv = kiv_os::getArgs("shutdown", regs, &argc);
 	return shutdown_main(argc, argv);
 }
 

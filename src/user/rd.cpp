@@ -95,7 +95,7 @@ namespace rd_program
 size_t __stdcall rd(const kiv_os::TRegisters &regs)
 {
 	int argc;
-	char **argv = kiv_os::getArgs(regs, &argc);
+	char **argv = kiv_os::getArgs("rd", regs, &argc);
 	rd_program::rd_main(argc, argv);
 	return 0;
 }

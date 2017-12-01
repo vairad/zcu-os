@@ -10,7 +10,7 @@
 
 namespace kiv_os {
 
-	char **getArgs(const kiv_os::TRegisters &context, int *argc);
+	char **getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc);
 
 	std::vector<std::string> parseLine(std::string line);
 

@@ -36,7 +36,7 @@ void type_main(int argc, char **argv) {
 size_t __stdcall type(const kiv_os::TRegisters &regs)
 { 
 	int argc;
-	char **argv = kiv_os::getArgs(regs, &argc);
+	char **argv = kiv_os::getArgs("type", regs, &argc);
 	type_main(argc, argv);
 	return 0; 
 }

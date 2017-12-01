@@ -7,16 +7,17 @@
 #undef stderr
 #undef stdout
 
-char **kiv_os::getArgs(const kiv_os::TRegisters &context, int *argc) {
+char **kiv_os::getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc) {
 	kiv_os::TProcess_Startup_Info *info = (kiv_os::TProcess_Startup_Info *)context.rdi.r;
 	std::string line = info->arg;
 	std::vector<std::string> parts = parseLine(line);
-	*argc = static_cast<int>(parts.size());
+	*argc = static_cast<int>(parts.size()) + 1; //plus one... first record is program name
 	std::vector<char *> argv{};
-	for (size_t i = 0; i < *argc; i++) {
-		argv.push_back(&parts[i].front());
-	}
 
+	argv.push_back(program_name); //add program name at first place
+	for (auto iterator = parts.begin(); iterator != parts.end(); ++iterator) {
+		argv.push_back(const_cast<char *>((*iterator).c_str()));
+	}
 	// TODO: Klaus - Test this!!
 	return argv.data();
 }
