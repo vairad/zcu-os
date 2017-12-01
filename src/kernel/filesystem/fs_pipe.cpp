@@ -109,7 +109,7 @@ namespace fs_pipe {
 		driver.openFile = nullptr;
 		driver.read = readBytes;
 		driver.write = writeBytes;
-		driver.closeDescriptor = closeDescriptor;
+		driver.cleanupDescriptor = closeDescriptor;
 
 		kiv_os_vfs::filesys_id fs_id;
 
