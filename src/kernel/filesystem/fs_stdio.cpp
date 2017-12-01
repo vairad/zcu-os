@@ -59,7 +59,12 @@ namespace fs_stdio {
 		
 		switch (type) 
 		{
-		case in: getline(std::cin, readed);
+		case in:
+			if(!std::cin.good())
+			{
+				return -1;
+			}
+			getline(std::cin, readed);
 			break;
 		default: //none and out is fault
 			return -1;
@@ -82,7 +87,12 @@ namespace fs_stdio {
 
 		switch (type)
 		{
-		case out: std::cout << to_write;
+		case out:
+			if (!std::cout.good())
+			{
+				return -1;
+			}
+			std::cout << to_write;
 			break;
 		default: //none and in is fault
 			return -1;

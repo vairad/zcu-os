@@ -90,7 +90,8 @@ namespace kiv_os_io {
 			regs.rax.r = read;
 		}
 		else {
-			regs.rax.r = GetLastError();
+			//regs.rax.r = GetLastError();
+			regs.rax.r = kiv_os::erInvalid_Handle;
 		}
 	}
 

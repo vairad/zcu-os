@@ -18,12 +18,20 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 	while (run) {
 		std::string line;
 		char readLine[1024];
-		// TODO: Klaus - Handle bad read.
+
 		size_t read = kiv_os::read(readLine, sizeof(readLine) - 1);
-		readLine[read] = 0; // Terminate the line.
-		line = readLine;
-		std::vector<kiv_os::Command> commands = kiv_os::parseCommands(line);
-		run = kiv_os::executeCommands(commands);
+
+		if(read != -1)
+		{
+			readLine[read] = 0; // Terminate the line.
+			line = readLine;
+			std::vector<kiv_os::Command> commands = kiv_os::parseCommands(line);
+			run = kiv_os::executeCommands(commands);
+		}
+		else
+		{
+			run = false;
+		}
 	}
 
 	return 0;

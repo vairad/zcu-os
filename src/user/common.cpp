@@ -61,8 +61,10 @@ std::vector<std::string> kiv_os::parseLine(std::string line) {
 
 size_t kiv_os::read(const char *buffer, size_t buffer_size) {
 	size_t read = -1;
-	// TODO: Klaus - Handle bad read.
+	
 	bool ok = kiv_os_rtl::Read_File(kiv_os::stdInput, buffer, buffer_size, read);
+	
+	if (!ok) { return -1; }
 	return read;
 }
 
