@@ -10,7 +10,7 @@
 
 namespace kiv_os_vfs {
 
-	int startUp() {
+	bool startUp() {
 		int initResult = init(42, 255, fs_pipe::createPipe);
 		if (initResult != 0) {
 			return false;

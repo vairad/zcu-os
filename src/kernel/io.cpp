@@ -1,7 +1,6 @@
 #include <Windows.h>
 
 #include "io.h"
-#include "kernel.h"
 #include "filesystem\VFS.h"
 #include "process_api.h"
 
@@ -222,9 +221,16 @@ namespace kiv_os_io {
 	*/
 	void createPipe(kiv_os::TRegisters &regs) {
 		kiv_os::THandle *handles = reinterpret_cast<kiv_os::THandle *>(regs.rdx.r);
+		kiv_os::THandle in;
+		kiv_os::THandle out;
 
-		int err = kiv_os_vfs::openPipe(handles, handles + 1);
-		regs.flags.carry = !!err;
+		const auto err = kiv_os_vfs::openPipe(&in, &out);
+		if(err == 0)
+		{
+			handles[0] = process::setNewFD(in);
+			handles[1] = process::setNewFD(out);
+		}
+		regs.flags.carry = (err != 0);
 	}
 }
 
