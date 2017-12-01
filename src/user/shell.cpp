@@ -50,6 +50,10 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 		}
 		else
 		{
+			readLine[0] = '\r';
+			readLine[1] = '\n';
+			readLine[2] = 0;
+			kiv_os_lib::print(readLine, strlen(readLine));
 			run = false;
 		}
 	}

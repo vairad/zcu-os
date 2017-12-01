@@ -17,11 +17,35 @@ namespace fs_stdio {
 		in, out, none
 	};
 
-	const int inodeCapacity = 128;
+	size_t in_open_count = 0;
+	size_t out_open_count = 0;
+
+	const int inodeCapacity = 3;
 
 	int _registered = 0;
 
 	stream_type inodeToStream[inodeCapacity];
+
+	bool checkCin(const uint16_t openCount)
+	{
+		if(std::cin.fail() && openCount > 1)
+		{
+			std::cin.clear();
+			return true;
+		}
+		return false;
+	}
+
+	bool checkCout(const uint16_t openCount)
+	{
+		if (std::cout.fail() && openCount > 1)
+		{
+			std::cout.clear();
+			return true;
+		}
+		return false;
+	}
+
 
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
@@ -60,8 +84,10 @@ namespace fs_stdio {
 		switch (type) 
 		{
 		case in:
+			
 			if(!std::cin.good())
 			{
+				checkCin(fd->openCounter);
 				return -1;
 			}
 			getline(std::cin, readed);
@@ -88,8 +114,10 @@ namespace fs_stdio {
 		switch (type)
 		{
 		case out:
+			
 			if (!std::cout.good())
 			{
+				checkCout(fd->openCounter);
 				return -1;
 			}
 			std::cout << to_write;
@@ -102,7 +130,7 @@ namespace fs_stdio {
 	}
 
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {
-		if (fd->openCounter < 1) {
+		if (fd->openCounter > 1) {
 			return 1;
 		}
 
