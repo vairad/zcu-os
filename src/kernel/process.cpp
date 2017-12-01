@@ -51,7 +51,6 @@ kiv_os::THandle next_avaliable_tid = 0;
 /// user.dll ref initialised by initialise_kernel()
 extern HMODULE User_Programs;
 
-
 /**
  * \brief Interface funnction
  * Function handle and call routines connected with creating process
@@ -67,6 +66,9 @@ bool HandleProcess(kiv_os::TRegisters &context)
 		
 			case kiv_os::scWait_For:
 				return routineWaitForProcess(context);
+
+			case kiv_os::scShutdown:
+				return routineShutdown(context);
 		
 			default:
 				Set_Err_Process(kiv_os::erInvalid_Argument, context);
@@ -153,6 +155,8 @@ bool routineWaitForProcess(kiv_os::TRegisters & context)
 	return true;
 }
 
+
+bool routineShutdown(const kiv_os::TRegisters& context);
 
 /**
  * \brief 
@@ -316,7 +320,7 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
 		return kiv_os::erInvalid_Handle;
 	}
 	auto tcb = createFreeTCB(tid, pid);
-	process::TStartBlock procInfo(tid ,entry_point, context);
+	process::TStartProcessBlock procInfo(tid ,entry_point, context);
 
 	tcb->thread = std::thread(&process0, procInfo);
 	return tid;
@@ -341,9 +345,9 @@ kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Pr
 	}
 
 	auto tcb = createFreeTCB(tid, pid);
-	process::TStartBlock procInfo(tid, entry_point, data);
+	process::TStartThreadBlock threadInfo(tid, entry_point, data);
 
-	tcb->thread = std::thread(&thread0, procInfo);
+	tcb->thread = std::thread(&thread0, threadInfo);
 	return tid;
 }
 
@@ -542,6 +546,21 @@ size_t GetRetVal(const kiv_os::THandle handle)
 }
 
 /**
+ * \brief Method kill and release all processes except init
+ * \param context in 
+ * \return 
+ */
+bool routineShutdown(const kiv_os::TRegisters& context)
+{
+	bool successFlag = true;
+	for(int pid = 1; pid < MAX_PROCESS_COUNT; pid++)
+	{
+		successFlag &= stopProcess(pid);
+	}
+	return successFlag;
+}
+
+/**
  * \brief Method recognize if Handle is thread or proces and pass handle to correct routine to process 
  * \param handle handle tid/pid to stop
  * \return success flag
@@ -581,24 +600,32 @@ bool stopThread(const kiv_os::THandle tid)
 */
 bool stopProcess(const kiv_os::THandle pid)
 {
-	return false; //TODO RVA implement kill algorithm
+	const auto my_pid = process::getPid();
+	if(process_table[pid] != nullptr && pid != my_pid)
+	{
+		cleanProcess(pid);
+	}
+	return true; 
 }
 
 /**
 * \brief Function run thread and after thread ens, it will notify all waiting processes
 * \param procInfo process startup informarion
 */
-void process0(process::TStartBlock &procInfo)
+void process0(process::TStartProcessBlock &procInfo)
 {
 	addRecordToThreadMap(procInfo.tid);
-
+	kiv_os::TRegisters context = procInfo.proc;
+	context.rdi.r = reinterpret_cast<uint64_t>(procInfo.getProcInfo());
+	
 	// do entry point work
-	const size_t retval = procInfo.entry_point.proc(procInfo.context.proc);
+	const size_t retval = procInfo.entry_point(context);
 
 	{
 		std::lock_guard<std::mutex> lock(process_table_lock);
 		//I'm done, notify others
 		const auto pid = process::getPid();
+
 
 		const size_t size = process_table[pid]->waiting.size();
 		process_table[pid]->retval.make_done(retval, size);
@@ -612,11 +639,11 @@ void process0(process::TStartBlock &procInfo)
 * \brief Function run thread and after thread ens, it will notify all waiting processes
 * \param threadInfo thread startup information
 */
-void thread0(process::TStartBlock& threadInfo)
+void thread0(process::TStartThreadBlock& threadInfo)
 {
 	addRecordToThreadMap(threadInfo.tid);
 	// do entry point work
-	const size_t retval = threadInfo.entry_point.thread(threadInfo.context.thread);
+	const size_t retval = threadInfo.entry_point(threadInfo.context);
 
 	//I'm done, notify others
 	{
@@ -707,8 +734,12 @@ kiv_os::THandle process::getPid()
 	{
 		return kiv_os::erInvalid_Handle;
 	}
-
-	const auto pid = thread_table[TidToTableIndex(tid)]->pid;
+	const auto thread_index = TidToTableIndex(tid);
+	if(thread_table[thread_index] == nullptr)
+	{
+		return kiv_os::erInvalid_Handle;
+	}
+	const auto pid = thread_table[thread_index]->pid;
 	return pid;
 }
 

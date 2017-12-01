@@ -150,3 +150,10 @@ bool kiv_os_rtl::Delete_File(const void *file) {
 	const bool result = Do_SysCall(regs);
 	return result;
 }
+
+bool kiv_os_rtl::Shutdown()
+{
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scShutdown);
+	const bool result = Do_SysCall(regs);
+	return result;
+}

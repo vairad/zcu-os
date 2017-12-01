@@ -34,4 +34,5 @@ namespace kiv_os_rtl {
 	bool Change_Working_Dir(const void *path);
 	bool Delete_File(const void *file);
 
+	bool Shutdown();
 }

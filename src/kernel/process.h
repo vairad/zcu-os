@@ -47,6 +47,8 @@ bool waitForProcess(const kiv_os::THandle handle, std::vector<kiv_os::THandle> &
 bool waitForThread(const kiv_os::THandle handle, std::vector<kiv_os::THandle> & already_done);
 size_t GetRetVal(kiv_os::THandle handle);
 
+// Working routines - shutodwn
+bool routineShutdown(const kiv_os::TRegisters& context);
 bool stopHandle(const kiv_os::THandle handle);
 bool stopThread(const kiv_os::THandle tid);
 bool stopProcess(const kiv_os::THandle pid);
@@ -68,8 +70,8 @@ void addRecordToThreadMap(const kiv_os::THandle tid);
 kiv_os::THandle resolveAndDuplicateFD(const kiv_os::THandle system_FD);
 
 //wrapper for run thread/process
-void process0(process::TStartBlock &procInfo);
-void thread0(process::TStartBlock &threadInfo);
+void process0(process::TStartProcessBlock &procInfo);
+void thread0(process::TStartThreadBlock &threadInfo);
 
 // cleaning methods
 void cleanProcess(const kiv_os::THandle handle);
