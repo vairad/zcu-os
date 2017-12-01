@@ -18,7 +18,7 @@ namespace rd_program
 
 	void incorrectSyntax() {
 		std::string error = "The syntax of the command is incorrect.";
-		kiv_os::printErr(error.c_str(), error.length());
+		kiv_os_lib::printErr(error.c_str(), error.length());
 	}
 
 	void deleteDir(kiv_os::THandle dir, char *dirname) {
@@ -63,8 +63,8 @@ namespace rd_program
 					std::string question = "Do you want to delete \'";
 					question.append(dirname);
 					question.append("\'? (Y / N): ");
-					kiv_os::print(question.c_str(), question.length());
-					read = kiv_os::read(buffer, sizeof(buffer) - 1);
+					kiv_os_lib::print(question.c_str(), question.length());
+					read = kiv_os_lib::read(buffer, sizeof(buffer) - 1);
 					buffer[read] = 0; // Terminate the string.
 
 					if (buffer == "Y" || buffer == "y") {
@@ -78,7 +78,7 @@ namespace rd_program
 			else {
 				// Error - folder is not empty.
 				std::string error = "The directory is not empty.";
-				kiv_os::printErr(error.c_str(), error.length());
+				kiv_os_lib::printErr(error.c_str(), error.length());
 				return DIR_IS_NOT_EMPTY;
 			}
 		}
@@ -95,7 +95,7 @@ namespace rd_program
 size_t __stdcall rd(const kiv_os::TRegisters &regs)
 {
 	int argc;
-	char **argv = kiv_os::getArgs("rd", regs, &argc);
+	char **argv = kiv_os_lib::getArgs("rd", regs, &argc);
 	rd_program::rd_main(argc, argv);
 	return 0;
 }

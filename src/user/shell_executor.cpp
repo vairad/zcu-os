@@ -19,7 +19,7 @@ bool checkName(std::string name) {
 
 void incorrectSyntax() {
 	std::string error = "The syntax of the command is incorrect.\n";
-	kiv_os::printErr(error.c_str(), error.length());
+	kiv_os_lib::printErr(error.c_str(), error.length());
 }
 
 bool setStdIn(kiv_os::InOutType in, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
@@ -67,7 +67,7 @@ bool setStdOut(kiv_os::InOutType out, kiv_os::THandle pipeHandles[], std::vector
 		} else {
 			// Error occured while creating pipe.
 			std::string error = "Error creating pipe.\n";
-			kiv_os::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErr(error.c_str(), error.length());
 			retVal = false;
 		}
 		break;
@@ -182,7 +182,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute) {
 				default:
 					errorStr = "Unspecified error during run program.\n";
 				}
-				kiv_os::printErr(errorStr.c_str(), errorStr.length());
+				kiv_os_lib::printErr(errorStr.c_str(), errorStr.length());
 				stopCommands(toExecute, i);
 				return;
 			}
@@ -235,7 +235,7 @@ bool kiv_os::executeCommands(std::vector<kiv_os::Command> commands) {
 			std::string error = "\'";
 			error.append(command.parameters[0]);
 			error.append("\' is not recognized as an internal or external command.\n");
-			kiv_os::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErr(error.c_str(), error.length());
 			return true;
 		}
 	}

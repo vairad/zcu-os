@@ -189,7 +189,25 @@ namespace kiv_os_io {
 		OUT:	rax pocet zapsanych znaku
 	*/
 	void getWorkDir(kiv_os::TRegisters &regs) {
+		char * buffer = reinterpret_cast<char *>(regs.rdx.r);
+		size_t size = regs.rcx.r;
 
+		std::string wd = process::getWorkingDir();
+		size_t wd_size = wd.size();
+
+		if( wd_size > size )
+		{
+			regs.flags.carry = true;
+			regs.rax.r = kiv_os::erInvalid_Handle; //TODO RVA consider beter retval
+		}
+
+		if ( strcpy_s(buffer, size, wd.c_str()))
+		{
+			//non zero return strcpy_s represent fail
+			regs.flags.carry = true;
+			regs.rax.r = kiv_os::erInvalid_Handle; //TODO RVA consider beter retval
+		}
+		regs.flags.carry = false;
 	}
 
 	/*

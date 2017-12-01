@@ -15,7 +15,7 @@ size_t md_main(int argc, char **argv) {
 	} else {
 		// Error - wrong number of parameters.
 		std::string error = "The syntax of the command is incorrect.";
-		kiv_os::printErr(error.c_str(), error.length());
+		kiv_os_lib::printErr(error.c_str(), error.length());
 	}
 
 	return 0;
@@ -24,7 +24,7 @@ size_t md_main(int argc, char **argv) {
 size_t __stdcall md(const kiv_os::TRegisters &regs) 
 {
 	int argc;
-	char **argv = kiv_os::getArgs("md", regs, &argc);
+	char **argv = kiv_os_lib::getArgs("md", regs, &argc);
 	md_main(argc, argv);
 	return 0;
 }

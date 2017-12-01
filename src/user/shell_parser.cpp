@@ -69,7 +69,7 @@ std::vector<kiv_os::Command> splitToCommands(std::vector<std::string> parts) {
 }
 
 std::vector<kiv_os::Command> kiv_os::parseCommands(std::string line) {
-	std::vector<std::string> parts = kiv_os::parseLine(line);
+	std::vector<std::string> parts = kiv_os_lib::parseLine(line);
 
 	return splitToCommands(parts);
 }

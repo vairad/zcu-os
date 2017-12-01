@@ -8,7 +8,7 @@
 #undef stdout
 #include "../api/api.h"
 
-namespace kiv_os {
+namespace kiv_os_lib {
 
 	char **getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc);
 
@@ -20,4 +20,5 @@ namespace kiv_os {
 
 	size_t printErr(const char *buffer, size_t buffer_size);
 
+	bool getWD(const char *buffer, size_t buffer_size);
 }

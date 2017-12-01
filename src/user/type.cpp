@@ -24,19 +24,19 @@ void type_main(int argc, char **argv) {
 				continue;
 			}
 
-			size_t written = kiv_os::print(buffer, read);
+			size_t written = kiv_os_lib::print(buffer, read);
 		}
 	} else {
 		// Error - wrong number of parameters.
 		std::string error = "The syntax of the command is incorrect.";
-		kiv_os::printErr(error.c_str(), error.length());
+		kiv_os_lib::printErr(error.c_str(), error.length());
 	}
 }
 
 size_t __stdcall type(const kiv_os::TRegisters &regs)
 { 
 	int argc;
-	char **argv = kiv_os::getArgs("type", regs, &argc);
+	char **argv = kiv_os_lib::getArgs("type", regs, &argc);
 	type_main(argc, argv);
 	return 0; 
 }
