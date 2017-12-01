@@ -21,12 +21,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\kernel\dllmain.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_mem_tree.cpp" />
+    <ClCompile Include="..\..\src\kernel\filesystem\fs_pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_stdio.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS_startup.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
+    <ClCompile Include="..\..\src\kernel\pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\process.cpp" />
     <ClCompile Include="..\..\src\kernel\retval.cpp" />
     <ClCompile Include="..\..\src\kernel\semaphore.cpp" />
@@ -37,12 +39,14 @@
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\api\api_extension.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_mem_tree.h" />
+    <ClInclude Include="..\..\src\kernel\filesystem\fs_pipe.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_stdio.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS_startup.h" />
     <ClInclude Include="..\..\src\kernel\handles.h" />
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
+    <ClInclude Include="..\..\src\kernel\pipe.h" />
     <ClInclude Include="..\..\src\kernel\process.h" />
     <ClInclude Include="..\..\src\kernel\process_api.h" />
     <ClInclude Include="..\..\src\kernel\retval.h" />

@@ -7,5 +7,5 @@
 #undef stdout
 
 namespace fs_stdio {
-	int registerDriver();
+	int registerAndMount();
 }
