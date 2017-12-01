@@ -589,7 +589,7 @@ bool stopHandle(const kiv_os::THandle handle)
 */
 bool stopThread(const kiv_os::THandle tid)
 {
-	return false; //TODO RVA implement kill algorithm
+	return false; //TODO RVA implement kill thread algorithm
 }
 
 
@@ -603,6 +603,7 @@ bool stopProcess(const kiv_os::THandle pid)
 	const auto my_pid = process::getPid();
 	if(process_table[pid] != nullptr && pid != my_pid)
 	{
+		process_table[pid]->retval.make_done(99, 0);
 		cleanProcess(pid);
 	}
 	return true; 
