@@ -13,40 +13,6 @@ bool HandleProcess(kiv_os::TRegisters &context);
 
 namespace process
 {
-	class TStartBlock
-	{
-	public:
-		bool is_process;
-		kiv_os::THandle tid;
-		union
-		{
-			kiv_os::TEntry_Point proc;
-			kiv_os::TThread_Proc thread;
-		} entry_point;
-		union
-		{
-			kiv_os::TRegisters proc;
-			void * thread;
-		} context;
-
-		TStartBlock(const kiv_os::THandle tid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
-			: is_process(true)
-			, tid(tid)
-		{
-			this->entry_point.proc = entry_point;
-			this->context.proc = context;
-		}
-
-		TStartBlock(const kiv_os::THandle tid, const kiv_os::TThread_Proc entry_point, void *context)
-			: is_process(false)
-			, tid(tid)
-		{
-			this->entry_point.thread = entry_point;
-			this->context.thread = context;
-		}
-	};
-
-
 	// get TID
 	kiv_os::THandle getTid();
 
@@ -72,4 +38,50 @@ namespace process
 	kiv_os::THandle setNewFD(const kiv_os::THandle system_handle);
 	void removeProcessFD(const kiv_os::THandle program_handle);
 
+	class TStartProcessBlock
+	{
+	public:
+		kiv_os::THandle tid;
+		std::string args;
+		kiv_os::TEntry_Point entry_point;
+		kiv_os::TRegisters proc;
+		kiv_os::TProcess_Startup_Info startup_info;
+
+		TStartProcessBlock(const kiv_os::THandle tid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
+			: tid(tid)
+		{
+			this->entry_point = entry_point;
+			this->proc = context;
+			kiv_os::TProcess_Startup_Info * startup_info = reinterpret_cast<kiv_os::TProcess_Startup_Info *>(context.rdi.r);
+			this->startup_info.stdin = startup_info->stdin;
+			this->startup_info.stdout = startup_info->stdout;
+			this->startup_info.stderr = startup_info->stderr;
+
+			args = startup_info->arg;
+			this->startup_info.arg = const_cast<char *>(args.c_str());
+		}
+
+		kiv_os::TProcess_Startup_Info *getProcInfo()
+		{
+			this->startup_info.arg = (char *)(args.c_str());
+			return &(this->startup_info);
+		}
+	};
+
+	class TStartThreadBlock
+	{
+	public:
+		kiv_os::THandle tid;
+		std::string args;
+
+		kiv_os::TThread_Proc entry_point;
+		void * context;
+
+		TStartThreadBlock(const kiv_os::THandle tid, const kiv_os::TThread_Proc entry_point, void *context)
+			: tid(tid)
+		{
+			this->entry_point = entry_point;
+			this->context = context;
+		}
+	};
 }
