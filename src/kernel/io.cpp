@@ -213,7 +213,17 @@ namespace kiv_os_io {
 		IN:		rdx je pointer na null-terminated ANSI char string udavajici novy adresar (muze byt relativni cesta)
 	*/
 	void setWorkDir(kiv_os::TRegisters &regs) {
+		const auto c_path = reinterpret_cast<char *>(regs.rdx.r);
 
+		//TODO RVA absolutize path
+		bool success = false;
+		//if ( kiv_os_vfs::checkDireExist(path)) //TODO RVA check on vfs changed folder
+		{
+			const std::string path = c_path;
+			success = process::changeWorkingDir(path);
+		}
+
+		regs.flags.carry = !success;
 	}
 
 	/*

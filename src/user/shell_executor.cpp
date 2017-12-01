@@ -138,6 +138,12 @@ void stopCommands(std::vector<kiv_os::CommandExecute> commands, size_t num) {
 
 void waitForCommands(std::vector<kiv_os::CommandExecute> toWait) {
 	for (size_t i = 0; i < toWait.size(); i++) {
+
+		if(toWait[i].handle == kiv_os::erInvalid_Handle)
+		{
+			continue; // pass invalid handler to kernel make no sense
+		}
+		
 		bool ok = kiv_os_rtl::Join_One_Handle(toWait[i].handle);
 		if (!ok) {
 			// TODO: Klaus - Error occured while waiting.
@@ -163,6 +169,7 @@ void runCommands(std::vector<kiv_os::CommandExecute> toExecute) {
 			args.append(params[i]);
 		}
 		if (ce->name == "cd") {
+			ce->handle = kiv_os::erInvalid_Handle;
 			bool ok = kiv_os::cd(*ce, args);
 			if (!ok) {
 				// TODO: Klaus - Error during cd.
