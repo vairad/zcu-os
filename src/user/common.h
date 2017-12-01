@@ -17,6 +17,7 @@ namespace kiv_os_lib {
 	size_t read(const char *buffer, size_t buffer_size);
 
 	size_t print(const char *buffer, size_t buffer_size);
+	size_t printLn(const char *buffer, size_t buffer_size);
 
 	size_t printErr(const char *buffer, size_t buffer_size);
 
