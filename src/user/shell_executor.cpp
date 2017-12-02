@@ -132,30 +132,33 @@ namespace shell_executor {
 		return retVal;
 	}
 
-	void stopCommands(std::vector<shell_executor::CommandExecute> commands, size_t num) {
-		for (size_t i = 0; i < num; i++) {
-			// TODO: Klaus - Stop processes / threads.
-		}
-	}
-
 	void waitForCommands(std::vector<shell_executor::CommandExecute> toWait) {
 		for (size_t i = 0; i < toWait.size(); i++) {
 
 			if (toWait[i].handle == kiv_os::erInvalid_Handle)
 			{
-				continue; // pass invalid handler to kernel make no sense
+				continue; // Passing invalid handler to kernel makes no sense.
 			}
 
 			bool ok = kiv_os_rtl::Join_One_Handle(toWait[i].handle);
 			if (!ok) {
-				// TODO: Klaus - Error occured while waiting.
-
-				/*std::string error = "Error waiting for process or thread.\n";
+				std::string error = "Error waiting for process or thread.\n";
 				size_t written;
-				kiv_os::printErr(error.c_str(), error.length());
-				stopCommands(toWait, toWait.size());
-				return;*/
+				kiv_os_lib::printErr(error.c_str(), error.length());
+				continue;
 			}
+		}
+	}
+
+	void closeHandles(shell_executor::CommandExecute *ce) {
+		if (ce->std_in != kiv_os::stdInput) {
+			kiv_os_rtl::Close_File(ce->std_in);
+		}
+		if (ce->std_out != kiv_os::stdOutput) {
+			kiv_os_rtl::Close_File(ce->std_out);
+		}
+		if (ce->std_err != kiv_os::stdError) {
+			kiv_os_rtl::Close_File(ce->std_err);
 		}
 	}
 
@@ -174,7 +177,7 @@ namespace shell_executor {
 				ce->handle = kiv_os::erInvalid_Handle;
 				bool ok = shell_cd::cd(*ce, args);
 				if (!ok) {
-					// TODO: Klaus - Error during cd.
+					return;
 				}
 			} else {
 				bool ok = kiv_os_rtl::Create_Process(&ce->handle, ce->name.c_str(), args.c_str(), ce->std_in, ce->std_out, ce->std_err);
@@ -192,11 +195,11 @@ namespace shell_executor {
 						errorStr = "Unspecified error during run program.\n";
 					}
 					kiv_os_lib::printErr(errorStr.c_str(), errorStr.length());
-					stopCommands(toExecute, i);
+					closeHandles(ce);
 					return;
 				}
-				// TODO: Klaus - Close handles if needed.
 			}
+			closeHandles(ce);
 		}
 
 		waitForCommands(toExecute);
