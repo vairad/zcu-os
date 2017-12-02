@@ -15,10 +15,9 @@ bool kiv_os::cd(kiv_os::CommandExecute command, std::string args) {
 		char wd[256];
 		size_t read;
 	
-		success = kiv_os_rtl::Get_Working_Dir(wd, sizeof(wd) - 1, read);
+		success = kiv_os_rtl::Get_Working_Dir(wd, sizeof(wd), read);
 
 		kiv_os_lib::printLn(wd, strlen(wd));
-
 	} else if (params.size() == 1) {
 		success = kiv_os_rtl::Change_Working_Dir(args.c_str());
 		// TODO: Klaus - Handle error.
