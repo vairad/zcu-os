@@ -13,25 +13,28 @@ bool HandleProcess(kiv_os::TRegisters &context);
 
 namespace process
 {
+//base functions process management
 	// get TID
 	kiv_os::THandle getTid();
-
 	// get PID
 	kiv_os::THandle getPid();
-
 	// get Parent pid
 	kiv_os::THandle getParentPid();
-
 	// get Working directory
 	std::string getWorkingDir();
+	// notify selected handle
+	void wakeUpThreadHandle(const kiv_os::THandle handle);
+	// notify selected handle
+	void wakeUpProcessHandle(const kiv_os::THandle handle);
 
-	// method changes (aprooved) working directory of program
-	bool changeWorkingDir(const std::string new_dir);
-
+//proceses init and destruct for kernel start and end
 	bool createInit();
 	bool destructInit();
-	void wakeUpThreadHandle(const kiv_os::THandle handle);
-	void wakeUpProcessHandle(const kiv_os::THandle handle);
+
+
+//interface for io module
+	// method changes (aprooved) working directory of program
+	bool changeWorkingDir(const std::string new_dir);
 
 	//FD interface for io
 	kiv_os::THandle getSystemFD(const kiv_os::THandle program_handle);
