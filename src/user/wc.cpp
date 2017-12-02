@@ -21,7 +21,7 @@ namespace wc_program {
 			char buffer[256];
 			bool first = true;
 			while ((read = kiv_os_lib::read(buffer, buffer_size)) != -1) {
-				buffer[read] = 0;
+				buffer[read] = 0; // Terminate the string.
 				if (!first) {
 					line.append(" ");
 				} else {
