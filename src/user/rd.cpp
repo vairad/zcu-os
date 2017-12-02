@@ -28,12 +28,12 @@ namespace rd_program
 	}
 
 	size_t rd_main(int argc, char **argv) {
-		if (argc > 0 && argc <= 3) {
+		if (argc > 1 && argc <= 4) {
 			bool quiet = true;
 			bool recurive = false;
 			char *dirname = nullptr;
 
-			for (size_t i = 0; i < argc; i++) {
+			for (size_t i = 1; i < argc; i++) {
 				// TODO: Klaus - Test this.
 				char *str = argv[i];
 				if (str == "/S" || str == "/s") {
