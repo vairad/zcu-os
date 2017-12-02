@@ -48,8 +48,8 @@ namespace kiv_os_vfs {
 
 	struct FsDriver {
 		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
-		int(*read)(FileDescriptor *fd, void *b, size_t length);
-		int(*write)(FileDescriptor *fd, void *b, size_t length);
+		int(*read)(FileDescriptor *fd, void *dest, size_t length);
+		int(*write)(FileDescriptor *fd, void *src, size_t length);
 		int(*cleanupDescriptor)(FileDescriptor *fd);
 	};
 
@@ -118,7 +118,7 @@ namespace kiv_os_vfs {
 
 	kiv_os::THandle openFile(char *path, uint64_t flags, uint8_t attrs);
 	int read(kiv_os::THandle fd, void *dest, uint64_t length);
-	int write(kiv_os::THandle fd, void *dest, uint64_t length);
+	int write(kiv_os::THandle fd, void *src, uint64_t length);
 	int delFile(char *path);
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);

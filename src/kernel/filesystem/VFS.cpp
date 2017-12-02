@@ -57,7 +57,7 @@ namespace kiv_os_vfs {
 			return 1;
 		}
 
-		*path += strnlen((*sb)->label, mountpointLabelSize);
+		*path += strnlen((*sb)->label, mountpointLabelSize) + 2; // also skip the ":/"
 		if (**path == pathSeparator) {
 			*path += 1;
 		}

@@ -8,4 +8,6 @@
 
 namespace kiv_os_vfs {
 	bool startUp();
+
+	void prefillDriveC();
 }

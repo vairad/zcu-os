@@ -27,8 +27,37 @@ namespace kiv_os_vfs {
 		fs_mem_tree::registerDriver();
 
 		// hardcoded fstab
-		fs_mem_tree::mountDrive("C", 256, 1024, 1024);
+		fs_mem_tree::mountDrive("C", 256, 1024, 2048);
 
 		return true;
+	}
+
+
+	// todo: remove this testing code, yah?
+
+	void createFolder(char *absPath) {
+		uint8_t folderAttrs = kiv_os::faDirectory;
+		uint64_t openFlags = 0;
+
+		kiv_os::THandle fd = kiv_os_vfs::openFile(absPath, openFlags, folderAttrs);
+		kiv_os_vfs::close(fd);
+	}
+
+	void prefillDriveC() {
+		createFolder("C:/comics");
+		createFolder("C:/comics/marvel");
+
+		auto fd = kiv_os_vfs::openFile("C:/comics/marvel/spdrmn.txt", 0, 0);
+
+		kiv_os_vfs::write(fd, "2017-11-i23 Block A\n", 20);
+		kiv_os_vfs::write(fd, "2017-11-i24 Block B\n", 20);
+		kiv_os_vfs::write(fd, "2017-11-i27 Not available\n", 26);
+		kiv_os_vfs::write(fd, "2017-11-i28 Block A\n", 20);
+
+		kiv_os_vfs::close(fd);
+
+		fd = kiv_os_vfs::openFile("C:/comics/marvel/dedpl.txt", 0, 0);
+		kiv_os_vfs::write(fd, "B****\nPanc*kes\nHi Francis!", 26);
+		kiv_os_vfs::close(fd);
 	}
 }

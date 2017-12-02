@@ -3,17 +3,26 @@
 #include "MemtreeMount.h"
 
 
+void initRootNode(kiv_os_vfs::Inode *node) {
+	node->mode = kiv_os::faDirectory | kiv_os::faSystem_File;
+	node->refCount = 1;
+}
 
 MemtreeMount::MemtreeMount(kiv_os_vfs::Superblock *superblock)
 {
 	this->sb = superblock;
+
 	this->data = new uint8_t[superblock->blockCount * superblock->blockSize];
 	this->inodes = new kiv_os_vfs::Inode[superblock->inodeCount];
 
+	std::memset(this->data, 0, superblock->blockCount * superblock->blockSize);
+	std::memset(this->inodes, 0, superblock->inodeCount * sizeof(kiv_os_vfs::Inode));
 
 
 	this->maxFilesize = this->sb->blockSize * kiv_os_vfs::inode_directLinks;
 	this->dirEntrySize = sizeof(MemtreeDirEntry);
+
+	initRootNode(this->inodes);
 }
 
 
@@ -36,6 +45,19 @@ kiv_os_vfs::Inode *MemtreeMount::getNode(node_t n) {
 	return node;
 }
 
+node_t MemtreeMount::reserveFreeNode() {
+	for (node_t i = 0; i < this->sb->inodeCount; i++) {
+		if (this->inodes[i].refCount == 0) {
+			this->inodes[i].refCount = 1;
+
+			return i;
+		}
+	}
+
+	return kiv_os_vfs::invalidNode;
+}
+
+//		PUBLIC
 
 size_t MemtreeMount::readNode(kiv_os_vfs::Inode *node, uint8_t *dst, size_t from, size_t to) {
 	if (from > node->size) {
@@ -125,8 +147,19 @@ size_t MemtreeMount::getSize(node_t n) {
 	return node->size;
 }
 
-bool isDirectoryNode(kiv_os_vfs::Inode *test) {
+bool isValidNode(kiv_os_vfs::Inode *test) {
 	if (test == nullptr) {
+		return false;
+	}
+	if (test->refCount == 0) {
+		return false;
+	}
+
+	return true;
+}
+
+bool isDirectoryNode(kiv_os_vfs::Inode *test) {
+	if (!isValidNode(test)) {
 		return false;
 	}
 
@@ -158,4 +191,29 @@ node_t MemtreeMount::findInDirectory(node_t dir, const char *member) {
 	}
 	
 	return kiv_os_vfs::invalidNode;
+}
+
+node_t MemtreeMount::createFile(node_t directory, const char* name, uint16_t attrs) {
+	kiv_os_vfs::Inode *parentNode = getNode(directory);
+	if (!isDirectoryNode(parentNode)) {
+		return kiv_os_vfs::invalidNode;
+	}
+	if (parentNode->size + this->dirEntrySize >= this->maxFilesize) {
+		return kiv_os_vfs::invalidNode;
+	}
+
+
+	node_t newFile = reserveFreeNode();
+	if (newFile == kiv_os_vfs::invalidNode) {
+		return kiv_os_vfs::invalidNode;
+	}
+
+	MemtreeDirEntry newFileDentry;
+	strcpy_s(newFileDentry.apiEntry.file_name, 12, name); // todo: 8 + 1 + 3 in api.h TDir_Entry
+	newFileDentry.apiEntry.file_attributes = attrs;
+	newFileDentry.node = newFile;
+	
+	writeNode(parentNode, (uint8_t *)(&newFileDentry), parentNode->size, parentNode->size + this->dirEntrySize);
+
+	return newFile;
 }

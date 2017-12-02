@@ -25,6 +25,8 @@ class MemtreeMount
 	size_t readNode(kiv_os_vfs::Inode *node, uint8_t *dst, size_t from, size_t to);
 	size_t writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t from, size_t to);
 
+	node_t reserveFreeNode();
+
 public:
 	MemtreeMount(kiv_os_vfs::Superblock *superblock);
 	~MemtreeMount();
@@ -37,5 +39,7 @@ public:
 
 	bool isDirectory(node_t node);
 	node_t findInDirectory(node_t folder, const char* member);
+
+	node_t createFile(node_t directory, const char* name, uint16_t attrs);
 };
 

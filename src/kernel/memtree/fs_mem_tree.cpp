@@ -18,11 +18,24 @@ namespace fs_mem_tree {
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		char *immediatePart, *rest;
+		
+		MemtreeMount *mm = mountPoints[0];
+		node_t currentFolder = 0, parent = 0;
 
 		vfs_paths::immediatePathPart(path, &immediatePart, &rest);
 
 		while (rest != nullptr) {
+			node_t immediate = mm->findInDirectory(currentFolder, immediatePart);
 			vfs_paths::immediatePathPart(rest, &immediatePart, &rest);
+		}
+
+		node_t desiredFile = mm->findInDirectory(currentFolder, immediatePart);
+
+		if (desiredFile != kiv_os_vfs::invalidNode) {
+
+		}
+		else {
+
 		}
 
 		// todo: locate file according to path
@@ -38,11 +51,21 @@ namespace fs_mem_tree {
 		return 0;
 	}
 
-	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *byte, size_t length) {
-		return 1;
+	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
+		MemtreeMount *mm = mountPoints[0];
+
+		size_t read = mm->read(fd->inode, (uint8_t *)dst, fd->position, fd->position + length);
+		fd->position += read;
+
+		return (int)read;
 	}
-	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *byte, size_t length) {
-		return 1;
+	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *src, size_t length) {
+		MemtreeMount *mm = mountPoints[0];
+
+		size_t written = mm->write(fd->inode, (uint8_t *)src, fd->position, fd->position + length);
+		fd->position += written;
+
+		return (int)written;
 	}
 
 	int mountDrive(char *label, node_t inodes, size_t blocks, size_t blockSize) {
