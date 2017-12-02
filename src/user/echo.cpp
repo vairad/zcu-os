@@ -27,7 +27,7 @@ namespace echo_program {
 size_t __stdcall echo(const kiv_os::TRegisters &regs)
 {
 	int argc;
-	char **argv = kiv_os_lib::getArgs("md", regs, &argc);
+	char **argv = kiv_os_lib::getArgs("echo", regs, &argc);
 	echo_program::echo_main(argc, argv);
 	return 0;
 }
