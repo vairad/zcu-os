@@ -1,8 +1,9 @@
 #include <Windows.h>
 
 #include "io.h"
-#include "filesystem\VFS.h"
-#include "process_api.h"
+
+#include "filesystem/VFS.h"
+#include "process/process_api.h"
 
 #undef stdin
 #undef stderr

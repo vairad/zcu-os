@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 
-#include "process_api.h"
 #include "waiting_queue.h"
 #include "thread_state.h"
 #include "retval.h"
@@ -9,7 +8,7 @@
 #undef stdin
 #undef stderr
 #undef stdout
-#include "../api/api.h"
+#include "../../api/api.h"
 
 
 /// One line from process control block table
@@ -32,6 +31,57 @@ struct TCB {
 	process::retval retval;
 	std::thread thread;
 };
+
+
+namespace process
+{
+	class TStartProcessBlock
+	{
+	public:
+		kiv_os::THandle tid;
+		std::string args;
+		kiv_os::TEntry_Point entry_point;
+		kiv_os::TRegisters proc;
+		kiv_os::TProcess_Startup_Info startup_info;
+
+		TStartProcessBlock(const kiv_os::THandle tid, const kiv_os::TEntry_Point entry_point, kiv_os::TRegisters &context)
+			: tid(tid)
+		{
+			this->entry_point = entry_point;
+			this->proc = context;
+			kiv_os::TProcess_Startup_Info * startup_info = reinterpret_cast<kiv_os::TProcess_Startup_Info *>(context.rdi.r);
+			this->startup_info.stdin = startup_info->stdin;
+			this->startup_info.stdout = startup_info->stdout;
+			this->startup_info.stderr = startup_info->stderr;
+
+			args = startup_info->arg;
+			this->startup_info.arg = const_cast<char *>(args.c_str());
+		}
+
+		kiv_os::TProcess_Startup_Info *getProcInfo()
+		{
+			this->startup_info.arg = (char *)(args.c_str());
+			return &(this->startup_info);
+		}
+	};
+
+	class TStartThreadBlock
+	{
+	public:
+		kiv_os::THandle tid;
+		std::string args;
+
+		kiv_os::TThread_Proc entry_point;
+		void * context;
+
+		TStartThreadBlock(const kiv_os::THandle tid, const kiv_os::TThread_Proc entry_point, void *context)
+			: tid(tid)
+		{
+			this->entry_point = entry_point;
+			this->context = context;
+		}
+	};
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -4,9 +4,10 @@
 #include <mutex>
 #include <vector>
 #include <map>
+
 #include <Windows.h>
 
-#include "filesystem/VFS.h"
+#include "../filesystem/VFS.h"
 
 #undef stdin
 #undef stderr

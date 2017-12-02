@@ -29,11 +29,11 @@
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel\pipe.cpp" />
-    <ClCompile Include="..\..\src\kernel\process.cpp" />
-    <ClCompile Include="..\..\src\kernel\retval.cpp" />
+    <ClCompile Include="..\..\src\kernel\process\process.cpp" />
+    <ClCompile Include="..\..\src\kernel\process\retval.cpp" />
     <ClCompile Include="..\..\src\kernel\semaphore.cpp" />
-    <ClCompile Include="..\..\src\kernel\thread_state.cpp" />
-    <ClCompile Include="..\..\src\kernel\waiting_queue.cpp" />
+    <ClCompile Include="..\..\src\kernel\process\thread_state.cpp" />
+    <ClCompile Include="..\..\src\kernel\process\waiting_queue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
@@ -47,12 +47,12 @@
     <ClInclude Include="..\..\src\kernel\io.h" />
     <ClInclude Include="..\..\src\kernel\kernel.h" />
     <ClInclude Include="..\..\src\kernel\pipe.h" />
-    <ClInclude Include="..\..\src\kernel\process.h" />
-    <ClInclude Include="..\..\src\kernel\process_api.h" />
-    <ClInclude Include="..\..\src\kernel\retval.h" />
+    <ClInclude Include="..\..\src\kernel\process\process.h" />
+    <ClInclude Include="..\..\src\kernel\process\process_api.h" />
+    <ClInclude Include="..\..\src\kernel\process\retval.h" />
     <ClInclude Include="..\..\src\kernel\semaphore.h" />
-    <ClInclude Include="..\..\src\kernel\thread_state.h" />
-    <ClInclude Include="..\..\src\kernel\waiting_queue.h" />
+    <ClInclude Include="..\..\src\kernel\process\thread_state.h" />
+    <ClInclude Include="..\..\src\kernel\process\waiting_queue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>

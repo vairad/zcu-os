@@ -4,9 +4,9 @@
 
 #include "kernel.h"
 #include "io.h"
-#include "process_api.h"
 
-#include "filesystem\VFS_startup.h"
+#include "process/process_api.h"
+#include "filesystem/VFS_startup.h"
 
 #undef stdin
 #undef stderr

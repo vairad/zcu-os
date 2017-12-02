@@ -6,9 +6,7 @@
 #undef stdin
 #undef stderr
 #undef stdout
-#include "..\api\api.h"
-
-
+#include "../../api/api.h"
 
 namespace process
 {
