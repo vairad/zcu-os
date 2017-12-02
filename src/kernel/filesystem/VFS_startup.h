@@ -1,7 +1,6 @@
 #pragma once
 
 #include "VFS.h"
-#include "fs_mem_tree.h"
 
 #undef stdin
 #undef stderr

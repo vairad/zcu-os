@@ -20,26 +20,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\kernel\dllmain.cpp" />
-    <ClCompile Include="..\..\src\kernel\filesystem\fs_mem_tree.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_stdio.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\proc_fs.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS.cpp" />
+    <ClCompile Include="..\..\src\kernel\filesystem\VFS_paths.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS_startup.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
     <ClCompile Include="..\..\src\kernel\io.cpp" />
     <ClCompile Include="..\..\src\kernel\kernel.cpp" />
+    <ClCompile Include="..\..\src\kernel\memtree\fs_mem_tree.cpp" />
     <ClCompile Include="..\..\src\kernel\pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\process\process.cpp" />
     <ClCompile Include="..\..\src\kernel\process\retval.cpp" />
     <ClCompile Include="..\..\src\kernel\semaphore.cpp" />
     <ClCompile Include="..\..\src\kernel\process\thread_state.cpp" />
     <ClCompile Include="..\..\src\kernel\process\waiting_queue.cpp" />
+    <ClCompile Include="..\..\src\kernel\memtree\MemtreeMount.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\api\api_extension.h" />
-    <ClInclude Include="..\..\src\kernel\filesystem\fs_mem_tree.h" />
+    <ClInclude Include="..\..\src\kernel\memtree\fs_mem_tree.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_pipe.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_stdio.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\proc_fs.h" />
@@ -55,6 +57,8 @@
     <ClInclude Include="..\..\src\kernel\semaphore.h" />
     <ClInclude Include="..\..\src\kernel\process\thread_state.h" />
     <ClInclude Include="..\..\src\kernel\process\waiting_queue.h" />
+    <ClInclude Include="..\..\src\kernel\filesystem\VFS_paths.h" />
+    <ClInclude Include="..\..\src\kernel\memtree\MemtreeMount.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B4305463-59C5-40C3-9A1A-92976A40562D}</ProjectGuid>

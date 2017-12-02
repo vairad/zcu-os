@@ -1,5 +1,10 @@
-#include "VFS.h"
 #include "fs_mem_tree.h"
+#include "MemtreeMount.h"
+
+#include "../filesystem/VFS.h"
+#include "../filesystem/VFS_paths.h"
+
+
 
 #undef stdin
 #undef stderr
@@ -9,7 +14,17 @@ namespace fs_mem_tree {
 
 	kiv_os_vfs::filesys_t _fsid;
 
+	MemtreeMount *mountPoints[1];
+
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
+		char *immediatePart, *rest;
+
+		vfs_paths::immediatePathPart(path, &immediatePart, &rest);
+
+		while (rest != nullptr) {
+			vfs_paths::immediatePathPart(rest, &immediatePart, &rest);
+		}
+
 		// todo: locate file according to path
 		// todo: cache pointer to the found file
 
@@ -30,7 +45,11 @@ namespace fs_mem_tree {
 		return 1;
 	}
 
-	int mountDrive(char *label, size_t inodes, size_t blocks, size_t blockSize) {
+	int mountDrive(char *label, node_t inodes, size_t blocks, size_t blockSize) {
+		if (mountPoints[0] != nullptr) {
+			return 1;
+		}
+
 		kiv_os_vfs::Superblock sb;
 
 		sb.filesys_id = _fsid;
@@ -39,7 +58,16 @@ namespace fs_mem_tree {
 		sb.inodeCount = sb.emptyInodes = inodes;
 		sb.connections = 0;
 
-		return kiv_os_vfs::mountDrive(label, sb);
+		kiv_os_vfs::Superblock *psb;
+		int mountResult = kiv_os_vfs::mountDrive(label, sb, &psb);
+		if (mountResult != 0) {
+			return mountResult;
+		}
+
+		mountPoints[0] = new MemtreeMount(psb);
+
+
+		return 0;
 	}
 
 	int registerDriver() {
@@ -56,5 +84,12 @@ namespace fs_mem_tree {
 		}
 
 		return result;
+	}
+
+	int cleanUp() {
+		delete mountPoints[0];
+		mountPoints[0] = nullptr;
+
+		return 0;
 	}
 }

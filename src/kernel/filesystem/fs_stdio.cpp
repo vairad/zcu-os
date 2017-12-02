@@ -1,7 +1,6 @@
 #include "VFS.h"
 #include "fs_stdio.h"
 
-#include "fs_mem_tree.h"
 #include <string>
 #include <iostream>
 #include <string.h>

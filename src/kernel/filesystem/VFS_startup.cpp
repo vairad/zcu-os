@@ -3,7 +3,7 @@
 #include "fs_stdio.h"
 #include "fs_pipe.h"
 #include "proc_fs.h"
-#include "fs_mem_tree.h"
+#include "../memtree/fs_mem_tree.h"
 
 #undef stdin
 #undef stderr

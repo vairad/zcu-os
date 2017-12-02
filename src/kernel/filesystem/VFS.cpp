@@ -8,9 +8,6 @@
 
 namespace kiv_os_vfs {
 
-	const char *mountSeparator = ":";
-	const char *pathSeparator = "/";
-
 	const size_t pathBufferSize = 1024;
 
 	int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out);
@@ -31,7 +28,7 @@ namespace kiv_os_vfs {
 
 	Superblock *resolveSuperblock(char **path) {
 		char *label = nullptr, *rest = nullptr;
-		label = strtok_s(*path, mountSeparator, &rest);
+		label = strtok_s(path, &mountSeparator, &rest);
 
 		for (int i = 0; i < _fs_mount_count; i++) {
 			if (!strcmp(label, (_superblocks + i)->label)) {
@@ -54,7 +51,7 @@ namespace kiv_os_vfs {
 	}
 
 	int resolveFolder(char **path, Superblock **sb) {
-		char *mountSeparatorPos = strstr(*path, mountSeparator);
+		char *mountSeparatorPos = strstr(*path, &mountSeparator);
 
 		if (mountSeparatorPos == nullptr) {
 			*sb = _superblocks;
@@ -164,8 +161,8 @@ namespace kiv_os_vfs {
 		strcpy_s(sb.label, label);
 
 		_superblocks[_fs_mount_count] = sb;
-		if (sb_id != nullptr) {
-			*sb_id = _fs_mount_count;
+		if (result != nullptr) {
+			*result = _superblocks + _fs_mount_count;
 		}
 
 		_fs_mount_count++;
@@ -251,6 +248,19 @@ namespace kiv_os_vfs {
 
 	int delFile(char *path) {
 		return 1;
+	}
+
+	bool fileExists(char *path) {
+		uint64_t flags = kiv_os::faRead_Only;
+		kiv_os::THandle fd = openFile(path, flags, 0);
+		
+		bool result = fd != kiv_os::erInvalid_Handle;
+
+		if (result) {
+			close(fd);
+		}
+
+		return result;
 	}
 
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType) {

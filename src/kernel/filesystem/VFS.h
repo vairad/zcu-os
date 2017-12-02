@@ -8,11 +8,17 @@
 #undef stdout
 #include "../../api/api.h"
 
+typedef size_t node_t;
+
+
 namespace kiv_os_vfs {
 
 	typedef uint8_t filesys_t;
 	
 	typedef uint8_t sblock_t;
+
+	const node_t invalidNode = -1;
+	
 
 	const uint8_t mountpointLabelSize = 8;
 
@@ -26,22 +32,19 @@ namespace kiv_os_vfs {
 	const uint8_t inode_directLinks = 12;
 	const uint8_t dentry_fileNameLength = 128;
 
+	const char mountSeparator = ':';
+	const char pathSeparator = '/';
+
 
 	struct FileDescriptor {
 		sblock_t superblockId;
-		size_t inode;
+		node_t inode;
 		size_t size;
 
 		uint16_t attributes;
 		uint8_t status;
 		uint64_t position;
 		uint16_t openCounter;
-	};
-
-	struct Dentry
-	{
-		char fileName[dentry_fileNameLength];
-		size_t inode;
 	};
 
 
@@ -55,7 +58,7 @@ namespace kiv_os_vfs {
 	struct Superblock {
 		char label[mountpointLabelSize];
 
-		size_t inodeCount;
+		node_t inodeCount;
 		size_t blockCount;
 		size_t emptyBlocks, emptyInodes;
 		size_t blockSize;
@@ -71,7 +74,7 @@ namespace kiv_os_vfs {
 		size_t size;
 		uint32_t atime, mtime, ctime; // unused
 
-		size_t directBlocks[inode_directLinks]; // not implemented
+		size_t directBlocks[inode_directLinks];
 		size_t singleIndirect; // not implemented
 		size_t doubleIndirect; // not implemented
 		size_t tripleIndirect; // not implemented
@@ -79,38 +82,39 @@ namespace kiv_os_vfs {
 
 	};
 
-	/*
-		Allocates resources for required number of drivers and mounting points
 
-		Returns error value
+	/*
+	Allocates resources for required number of drivers and mounting points
+
+	Returns error value
 	*/
 	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
 	
 	/*
-		Performs shutdown tasks
+	Performs shutdown tasks
 
-		Returns error value
+	Returns error value
 	*/
 	int shutdown();
 
 	/*
-		Adds given filesystem driver
+	Adds given filesystem driver
 
-		Returns error value
+	Returns error value
 	*/
 	int registerDriver(FsDriver &p_driver, filesys_t *result);
 
 	/*
-		Registers given filesystem under desired label if that label is not taken yet
+	Registers given filesystem under desired label if that label is not taken yet
 
-		Returns error value
+	Returns error value
 	*/
 	int mountDrive(char *label, Superblock &superblock, sblock_t *mountpoint = nullptr);
 
 	/*
-		Looks up coresponding file descriptor and increases its  open counter
+	Looks up coresponding file descriptor and increases its  open counter
 
-		Returns error value
+	Returns error value
 	*/
 	int increaseFDescOpenCounter(kiv_os::THandle fd);
 
