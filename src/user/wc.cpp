@@ -10,23 +10,47 @@
 namespace wc_program {
 
 	void wc_main(int argc, char **argv) {
-		std::string line = "";
-		for (size_t i = 1; i < argc; i++) {
-			if (i != 1) {
-				line.append(" ");
+		if (argc == 1 || argc == 2) {
+			bool reverse = false;
+			if (argc == 2 && (argv[1] == "/R" || argv[1] == "/r")) {
+				reverse = true;
 			}
-			line.append(argv[i]);
-		}
-
-		int count = 0;
-		for (size_t i = 0; i < line.length(); i++) {
-			if (line[i] == ' ') {
-				count++;
+			std::string line = "";
+			size_t read;
+			size_t buffer_size = 255;
+			char buffer[256];
+			bool first = true;
+			while ((read = kiv_os_lib::read(buffer, buffer_size)) != -1) {
+				buffer[read] = 0;
+				if (!first) {
+					line.append(" ");
+				} else {
+					first = false;
+				}
+				line.append(buffer);
 			}
-		}
 
-		line = std::to_string(count);
-		kiv_os_lib::printLn(line.c_str(), line.length());
+			int count = 0;
+			if (!reverse) {
+				for (size_t i = 0; i < line.length(); i++) {
+					if (line[i] == ' ') {
+						count++;
+					}
+				}
+			} else {
+				for (size_t i = line.length() - 1; i >= 0; i--) {
+					if (line[i] == ' ') {
+						count++;
+					}
+				}
+			}
+
+			line = std::to_string(count);
+			kiv_os_lib::printLn(line.c_str(), line.length());
+		} else {
+			std::string error = "The syntax of the command is incorrect.";
+			kiv_os_lib::printErr(error.c_str(), error.length());
+		}
 	}
 
 }
