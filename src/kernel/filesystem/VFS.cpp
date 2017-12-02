@@ -19,7 +19,7 @@ namespace kiv_os_vfs {
 
 	uint8_t _fs_mount_count_max;
 	uint8_t _fs_mount_count;
-	Superblock *_superblocks;
+	Superblock **_superblocks;
 
 	const kiv_os::THandle fdCount = 0xFFFF;
 	FileDescriptor files[fdCount];
@@ -31,17 +31,11 @@ namespace kiv_os_vfs {
 		label = strtok_s(path, &mountSeparator, &rest);
 
 		for (int i = 0; i < _fs_mount_count; i++) {
-			if (!strcmp(label, (_superblocks + i)->label)) {
-				
-				//todo review ... patch missing rest of path
-				if (rest != 0)
-				{
-					size_t remain_length = strlen(rest);
-					strcpy_s(*path, remain_length + 1, rest);
-					*path = rest;
-				}
-				
-				return _superblocks + i;
+			if (_superblocks[i] == nullptr) {
+				continue;
+			}
+			if (!strcmp(label, (_superblocks[i])->label)) {
+				return _superblocks[i];
 			}
 		}
 
@@ -54,7 +48,7 @@ namespace kiv_os_vfs {
 		char *mountSeparatorPos = strstr(*path, &mountSeparator);
 
 		if (mountSeparatorPos == nullptr) {
-			*sb = _superblocks;
+			*sb = _superblocks[0];
 			return 0;
 		}
 
@@ -63,9 +57,8 @@ namespace kiv_os_vfs {
 			return 1;
 		}
 
-		// todo review removed by pathc missing path
-	    //*path += strnlen((*sb)->label, mountpointLabelSize) -1 ; //indexed from zero you have to decrease one
-		if (**path == *pathSeparator) {
+		*path += strnlen((*sb)->label, mountpointLabelSize);
+		if (**path == pathSeparator) {
 			*path += 1;
 		}
 
@@ -83,7 +76,7 @@ namespace kiv_os_vfs {
 			return 2;
 		}
 
-		*sb = _superblocks + (*fDesc)->superblockId;
+		*sb = _superblocks[(*fDesc)->superblockId];
 		if ((*sb)->connections < 1) {
 			return 3;
 		}
@@ -106,7 +99,7 @@ namespace kiv_os_vfs {
 
 	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
-		_superblocks = new __nothrow Superblock[fsMountCapacity];
+		_superblocks = new __nothrow Superblock*[fsMountCapacity];
 
 		_fs_createPipe = createPipe;
 
@@ -150,7 +143,7 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int mountDrive(char *label, Superblock &sb, sblock_t *sb_id) {
+	int mountDrive(char *label, Superblock *sb, sblock_t *result) {
 		if (strlen(label) > mountpointLabelSize) {
 			return mountErr_labelTooLong;
 		}
@@ -158,11 +151,11 @@ namespace kiv_os_vfs {
 			return mountErr_noMoreRoom;
 		}
 
-		strcpy_s(sb.label, label);
+		strcpy_s(sb->label, label);
 
 		_superblocks[_fs_mount_count] = sb;
 		if (result != nullptr) {
-			*result = _superblocks + _fs_mount_count;
+			*result = _fs_mount_count;
 		}
 
 		_fs_mount_count++;

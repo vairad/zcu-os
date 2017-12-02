@@ -12,7 +12,7 @@
 
 namespace fs_mem_tree {
 
-	kiv_os_vfs::filesys_t _fsid;
+	filesys_t _fsid;
 
 	MemtreeMount *mountPoints[1];
 
@@ -50,21 +50,21 @@ namespace fs_mem_tree {
 			return 1;
 		}
 
-		kiv_os_vfs::Superblock sb;
+		kiv_os_vfs::Superblock * sb = new kiv_os_vfs::Superblock;
 
-		sb.filesys_id = _fsid;
-		sb.blockSize = blockSize;
-		sb.blockCount = sb.emptyBlocks = blocks;
-		sb.inodeCount = sb.emptyInodes = inodes;
-		sb.connections = 0;
+		sb->filesys_id = _fsid;
+		sb->blockSize = blockSize;
+		sb->blockCount = sb->emptyBlocks = blocks;
+		sb->inodeCount = sb->emptyInodes = inodes;
+		sb->connections = 0;
 
-		kiv_os_vfs::Superblock *psb;
+		sblock_t psb;
 		int mountResult = kiv_os_vfs::mountDrive(label, sb, &psb);
 		if (mountResult != 0) {
 			return mountResult;
 		}
 
-		mountPoints[0] = new MemtreeMount(psb);
+		mountPoints[0] = new MemtreeMount(sb);
 
 
 		return 0;

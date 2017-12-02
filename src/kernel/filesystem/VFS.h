@@ -9,13 +9,11 @@
 #include "../../api/api.h"
 
 typedef size_t node_t;
+typedef uint8_t filesys_t;
+typedef uint8_t sblock_t;
 
 
 namespace kiv_os_vfs {
-
-	typedef uint8_t filesys_t;
-	
-	typedef uint8_t sblock_t;
 
 	const node_t invalidNode = -1;
 	
@@ -109,7 +107,7 @@ namespace kiv_os_vfs {
 
 	Returns error value
 	*/
-	int mountDrive(char *label, Superblock &superblock, sblock_t *mountpoint = nullptr);
+	int mountDrive(char *label, Superblock *superblock, sblock_t *result = nullptr);
 
 	/*
 	Looks up coresponding file descriptor and increases its  open counter

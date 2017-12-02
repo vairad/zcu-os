@@ -137,13 +137,13 @@ namespace fs_stdio {
 		return 0;
 	}
 
-	int mountStdio(kiv_os_vfs::filesys_t fs_id) {
-		kiv_os_vfs::Superblock sb;
+	int mountStdio(filesys_t fs_id) {
+		kiv_os_vfs::Superblock *sb = new kiv_os_vfs::Superblock();
 
-		sb.filesys_id = fs_id;
-		sb.connections = 0;
+		sb->filesys_id = fs_id;
+		sb->connections = 0;
 
-		sb.inodeCount = sb.emptyInodes = inodeCapacity;
+		sb->inodeCount = sb->emptyInodes = inodeCapacity;
 
 		int result = kiv_os_vfs::mountDrive("stdio", sb);
 		if (result) {
@@ -170,7 +170,7 @@ namespace fs_stdio {
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
 
-		kiv_os_vfs::filesys_t fs_id;
+		filesys_t fs_id;
 
 		int result = kiv_os_vfs::registerDriver(driver, &fs_id);
 		if (result != 0) {
