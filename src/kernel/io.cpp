@@ -243,6 +243,20 @@ namespace kiv_os_io {
 		}
 		regs.flags.carry = (err != 0);
 	}
+
+	/*
+		IN:		rdx - pointer
+
+		OUT:	rax.l - file attributes according to api.h
+	*/
+	void getFileAttributes(kiv_os::TRegisters &regs) {
+		kiv_os::THandle procFd = regs.rdx.x;
+		kiv_os::THandle vfsHandle = process::getSystemFD(procFd);
+
+		const auto err = kiv_os_vfs::getFileAttributes(vfsHandle, &regs.rax.l);
+
+		regs.flags.carry = err != 0;
+	}
 }
 
 void HandleIO(kiv_os::TRegisters &regs) {
@@ -268,6 +282,8 @@ void HandleIO(kiv_os::TRegisters &regs) {
 		return kiv_os_io::getWorkDir(regs);
 	case kiv_os::scCreate_Pipe:
 		return kiv_os_io::createPipe(regs);
+	case kiv_os::scGetFileAttributes:
+		return kiv_os_io::getFileAttributes(regs);
 
 	default:
 		return kiv_os_io::illegalAL(regs);

@@ -329,4 +329,16 @@ namespace kiv_os_vfs {
 
 		return 0;
 	}
+
+	int getFileAttributes(kiv_os::THandle fd, uint8_t *dest) {
+		if (fd == kiv_os::erInvalid_Handle) {
+			return 1;
+		}
+		if (files[fd].openCounter == 0) {
+			return 2;
+		}
+		*dest = files[fd].attributes;
+
+		return 0;
+	}
 }

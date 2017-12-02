@@ -32,6 +32,7 @@ namespace kiv_os_vfs {
 		size_t inode;
 		size_t size;
 
+		uint8_t attributes;
 		uint8_t status;
 		uint64_t position;
 		uint16_t openCounter;
@@ -122,5 +123,7 @@ namespace kiv_os_vfs {
 	int close(kiv_os::THandle fd);
 
 	int openPipe(kiv_os::THandle *fd_in, kiv_os::THandle *fd_out);
+
+	int getFileAttributes(kiv_os::THandle fd, uint8_t *dest);
 
 }
