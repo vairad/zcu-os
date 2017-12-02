@@ -7,8 +7,8 @@
 #undef stderr
 #undef stdout
 
-namespace kiv_os {
+namespace shell_cd {
 
-	bool cd(kiv_os::CommandExecute command, std::string args);
+	bool cd(shell_executor::CommandExecute command, std::string args);
 
 }

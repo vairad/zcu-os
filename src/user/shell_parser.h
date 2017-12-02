@@ -7,7 +7,7 @@
 #undef stderr
 #undef stdout
 
-namespace kiv_os {
+namespace shell_parser {
 
 	enum class InOutType {
 		STANDARD,
@@ -24,6 +24,6 @@ namespace kiv_os {
 		InOutType std_err;
 	} Command;
 
-	std::vector<kiv_os::Command> parseCommands(std::string line);
+	std::vector<Command> parseCommands(std::string line);
 
 }

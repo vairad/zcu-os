@@ -45,8 +45,8 @@ size_t __stdcall shell(const kiv_os::TRegisters &regs) {
 		{
 			readLine[read] = 0; // Terminate the line.
 			std::string line = readLine;
-			std::vector<kiv_os::Command> commands = kiv_os::parseCommands(line);
-			run = kiv_os::executeCommands(commands);
+			std::vector<shell_parser::Command> commands = shell_parser::parseCommands(line);
+			run = shell_executor::executeCommands(commands);
 		}
 		else
 		{

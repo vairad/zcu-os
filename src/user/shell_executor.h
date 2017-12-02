@@ -8,7 +8,7 @@
 #undef stdout
 #include "../api/api.h"
 
-namespace kiv_os {
+namespace shell_executor {
 
 	typedef struct shell_command_execute {
 		std::string name;
@@ -16,9 +16,9 @@ namespace kiv_os {
 		kiv_os::THandle std_in;
 		kiv_os::THandle std_out;
 		kiv_os::THandle std_err;
-		kiv_os::THandle handle = erInvalid_Handle;
+		kiv_os::THandle handle = kiv_os::erInvalid_Handle;
 	} CommandExecute;
 
-	bool executeCommands(std::vector<kiv_os::Command> commands);
+	bool executeCommands(std::vector<shell_parser::Command> commands);
 
 }

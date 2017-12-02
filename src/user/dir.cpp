@@ -47,7 +47,7 @@ namespace dir_program {
 
 }
 
-size_t __stdcall md(const kiv_os::TRegisters &regs)
+size_t __stdcall dir(const kiv_os::TRegisters &regs)
 {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("dir", regs, &argc);
