@@ -36,7 +36,7 @@ namespace dir_program {
 					return;
 				}
 				buffer[read] = 0; // Terminate the string.
-				kiv_os_lib::printLn(buffer, strlen(buffer));
+				kiv_os_lib::printLn(buffer, read);
 			}
 		} else {
 			// Error - wrong number of parameters.
