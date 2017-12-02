@@ -7,7 +7,7 @@
 
 namespace fs_mem_tree {
 
-	kiv_os_vfs::filesys_id _fsid;
+	kiv_os_vfs::filesys_t _fsid;
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		// todo: locate file according to path

@@ -10,9 +10,9 @@
 
 namespace kiv_os_vfs {
 
-	typedef uint8_t filesys_id;
+	typedef uint8_t filesys_t;
 	
-	typedef uint8_t sblock;
+	typedef uint8_t sblock_t;
 
 	const uint8_t mountpointLabelSize = 8;
 
@@ -28,7 +28,7 @@ namespace kiv_os_vfs {
 
 
 	struct FileDescriptor {
-		sblock superblockId;
+		sblock_t superblockId;
 		size_t inode;
 		size_t size;
 
@@ -60,7 +60,7 @@ namespace kiv_os_vfs {
 		size_t emptyBlocks, emptyInodes;
 		size_t blockSize;
 		size_t groupBlocks, groupInodes; // unused
-		filesys_id filesys_id;
+		filesys_t filesys_id;
 		size_t connections;
 	};
 
@@ -98,14 +98,14 @@ namespace kiv_os_vfs {
 
 		Returns error value
 	*/
-	int registerDriver(FsDriver &p_driver, filesys_id *result);
+	int registerDriver(FsDriver &p_driver, filesys_t *result);
 
 	/*
 		Registers given filesystem under desired label if that label is not taken yet
 
 		Returns error value
 	*/
-	int mountDrive(char *label, Superblock &superblock, sblock *mountpoint = nullptr);
+	int mountDrive(char *label, Superblock &superblock, sblock_t *mountpoint = nullptr);
 
 	/*
 		Looks up coresponding file descriptor and increases its  open counter

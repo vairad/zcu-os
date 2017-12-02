@@ -138,7 +138,7 @@ namespace fs_stdio {
 		return 0;
 	}
 
-	int mountStdio(kiv_os_vfs::filesys_id fs_id) {
+	int mountStdio(kiv_os_vfs::filesys_t fs_id) {
 		kiv_os_vfs::Superblock sb;
 
 		sb.filesys_id = fs_id;
@@ -171,7 +171,7 @@ namespace fs_stdio {
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
 
-		kiv_os_vfs::filesys_id fs_id;
+		kiv_os_vfs::filesys_t fs_id;
 
 		int result = kiv_os_vfs::registerDriver(driver, &fs_id);
 		if (result != 0) {

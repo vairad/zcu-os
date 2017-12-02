@@ -7,7 +7,7 @@ namespace fs_pipe {
 
 	int _registered = 0;
 
-	kiv_os_vfs::sblock superblock;
+	kiv_os_vfs::sblock_t superblock;
 
 	pipe *pipes[pipeCapacity];
 
@@ -87,7 +87,7 @@ namespace fs_pipe {
 		return 0;
 	}
 
-	int mountPipe(kiv_os_vfs::filesys_id fs_id) {
+	int mountPipe(kiv_os_vfs::filesys_t fs_id) {
 		kiv_os_vfs::Superblock sb;
 
 		sb.filesys_id = fs_id;
@@ -111,7 +111,7 @@ namespace fs_pipe {
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
 
-		kiv_os_vfs::filesys_id fs_id;
+		kiv_os_vfs::filesys_t fs_id;
 
 		int result = kiv_os_vfs::registerDriver(driver, &fs_id);
 		if (result != 0) {

@@ -129,7 +129,7 @@ namespace kiv_os_vfs {
 	}
 
 
-	int registerDriver(FsDriver &p_driver, filesys_id *result) {
+	int registerDriver(FsDriver &p_driver, filesys_t *result) {
 		if (_fs_driver_count >= _fs_driver_count_max) {
 			return driverReg_err;
 		}
@@ -141,7 +141,7 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int mountDrive(char *label, Superblock &sb, sblock *sb_id) {
+	int mountDrive(char *label, Superblock &sb, sblock_t *sb_id) {
 		if (strlen(label) > mountpointLabelSize) {
 			return mountErr_labelTooLong;
 		}
