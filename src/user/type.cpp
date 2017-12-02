@@ -17,13 +17,16 @@ namespace type_program {
 					continue;
 				}
 
-				size_t read;
+				size_t read = 1;
 				char buffer[1024];
-				bool ok = kiv_os_rtl::Read_File(file, &buffer, sizeof(buffer) - 1, read);
-				buffer[read] = 0; //Terminate the string.
-				if (!ok) {
-					// TODO: Klaus - Handle error.
-					continue;
+				while (read != -1) {
+					bool ok = kiv_os_rtl::Read_File(file, buffer, sizeof(buffer) - 1, read);
+					if (!ok) {
+						// TODO: Handle read error.
+						continue;
+					}
+					buffer[read] = 0; // Terminate the string.
+					kiv_os_lib::printLn(buffer, read);
 				}
 
 				size_t written = kiv_os_lib::print(buffer, read);
