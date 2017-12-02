@@ -13,9 +13,7 @@ bool kiv_os::cd(kiv_os::CommandExecute command, std::string args) {
 
 	if (params.empty()) {
 		char wd[256];
-		size_t read;
-	
-		success = kiv_os_rtl::Get_Working_Dir(wd, sizeof(wd), read);
+		success = kiv_os_lib::getWD(wd, sizeof(wd));
 
 		kiv_os_lib::printLn(wd, strlen(wd));
 	} else if (params.size() == 1) {
