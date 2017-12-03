@@ -10,14 +10,15 @@
 
 namespace kiv_os_lib {
 
-	const size_t SUCCESS = 0;
-	const size_t FILE_NOT_FOUND = 1;
-	const size_t ATTRS_ERROR = 2;
-	const size_t INCORRECT_SYNTAX = 3;
-	const size_t READ_ERROR = 4;
-	const size_t DIR_NOT_EMPTY = 5;
+	const size_t SUCCESS			= 0;
+	const size_t FILE_NOT_FOUND		= 1;
+	const size_t ATTRS_ERROR		= 2;
+	const size_t INCORRECT_SYNTAX	= 3;
+	const size_t READ_ERROR			= 4;
+	const size_t DIR_NOT_EMPTY		= 5;
 	const size_t CANNOT_CREATE_THREAD = 6;
-	
+	const size_t FILE_NOT_CREATED	= 7;
+
 	std::vector<char *> getArgsDataPointer(std::vector<std::string> &args);
 	std::vector<std::string> getArgs(char* program_name, const kiv_os::TRegisters& context);
 
@@ -29,6 +30,7 @@ namespace kiv_os_lib {
 	size_t printLn(const char *buffer, size_t buffer_size);
 
 	size_t printErr(const char *buffer, size_t buffer_size);
+	size_t printErrLn(const char *buffer, size_t buffer_size);
 
 	bool getWD(const char *buffer, size_t buffer_size);
 

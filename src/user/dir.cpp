@@ -19,8 +19,9 @@ namespace dir_program {
 				path = argv[1];
 			}
 
-			kiv_os::THandle handle = kiv_os_rtl::Create_File(path.c_str(), kiv_os::fmOpen_Always);
-			if (handle == kiv_os::erInvalid_Handle) {
+			kiv_os::THandle handle;
+			const bool success = kiv_os_rtl::Create_File(path.c_str(), kiv_os::fmOpen_Always, handle);
+			if (success) {
 				// Error - File does not exist.
 				std::string error = "File not found.";
 				kiv_os_lib::printErr(error.c_str(), error.length());

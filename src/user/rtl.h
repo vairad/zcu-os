@@ -10,9 +10,17 @@ namespace kiv_os_rtl {
 
 	size_t Get_Last_Error();
 
-	kiv_os::THandle Create_File(const char *file_name, size_t flags);
-	//podle flags otevre, vytvori soubor a vrati jeho deskriptor
-	//vraci nenulovy handle, kdyz vse OK
+	
+	/**
+	 * \brief Depend on parameters try to create an OPEN file.
+	 * \param file_name path to file 
+	 * \param flags file atribute
+	 * \param handle field for returned handle of opened file
+	 * \return success flag
+	 */
+	bool Create_File(const char* file_name, size_t flags, kiv_os::THandle& handle);
+
+
 	bool Write_File(const kiv_os::THandle file_handle, const void *buffer, const size_t buffer_size, size_t &written);
 	//zapise do souboru identifikovaneho deskriptor data z buffer o velikosti buffer_size a vrati pocet zapsanych dat ve written
 	//vraci true, kdyz vse OK

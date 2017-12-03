@@ -98,6 +98,13 @@ size_t kiv_os_lib::printErr(const char *buffer, size_t buffer_size) {
 	return written;
 }
 
+size_t kiv_os_lib::printErrLn(const char* buffer, size_t buffer_size)
+{
+	const size_t written = printErr(buffer, buffer_size);
+	printErr("\r\n", 3);
+	return written;
+}
+
 bool kiv_os_lib::getWD(const char* buffer, size_t buffer_size)
 {
 	size_t readed = -1;

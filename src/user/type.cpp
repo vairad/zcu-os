@@ -11,7 +11,8 @@ namespace type_program {
 	size_t type_main(int argc, char **argv) {
 		if (argc > 1) {
 			for (size_t i = 1; i < argc; i++) {
-				kiv_os::THandle file = kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always);
+				kiv_os::THandle file;
+				kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always, file);
 				if (file == kiv_os::erInvalid_Handle) {
 					// TODO: Klaus - Handle error.
 					continue;

@@ -8,12 +8,33 @@
 
 namespace md_program {
 
-	size_t md_main(int argc, char **argv) {
-		if (argc == 2) {
-			char *file = argv[1];
-			kiv_os::THandle handle = kiv_os_rtl::Create_File(file, kiv_os::faDirectory);
-			// TODO: Klaus - Check for error all over the application where creating file.
+	bool createFile(char * file)
+	{
+		kiv_os::THandle handle = kiv_os::erInvalid_Handle;
+		const bool succes = kiv_os_rtl::Create_File(file, kiv_os::faDirectory, handle);
+		if (succes)
+		{
 			kiv_os_rtl::Close_File(handle);
+		}
+		else
+		{
+			std::string error = "Directory " + std::string(file) + " could not be created";
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
+			return false;
+		}
+	}
+
+	size_t md_main(int argc, char **argv) {
+		if (argc > 1) {
+			bool success = true;
+			for (int i = 1; i < argc; ++i)
+			{
+				success &= createFile(argv[i]);
+			}
+			if (!success)
+			{
+				return kiv_os_lib::FILE_NOT_CREATED;
+			}
 		} else {
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";
