@@ -13,7 +13,10 @@ namespace rd_program
 {
 	const size_t SUCCESS = 0;
 	const size_t INCORRECT_SYNTAX = 1;
-	const size_t DIR_IS_NOT_EMPTY = 2;
+	const size_t FILE_NOT_FOUND = 2;
+	const size_t READ_ERROR = 3;
+	const size_t ATTRS_ERROR = 4;
+	const size_t DIR_NOT_EMPTY = 5;
 
 
 	void incorrectSyntax() {
@@ -23,21 +26,42 @@ namespace rd_program
 
 	void deleteDir(kiv_os::THandle dir, char *dirname) {
 		// TODO: Klaus - Handle errors.
-		kiv_os_rtl::Delete_File(dirname);
 		kiv_os_rtl::Close_File(dir);
+		kiv_os_rtl::Delete_File(dirname);
+	}
+
+	size_t ask(char *dirname) {
+		std::string question = "Do you want to delete \'";
+		question.append(dirname);
+		question.append("\'? (Y / N): ");
+		kiv_os_lib::print(question.c_str(), question.length());
+		char buffer[5];
+		size_t read = kiv_os_lib::read(buffer, sizeof(buffer) - 1);
+		if (read == -1) {
+			// Error - Bad read.
+			std::string error = "Error reading from standard input.";
+			kiv_os_lib::printErr(error.c_str(), error.length());
+			return READ_ERROR;
+		}
+		buffer[read] = 0; // Terminate the string.
+
+		if (buffer == "Y" || buffer == "y") {
+			return 1;
+		}
+		return 0;
 	}
 
 	size_t rd_main(int argc, char **argv) {
 		if (argc > 1 && argc <= 4) {
 			bool quiet = true;
-			bool recurive = false;
+			bool recursive = false;
 			char *dirname = nullptr;
 
 			for (size_t i = 1; i < argc; i++) {
 				// TODO: Klaus - Test this.
 				char *str = argv[i];
 				if (str == "/S" || str == "/s") {
-					recurive = true;
+					recursive = true;
 				}
 				else if (str == "/Q" || str == "/q") {
 					quiet = false;
@@ -52,34 +76,56 @@ namespace rd_program
 				return INCORRECT_SYNTAX;
 			}
 
-			// TODO: Klaus - Handle errors.
 			kiv_os::THandle dir = kiv_os_rtl::Create_File(dirname, kiv_os::fmOpen_Always);
-			size_t read;
-			char buffer[5];
-			bool ok = kiv_os_rtl::Read_File(dir, buffer, sizeof(buffer) - 1, read);
-			buffer[read] = 0; // Terminate the string.
-			if (read == 0 || recurive) {
-				if (!quiet) {
-					std::string question = "Do you want to delete \'";
-					question.append(dirname);
-					question.append("\'? (Y / N): ");
-					kiv_os_lib::print(question.c_str(), question.length());
-					read = kiv_os_lib::read(buffer, sizeof(buffer) - 1);
-					buffer[read] = 0; // Terminate the string.
+			if (dir == kiv_os::erInvalid_Handle) {
+				// Error - File not found.
+				std::string error = "File not found.";
+				kiv_os_lib::printErr(error.c_str(), error.length());
+				return FILE_NOT_FOUND;
+			}
 
-					if (buffer == "Y" || buffer == "y") {
-						deleteDir(dir, dirname);
-					}
+			bool isDir;
+			bool ok = kiv_os_lib::isDir(dir, isDir, nullptr);
+			if (!ok) {
+				// Error - Cannot get attrs.
+				std::string error = "Could not get file attributes.";
+				kiv_os_lib::printErr(error.c_str(), error.length());
+				return ATTRS_ERROR;
+			}
+
+			if (isDir) {
+				size_t read;
+				kiv_os::TDir_Entry tdir;
+				bool ok = kiv_os_rtl::Read_File(dir, &tdir, sizeof(kiv_os::TDir_Entry), read);
+				if (!ok) {
+					// Error - Bad read.
+					std::string error = "Error reading file.";
+					kiv_os_lib::printErr(error.c_str(), error.length());
+					return READ_ERROR;
 				}
-				else {
+				bool empty = read == -1;
+				size_t result = ask(dirname);
+				if (result == READ_ERROR) {
+					// Error - Bad read.
+					std::string error = "Error reading from standard input.";
+					kiv_os_lib::printErr(error.c_str(), error.length());
+					return READ_ERROR;
+				}
+
+				bool answer = result;
+				if ((empty || recursive) && (quiet || answer)) {
 					deleteDir(dir, dirname);
 				}
-			}
-			else {
-				// Error - folder is not empty.
-				std::string error = "The directory is not empty.";
-				kiv_os_lib::printErr(error.c_str(), error.length());
-				return DIR_IS_NOT_EMPTY;
+				if (!empty && !recursive) {
+					// Error - folder is not empty. 
+					std::string error = "The directory is not empty.";
+					kiv_os_lib::printErr(error.c_str(), error.length());
+					return DIR_NOT_EMPTY;
+				}
+			} else {
+				if (quiet || ask(dirname)) {
+					deleteDir(dir, dirname);
+				}
 			}
 		}
 		else {
@@ -96,6 +142,5 @@ size_t __stdcall rd(const kiv_os::TRegisters &regs)
 {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("rd", regs, &argc);
-	rd_program::rd_main(argc, argv);
-	return 0;
+	return rd_program::rd_main(argc, argv);
 }
