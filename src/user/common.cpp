@@ -97,8 +97,8 @@ bool kiv_os_lib::getWD(const char* buffer, size_t buffer_size)
 	return ok;
 }
 
-bool kiv_os_lib::isDir(kiv_os::THandle handle, bool &isDir, uint8_t *attrs) {
-	uint8_t attributes;
+bool kiv_os_lib::isDir(kiv_os::THandle handle, bool &isDir, uint16_t *attrs) {
+	uint16_t attributes;
 	bool ok = kiv_os_rtl::Get_File_Attributes(handle, attributes);
 	if (ok) {
 		isDir = (attributes & kiv_os::faDirectory) == kiv_os::faDirectory;

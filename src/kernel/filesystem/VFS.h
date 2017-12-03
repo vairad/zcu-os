@@ -32,7 +32,7 @@ namespace kiv_os_vfs {
 		size_t inode;
 		size_t size;
 
-		uint8_t attributes;
+		uint16_t attributes;
 		uint8_t status;
 		uint64_t position;
 		uint16_t openCounter;
@@ -124,6 +124,11 @@ namespace kiv_os_vfs {
 
 	int openPipe(kiv_os::THandle *fd_in, kiv_os::THandle *fd_out);
 
-	int getFileAttributes(kiv_os::THandle fd, uint8_t *dest);
+	/*
+	Looks for file or folder on given path.
+	*/
+	bool fileExists(char *path);
+
+	int getFileAttributes(kiv_os::THandle fd, uint16_t *dest);
 
 }

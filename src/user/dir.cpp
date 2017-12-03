@@ -28,7 +28,7 @@ namespace dir_program {
 			}
 
 			bool isDir;
-			uint8_t attrs;
+			uint16_t attrs;
 			bool ok = kiv_os_lib::isDir(handle, isDir, &attrs);
 			if (!ok) {
 				// Error - Get args fail.

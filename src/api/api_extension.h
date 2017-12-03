@@ -13,7 +13,7 @@ const uint16_t erProces_Not_Created = 4;								// proces nebyl vytvoren z duvod
 /*
 IN:		rdx.x - pointer
 
-OUT:	rax.l - file attributes according to api.h
+OUT:	rax.x - file attributes according to api.h
 */
 const uint8_t scGetFileAttributes = 11;
 

@@ -330,7 +330,7 @@ namespace kiv_os_vfs {
 		return 0;
 	}
 
-	int getFileAttributes(kiv_os::THandle fd, uint8_t *dest) {
+	int getFileAttributes(kiv_os::THandle fd, uint16_t *dest) {
 		if (fd == kiv_os::erInvalid_Handle) {
 			return 1;
 		}

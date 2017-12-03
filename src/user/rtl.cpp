@@ -170,13 +170,13 @@ bool kiv_os_rtl::Delete_File(const void *file) {
 	return result;
 }
 
-bool kiv_os_rtl::Get_File_Attributes(kiv_os::THandle handle, uint8_t &attrs) {
+bool kiv_os_rtl::Get_File_Attributes(kiv_os::THandle handle, uint16_t &attrs) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scGetFileAttributes);
 
 	regs.rdx.r = (uint64_t) handle;
 
 	const bool result = Do_SysCall(regs);
-	attrs = regs.rax.l;
+	attrs = regs.rax.x;
 	return result;
 }
 

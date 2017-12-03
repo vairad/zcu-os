@@ -31,5 +31,5 @@ namespace kiv_os_lib {
 
 	bool getWD(const char *buffer, size_t buffer_size);
 
-	bool isDir(kiv_os::THandle handle, bool &isDir, uint8_t *attrs);
+	bool isDir(kiv_os::THandle handle, bool &isDir, uint16_t *attrs);
 }

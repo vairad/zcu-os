@@ -35,6 +35,6 @@ namespace kiv_os_rtl {
 	bool Change_Working_Dir(const void *path);
 	bool Delete_File(const void *file);
 
-	bool Get_File_Attributes(kiv_os::THandle handle, uint8_t &attrs);
+	bool Get_File_Attributes(kiv_os::THandle handle, uint16_t &attrs);
 	bool Shutdown();
 }

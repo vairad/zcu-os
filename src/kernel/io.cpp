@@ -247,13 +247,13 @@ namespace kiv_os_io {
 	/*
 		IN:		rdx - pointer
 
-		OUT:	rax.l - file attributes according to api.h
+		OUT:	rax.x - file attributes according to api.h
 	*/
 	void getFileAttributes(kiv_os::TRegisters &regs) {
 		kiv_os::THandle procFd = regs.rdx.x;
 		kiv_os::THandle vfsHandle = process::getSystemFD(procFd);
 
-		const auto err = kiv_os_vfs::getFileAttributes(vfsHandle, &regs.rax.l);
+		const auto err = kiv_os_vfs::getFileAttributes(vfsHandle, &regs.rax.x);
 
 		regs.flags.carry = err != 0;
 	}
