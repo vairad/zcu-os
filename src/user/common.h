@@ -17,8 +17,9 @@ namespace kiv_os_lib {
 	const size_t READ_ERROR = 4;
 	const size_t DIR_NOT_EMPTY = 5;
 	const size_t CANNOT_CREATE_THREAD = 6;
-
-	char **getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc);
+	
+	std::vector<char *> getArgsDataPointer(std::vector<std::string> &args);
+	std::vector<std::string> getArgs(char* program_name, const kiv_os::TRegisters& context);
 
 	std::vector<std::string> parseLine(std::string line);
 

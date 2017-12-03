@@ -2,24 +2,33 @@
 #include "rtl.h"
 
 #include <locale>
+#include <vector>
 
 #undef stdin
 #undef stderr
 #undef stdout
 
-char **kiv_os_lib::getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc) {
+std::vector<char *> kiv_os_lib::getArgsDataPointer(std::vector<std::string> &args)
+{
+	std::vector<char *> argv;
+
+	for (auto i = 0; i < args.size(); ++i) {
+		argv.push_back( const_cast<char *>(args.at(i).c_str()) );
+	}
+	return argv;
+}
+
+std::vector<std::string> kiv_os_lib::getArgs(char* program_name, const kiv_os::TRegisters& context) {
 	kiv_os::TProcess_Startup_Info *info = (kiv_os::TProcess_Startup_Info *)context.rdi.r;
 	std::string line = info->arg;
 	std::vector<std::string> parts = parseLine(line);
-	*argc = static_cast<int>(parts.size()) + 1; //plus one... first record is program name
-	std::vector<char *> argv{};
+	std::vector<std::string> argv{};
 
 	argv.push_back(program_name); //add program name at first place
 	for (auto iterator = parts.begin(); iterator != parts.end(); ++iterator) {
-		argv.push_back(const_cast<char *>((*iterator).c_str()));
+		argv.push_back( *iterator );
 	}
-	// TODO: Klaus - Test this!!
-	return argv.data();
+	return argv;
 }
 
 std::vector<std::string> kiv_os_lib::parseLine(std::string line) {

@@ -35,7 +35,8 @@ namespace sort_program {
 }
 
 size_t __stdcall sort(const kiv_os::TRegisters &regs) {
-	int argc;
-	char **argv = kiv_os_lib::getArgs("sort", regs, &argc);
-	return sort_program::sort_main(argc, argv);
+	std::vector<std::string> args = kiv_os_lib::getArgs("sort", regs);
+	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
+
+	return sort_program::sort_main(argv.size(), argv.data());
 }

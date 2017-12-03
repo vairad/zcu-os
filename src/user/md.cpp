@@ -27,7 +27,9 @@ namespace md_program {
 }
 
 size_t __stdcall md(const kiv_os::TRegisters &regs) {
-	int argc;
-	char **argv = kiv_os_lib::getArgs("md", regs, &argc);
-	return md_program::md_main(argc, argv);
+	
+	std::vector<std::string> args = kiv_os_lib::getArgs("md", regs);
+	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
+
+	return md_program::md_main(args.size(), argv.data());
 }
