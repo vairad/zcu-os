@@ -39,7 +39,6 @@ namespace kiv_os_vfs {
 	struct FileDescriptor {
 		sblock_t superblockId;
 		node_t inode;
-		size_t size;
 
 		uint16_t attributes;
 		uint8_t status;
@@ -50,8 +49,14 @@ namespace kiv_os_vfs {
 
 	struct FsDriver {
 		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
+		int(*deleteFile)(char *path);
+
 		int(*read)(FileDescriptor *fd, void *dest, size_t length);
 		int(*write)(FileDescriptor *fd, void *src, size_t length);
+
+		int(*setPos)(FileDescriptor *fd, size_t position, uint8_t posType, uint8_t setType);
+		int(*getPos)(FileDescriptor *fd, size_t *position, uint8_t posType);
+
 		int(*cleanupDescriptor)(FileDescriptor *fd);
 	};
 
@@ -74,7 +79,7 @@ namespace kiv_os_vfs {
 	Returns error value
 	*/
 	int init(uint8_t driverCount, sblock_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
-	
+
 	/*
 	Performs shutdown tasks
 
@@ -120,7 +125,7 @@ namespace kiv_os_vfs {
 	/*
 	Looks for file or folder on given path.
 	*/
-	
+
 
 	int getFileAttributes(kiv_os::THandle fd, uint16_t *dest);
 

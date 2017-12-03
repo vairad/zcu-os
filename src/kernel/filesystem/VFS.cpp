@@ -242,7 +242,22 @@ namespace kiv_os_vfs {
 	}
 
 	int delFile(const char *path) {
-		return 1;
+		Superblock *sb;
+		char *drivePath;
+
+		char pathBuffer[pathBufferSize] = { 0 };
+		vfs_paths::normalizePath(pathBuffer, path, pathBufferSize);
+
+		if (resolveSuperblock(pathBuffer, &sb, &drivePath)) {
+			return 1;
+		}
+
+		FsDriver *driver = _fs_drivers + sb->filesys_id;
+		if (driver->deleteFile == nullptr) {
+			return -1;
+		}
+
+		return driver->deleteFile(drivePath);
 	}
 
 	bool fileExists(const char *path) {
@@ -259,53 +274,34 @@ namespace kiv_os_vfs {
 	}
 
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType) {
-		if (fd == kiv_os::erInvalid_Handle) {
-			return 1;
+		FileDescriptor *fDesc;
+		Superblock *superblock;
+		FsDriver *driver;
+
+		if (resolveOpenedFd(fd, &fDesc, &superblock, &driver)) {
+			return -1;
 		}
-		if (files[fd].status == 0) {
-			return 2;
-		}
-
-		size_t newPosition;
-
-
-		switch (posType) {
-		case kiv_os::fsBeginning:
-			newPosition = position; break;
-		case kiv_os::fsCurrent:
-			newPosition = files[fd].position + position; break;
-		case kiv_os::fsEnd:
-			newPosition = files[fd].size - position; break;
-		default: return 3; break;
+		if (driver->setPos == nullptr) {
+			return -1;
 		}
 
-		// todo: possibly validate position change for each case individually
-		if (newPosition > files[fd].size || newPosition < 0) {
-			return 4;
-		}
-
-		files[fd].position = newPosition;
-		return 0;
+		return driver->setPos(fDesc, position, posType, setType);
 	}
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType) {
-		if (fd == kiv_os::erInvalid_Handle) {
-			return 1;
+		FileDescriptor *fDesc;
+		Superblock *superblock;
+		FsDriver *driver;
+
+		if (resolveOpenedFd(fd, &fDesc, &superblock, &driver)) {
+			return -1;
 		}
-		if (files[fd].status == 0) {
-			return 2;
+		if (driver->setPos == nullptr) {
+			return -1;
 		}
 
-		switch (posType) {
-		case kiv_os::fsBeginning:
-			*position = files[fd].position; break;
-		case kiv_os::fsCurrent:
-			*position = 0; break;
-		case kiv_os::fsEnd:
-			*position = files[fd].size - files[fd].position; break;
-		default: return 3; break;
-		}
-		return 0;
+		return driver->getPos(fDesc, position, posType);
 	}
+
 
 	int close(kiv_os::THandle fd) {
 		FileDescriptor *fDesc;

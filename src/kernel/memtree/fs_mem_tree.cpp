@@ -12,54 +12,73 @@
 
 namespace fs_mem_tree {
 
+	const int fileResolved = 0;
+	const int fileMissingPathResolved = 1;
+	const int fileMissingPathMissing = 2;
+
+
 	filesys_t _fsid;
 
 	MemtreeMount *mountPoints[1];
 	sblock_t _superblock;
 
-	void createDescriptor(kiv_os_vfs::FileDescriptor *fd, node_t node, uint16_t attrs, size_t size = 0) {
+	void createDescriptor(kiv_os_vfs::FileDescriptor *fd, node_t node, uint16_t attrs) {
 		fd->attributes = attrs;
 		fd->openCounter = 1;
 		fd->superblockId = _superblock;
 
 		fd->inode = node;
 		fd->position = 0;
-		fd->size = size;
 	}
 
-
-	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
-		char *immediatePart, *rest;
-		
+	int resolveFile(char *path, node_t *file, node_t *parent, bool createMissingDirs) {
 		MemtreeMount *mm = mountPoints[0];
+		char *rest;
+		char *immediatePart;
 
-		node_t currentFolder = mm->getRootNode();
+		*parent = mm->getRootNode();
 
 		vfs_paths::immediatePathPart(path, &immediatePart, &rest);
 
 		while (rest != nullptr) {
-			if (!mm->isDirectory(currentFolder)) {
+			if (!mm->isDirectory(*parent)) {
 				// there is still some path to be walked but current node is not a directory
-				return 1;
+				return fileMissingPathMissing;
 			}
-			currentFolder = mm->findInDirectory(currentFolder, immediatePart);
-			if (currentFolder == kiv_os_vfs::invalidNode) {
+			*file = mm->findInDirectory(*parent, immediatePart);
+			if (*file == kiv_os_vfs::invalidNode) {
 				// current immediate part was not found in parent folder
-				return 1;
+				return fileMissingPathMissing;
 			}
 
 			vfs_paths::immediatePathPart(rest, &immediatePart, &rest);
 		}
 
-		node_t desiredFile = mm->findInDirectory(currentFolder, immediatePart);
+		*file = mm->findInDirectory(*parent, immediatePart);
 
-		if (desiredFile != kiv_os_vfs::invalidNode) {
+		return fileResolved;
+	}
+
+	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
+	
+		MemtreeMount *mm = mountPoints[0];
+
+		node_t parentFolder;
+		node_t desiredFile;
+
+		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, false);
+		
+		if (resolveResult == fileMissingPathMissing) {
+			return 1;
+		}
+
+		if (resolveResult == fileResolved) {
 			// file is found within a folder 
 			bool fileTypeMatches = ((attrs & kiv_os::faDirectory) != 0) == mm->isDirectory(desiredFile);
 			if (!fileTypeMatches) {
 				return 2;
 			}
-			createDescriptor(fd, desiredFile, attrs, mm->getSize(desiredFile));
+			createDescriptor(fd, desiredFile, attrs);
 
 			return 0;
 		}
@@ -68,7 +87,7 @@ namespace fs_mem_tree {
 		if (flags & kiv_os::fmOpen_Always) {
 			return 2;
 		}
-		desiredFile = mm->createFile(currentFolder, immediatePart, attrs);
+		desiredFile = mm->createFile(parentFolder, immediatePart, attrs);
 		if (desiredFile == kiv_os_vfs::invalidNode) {
 			return 3;
 		}
@@ -77,6 +96,18 @@ namespace fs_mem_tree {
 
 		return 0;
 	}
+
+	int deleteFile(char *path) {
+		node_t parentFolder;
+		node_t desiredFile;
+
+		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, false);
+
+		// todo: implement
+
+		return 1;
+	}
+
 
 	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
 		MemtreeMount *mm = mountPoints[0];
@@ -93,6 +124,52 @@ namespace fs_mem_tree {
 		fd->position += written;
 
 		return (int)written;
+	}
+
+	int setPos(kiv_os_vfs::FileDescriptor *fd, size_t position, uint8_t posType, uint8_t setType) {
+		size_t newPosition;
+		size_t currentSize;
+
+		MemtreeMount *mm = mountPoints[0];
+
+		currentSize = mm->getSize(fd->inode);
+		
+		switch (posType) {
+		case kiv_os::fsBeginning:
+			newPosition = position; break;
+		case kiv_os::fsCurrent:
+			newPosition = fd->position + position; break;
+		case kiv_os::fsEnd:
+			newPosition = currentSize - position; break;
+		default: return 3; break;
+		}
+
+		// todo: possibly validate position change for each case individually
+		if (newPosition > currentSize) {
+			return 4;
+		}
+
+		fd->position = newPosition;
+		if (setType & kiv_os::fsSet_Size) {
+			mm->setSize(fd->inode, newPosition);
+		}
+
+		return 0;
+	}
+	int getPos(kiv_os_vfs::FileDescriptor *fd, size_t *position, uint8_t posType) {
+		MemtreeMount *mm = mountPoints[0];
+
+		switch (posType) {
+		case kiv_os::fsBeginning:
+			*position = fd->position; break;
+		case kiv_os::fsCurrent:
+			*position = 0; break;
+		case kiv_os::fsEnd:
+			*position = mm->getSize(fd->inode) - fd->position; break;
+		default: return 3; break;
+		}
+
+		return 0;
 	}
 
 	int mountDrive(char *label, node_t inodes, block_t blocks, size_t blockSize) {
@@ -123,8 +200,14 @@ namespace fs_mem_tree {
 		kiv_os_vfs::FsDriver driver;
 
 		driver.openFile = openFile;
+		driver.deleteFile = deleteFile;
+
 		driver.read = readBytes;
 		driver.write = writeBytes;
+
+		driver.setPos = setPos;
+		driver.getPos = getPos;
+
 		driver.cleanupDescriptor = nullptr;
 
 		int result = kiv_os_vfs::registerDriver(driver, &_fsid);
