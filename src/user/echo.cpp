@@ -31,5 +31,5 @@ size_t __stdcall echo(const kiv_os::TRegisters &regs)
 	std::vector<std::string> args = kiv_os_lib::getArgs("echo", regs);
 	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
 
-	return echo_program::echo_main(argv.size(), argv.data());
+	return echo_program::echo_main(static_cast<int>(argv.size()), argv.data());
 }

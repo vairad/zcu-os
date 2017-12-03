@@ -48,5 +48,5 @@ size_t __stdcall type(const kiv_os::TRegisters &regs)
 	std::vector<std::string> args = kiv_os_lib::getArgs("type", regs);
 	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
 
-	return type_program::type_main(argv.size(), argv.data());
+	return type_program::type_main(static_cast<int>(argv.size()), argv.data());
 }

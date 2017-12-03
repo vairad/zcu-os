@@ -49,7 +49,8 @@ namespace rgen_program {
 }
 
 size_t __stdcall rgen(const kiv_os::TRegisters &regs) {
-	int argc;
-	char **argv = kiv_os_lib::getArgs("rgen", regs, &argc);
-	return rgen_program::rgen_main(argc, argv);
+	std::vector<std::string> args = kiv_os_lib::getArgs("rgen", regs);
+	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
+
+	return rgen_program::rgen_main(static_cast<int>(argv.size()), argv.data());
 }

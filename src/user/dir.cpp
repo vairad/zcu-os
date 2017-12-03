@@ -70,5 +70,5 @@ size_t __stdcall dir(const kiv_os::TRegisters &regs)
 	std::vector<std::string> args = kiv_os_lib::getArgs("dir", regs);
 	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
 
-	return dir_program::dir_main(argv.size(), argv.data());
+	return dir_program::dir_main(static_cast<int>(argv.size()), argv.data());
 }

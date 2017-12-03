@@ -63,6 +63,5 @@ size_t __stdcall wc(const kiv_os::TRegisters &regs)
 	std::vector<std::string> args = kiv_os_lib::getArgs("wc", regs);
 	std::vector<char *> argv = kiv_os_lib::getArgsDataPointer(args);
 
-
-	return wc_program::wc_main(argv.size(), argv.data());
+	return wc_program::wc_main(static_cast<int>(argv.size()), argv.data());
 }
