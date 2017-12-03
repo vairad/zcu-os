@@ -17,37 +17,63 @@ namespace fs_mem_tree {
 	MemtreeMount *mountPoints[1];
 	sblock_t _superblock;
 
+	void createDescriptor(kiv_os_vfs::FileDescriptor *fd, node_t node, uint16_t attrs, size_t size = 0) {
+		fd->attributes = attrs;
+		fd->openCounter = 1;
+		fd->superblockId = _superblock;
+
+		fd->inode = node;
+		fd->position = 0;
+		fd->size = size;
+	}
+
+
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		char *immediatePart, *rest;
 		
 		MemtreeMount *mm = mountPoints[0];
-		node_t currentFolder = 0, parent = 0;
+
+		node_t currentFolder = mm->getRootNode();
 
 		vfs_paths::immediatePathPart(path, &immediatePart, &rest);
 
 		while (rest != nullptr) {
-			node_t immediate = mm->findInDirectory(currentFolder, immediatePart);
+			if (!mm->isDirectory(currentFolder)) {
+				// there is still some path to be walked but current node is not a directory
+				return 1;
+			}
+			currentFolder = mm->findInDirectory(currentFolder, immediatePart);
+			if (currentFolder == kiv_os_vfs::invalidNode) {
+				// current immediate part was not found in parent folder
+				return 1;
+			}
+
 			vfs_paths::immediatePathPart(rest, &immediatePart, &rest);
 		}
 
 		node_t desiredFile = mm->findInDirectory(currentFolder, immediatePart);
 
 		if (desiredFile != kiv_os_vfs::invalidNode) {
+			// file is found within a folder 
+			bool fileTypeMatches = ((attrs & kiv_os::faDirectory) != 0) == mm->isDirectory(desiredFile);
+			if (!fileTypeMatches) {
+				return 2;
+			}
+			createDescriptor(fd, desiredFile, attrs, mm->getSize(desiredFile));
 
-		}
-		else {
-
-		}
-
-		// todo: locate file according to path
-		// todo: cache pointer to the found file
-
-		if (true) {
-			return 1;
+			return 0;
 		}
 
-		fd->openCounter = 1;
-		fd->position = 0;
+		// parent folder was found but the final file was not
+		if (flags & kiv_os::fmOpen_Always) {
+			return 2;
+		}
+		desiredFile = mm->createFile(currentFolder, immediatePart, attrs);
+		if (desiredFile == kiv_os_vfs::invalidNode) {
+			return 3;
+		}
+
+		createDescriptor(fd, desiredFile, attrs);
 
 		return 0;
 	}

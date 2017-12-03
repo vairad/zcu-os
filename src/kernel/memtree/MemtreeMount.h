@@ -2,6 +2,7 @@
 
 #include "../../api/api.h"
 #include "../filesystem/VFS.h"
+#include "../Bitmap.h"
 
 struct MemtreeDirEntry {
 	kiv_os::TDir_Entry apiEntry;
@@ -11,10 +12,15 @@ struct MemtreeDirEntry {
 
 class MemtreeMount
 {
+	static const block_t invalidBlock = -1;
+
 	kiv_os_vfs::Superblock *sb;
 
 	kiv_os_vfs::Inode *inodes;
 	uint8_t *data;
+	Bitmap *blockBitmap;
+
+	node_t rootNode;
 
 
 	size_t maxFilesize;
@@ -25,11 +31,17 @@ class MemtreeMount
 	size_t readNode(kiv_os_vfs::Inode *node, uint8_t *dst, size_t from, size_t to);
 	size_t writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t from, size_t to);
 
-	node_t reserveFreeNode();
+	node_t reserveFreeNode(uint16_t attrs);
+	void releaseNode(node_t n);
+
+	block_t reserveBlock(kiv_os_vfs::Inode *node, block_t nodeBlock);
+	void releaseBlock(kiv_os_vfs::Inode *node, block_t nodeBlock);
 
 public:
 	MemtreeMount(kiv_os_vfs::Superblock *superblock);
 	~MemtreeMount();
+
+	node_t getRootNode();
 
 	size_t read(node_t node, uint8_t *dst, size_t from, size_t to);
 	size_t write(node_t node, uint8_t *src, size_t from, size_t to);
