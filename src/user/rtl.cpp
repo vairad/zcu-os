@@ -105,15 +105,12 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle *returned, const char *program, 
 bool kiv_os_rtl::Create_Thread(kiv_os::THandle *returned, const void *program, const void
 	*data) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
-	kiv_os::TThread_Proc threadProc;
 
 	regs.rcx.x = kiv_os::clCreate_Thread;
 
-	threadProc = (kiv_os::TThread_Proc) program;
-	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(&threadProc);
+	regs.rdx.r = uint64_t(program);
+	regs.rdi.r = uint64_t(data);
 
-
-	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.r)>(data);
 	if (Do_SysCall(regs)) {
 		*returned = regs.rax.x;
 		return true;

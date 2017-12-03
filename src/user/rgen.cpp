@@ -12,10 +12,13 @@
 
 namespace rgen_program {
 
+	bool run_generator;
+
 	size_t __stdcall generateNumbers(const void *data) {
-		bool run = data;
+		bool * run = (bool *) data;
+		
 		srand(time(0));
-		while (run) {
+		while ( *run ) {
 			double num = rand() / RAND_MAX;
 			std::string s = std::to_string(num);
 			kiv_os_lib::printLn(s.c_str(), s.length());
@@ -43,6 +46,9 @@ namespace rgen_program {
 			// Nothing, wait for EOF.
 		}
 		run = false;
+
+		kiv_os_rtl::Join_One_Handle(handle);
+
 		return kiv_os_lib::SUCCESS;
 	}
 

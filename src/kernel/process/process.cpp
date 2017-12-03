@@ -336,16 +336,25 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
  */
 kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Proc entry_point, void * data)
 {
-	std::unique_lock<std::mutex> lck(thread_table_lock);
+	std::shared_ptr<TCB> tcb = nullptr;
+	kiv_os::THandle tid;
+	{
+		std::unique_lock<std::mutex> lck(thread_table_lock);
 
-	//find next free TID value
-	const auto tid = getNextFreeTid();
-	if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
+		//find next free TID value
+		tid = getNextFreeTid();
+		if ((MAX_THREAD_COUNT + BASE_TID_INDEX) == tid)
+		{
+			return kiv_os::erInvalid_Handle;
+		}
+
+		tcb = createFreeTCB(tid, pid);
+	}
+
+	if(tcb == nullptr)
 	{
 		return kiv_os::erInvalid_Handle;
 	}
-
-	auto tcb = createFreeTCB(tid, pid);
 	process::TStartThreadBlock threadInfo(tid, entry_point, data);
 
 	tcb->thread = std::thread(&thread0, threadInfo);
@@ -856,8 +865,6 @@ bool process::destructInit()
  */
 void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 {
-	std::lock_guard<std::mutex> lock(thread_table_lock);
-
 	const auto tid = process::getTid();
 	if (thread_table[TidToTableIndex(handle)] && tid < BASE_TID_INDEX + MAX_THREAD_COUNT)
 	{
@@ -892,6 +899,10 @@ kiv_os::THandle process::getSystemFD(const kiv_os::THandle program_handle)
 	std::lock_guard<std::mutex> lock(process_table_lock);
 
 	const auto pid = process::getPid();
+	if (pid == kiv_os::erInvalid_Handle)
+	{
+		return kiv_os::erInvalid_Handle;
+	}
 	kiv_os::THandle sys_handle;
 	try
 	{
