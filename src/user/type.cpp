@@ -8,7 +8,7 @@
 
 namespace type_program {
 
-	void type_main(int argc, char **argv) {
+	size_t type_main(int argc, char **argv) {
 		if (argc > 1) {
 			for (size_t i = 1; i < argc; i++) {
 				kiv_os::THandle file = kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always);
@@ -35,7 +35,10 @@ namespace type_program {
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";
 			kiv_os_lib::printErr(error.c_str(), error.length());
+			return kiv_os_lib::INCORRECT_SYNTAX;
 		}
+
+		return kiv_os_lib::SUCCESS;
 	}
 
 }
@@ -44,6 +47,5 @@ size_t __stdcall type(const kiv_os::TRegisters &regs)
 { 
 	int argc;
 	char **argv = kiv_os_lib::getArgs("type", regs, &argc);
-	type_program::type_main(argc, argv);
-	return 0; 
+	return type_program::type_main(argc, argv);
 }

@@ -18,17 +18,16 @@ namespace md_program {
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";
 			kiv_os_lib::printErr(error.c_str(), error.length());
+			return kiv_os_lib::INCORRECT_SYNTAX;
 		}
 
-		return 0;
+		return kiv_os_lib::SUCCESS;
 	}
 
 }
 
-size_t __stdcall md(const kiv_os::TRegisters &regs) 
-{
+size_t __stdcall md(const kiv_os::TRegisters &regs) {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("md", regs, &argc);
-	md_program::md_main(argc, argv);
-	return 0;
+	return md_program::md_main(argc, argv);
 }

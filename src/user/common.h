@@ -10,6 +10,13 @@
 
 namespace kiv_os_lib {
 
+	const size_t SUCCESS = 0;
+	const size_t FILE_NOT_FOUND = 1;
+	const size_t ATTRS_ERROR = 2;
+	const size_t INCORRECT_SYNTAX = 3;
+	const size_t READ_ERROR = 4;
+	const size_t DIR_NOT_EMPTY = 5;
+
 	char **getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc);
 
 	std::vector<std::string> parseLine(std::string line);

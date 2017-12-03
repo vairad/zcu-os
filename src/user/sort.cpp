@@ -11,7 +11,7 @@
 
 namespace sort_program {
 
-	void sort_main(int argc, char **argv) {
+	size_t sort_main(int argc, char **argv) {
 		std::vector<std::string> lines = std::vector<std::string>();
 		size_t read;
 		size_t buffer_size = 255;
@@ -28,14 +28,14 @@ namespace sort_program {
 			std::string line = lines[i];
 			kiv_os_lib::printLn(line.c_str(), line.length());
 		}
+
+		return kiv_os_lib::SUCCESS;
 	}
 
 }
 
-size_t __stdcall sort(const kiv_os::TRegisters &regs)
-{
+size_t __stdcall sort(const kiv_os::TRegisters &regs) {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("sort", regs, &argc);
-	sort_program::sort_main(argc, argv);
-	return 0;
+	return sort_program::sort_main(argc, argv);
 }

@@ -143,7 +143,6 @@ namespace shell_executor {
 			bool ok = kiv_os_rtl::Join_One_Handle(toWait[i].handle);
 			if (!ok) {
 				std::string error = "Error waiting for process or thread.\n";
-				size_t written;
 				kiv_os_lib::printErr(error.c_str(), error.length());
 				continue;
 			}

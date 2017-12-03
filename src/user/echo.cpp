@@ -9,7 +9,7 @@
 
 namespace echo_program {
 
-	void echo_main(int argc, char **argv) {
+	size_t echo_main(int argc, char **argv) {
 		std::string line = "";
 		for (size_t i = 1; i < argc; i++) {
 			if (i != 1) {
@@ -20,6 +20,8 @@ namespace echo_program {
 		}
 
 		kiv_os_lib::printLn(line.c_str(), line.length());
+
+		return kiv_os_lib::SUCCESS;
 	}
 
 }
@@ -28,6 +30,5 @@ size_t __stdcall echo(const kiv_os::TRegisters &regs)
 {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("echo", regs, &argc);
-	echo_program::echo_main(argc, argv);
-	return 0;
+	return echo_program::echo_main(argc, argv);
 }
