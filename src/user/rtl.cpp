@@ -32,9 +32,7 @@ bool Do_SysCall(kiv_os::TRegisters &regs) {
 	return !regs.flags.carry;
 }
 
-
-
-kiv_os::THandle kiv_os_rtl::Create_File(const char* file_name, size_t flags) {
+kiv_os::THandle kiv_os_rtl::Create_File(const char *file_name, size_t flags) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scCreate_File);
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file_name);
 	regs.rcx.r = flags;
@@ -71,11 +69,10 @@ bool kiv_os_rtl::Close_File(const kiv_os::THandle file_handle) {
 }
 
 
-bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program, const char * args
-								, const kiv_os::THandle in_stream
-								, const kiv_os::THandle out_stream
-								, const kiv_os::THandle err_stream) 
-{
+bool kiv_os_rtl::Create_Process(kiv_os::THandle *returned, const char *program, const char *args,
+	const kiv_os::THandle in_stream,
+	const kiv_os::THandle out_stream,
+	const kiv_os::THandle err_stream) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
 	kiv_os::TProcess_Startup_Info procInfo;
 	
@@ -89,8 +86,7 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 	procInfo.arg = (char*)args; //TODO RVA should be const in api?
 	
 	regs.rdi.r = uint64_t(&procInfo);
-	if(Do_SysCall(regs))
-	{
+	if(Do_SysCall(regs)) {
 		*returned = regs.rax.x;
 		return true;
 	}
@@ -99,6 +95,26 @@ bool kiv_os_rtl::Create_Process(kiv_os::THandle* returned, const char * program,
 	return false;
 }
 
+bool kiv_os_rtl::Create_Thread(kiv_os::THandle *returned, const void *program, const void
+	*data) {
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scClone);
+	kiv_os::TThread_Proc threadProc;
+
+	regs.rcx.x = kiv_os::clCreate_Thread;
+
+	threadProc = (kiv_os::TThread_Proc) program;
+	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(&threadProc);
+
+
+	regs.rdi.r = reinterpret_cast<decltype(regs.rdx.r)>(data);
+	if (Do_SysCall(regs)) {
+		*returned = regs.rax.x;
+		return true;
+	}
+	*returned = kiv_os::erInvalid_Handle;
+	Last_Error = regs.rax.x;
+	return false;
+}
 
 bool kiv_os_rtl::Join_One_Handle(const kiv_os::THandle wait_for) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scProc, kiv_os::scWait_For);

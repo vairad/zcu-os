@@ -16,6 +16,7 @@ namespace kiv_os_lib {
 	const size_t INCORRECT_SYNTAX = 3;
 	const size_t READ_ERROR = 4;
 	const size_t DIR_NOT_EMPTY = 5;
+	const size_t CANNOT_CREATE_THREAD = 6;
 
 	char **getArgs(char *program_name, const kiv_os::TRegisters &context, int *argc);
 
