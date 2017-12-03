@@ -44,6 +44,8 @@ namespace kiv_os_vfs {
 	}
 
 	void prefillDriveC() {
+		kiv_os_vfs::openFile("var/././../etc/./karel.txt", 0, 0);
+
 		createFolder("C:/comics");
 		createFolder("C:/comics/marvel");
 

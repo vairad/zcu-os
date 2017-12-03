@@ -103,10 +103,14 @@ namespace kiv_os_vfs {
 	*/
 	int increaseFDescOpenCounter(kiv_os::THandle fd);
 
-	kiv_os::THandle openFile(char *path, uint64_t flags, uint8_t attrs);
+	kiv_os::THandle openFile(const char *path, uint64_t flags, uint8_t attrs);
+	int delFile(const char *path);
+	bool fileExists(const char *path);
+
+
 	int read(kiv_os::THandle fd, void *dest, uint64_t length);
 	int write(kiv_os::THandle fd, void *src, uint64_t length);
-	int delFile(char *path);
+
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);
 	int close(kiv_os::THandle fd);
@@ -116,7 +120,7 @@ namespace kiv_os_vfs {
 	/*
 	Looks for file or folder on given path.
 	*/
-	bool fileExists(char *path);
+	
 
 	int getFileAttributes(kiv_os::THandle fd, uint16_t *dest);
 

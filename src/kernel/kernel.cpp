@@ -41,12 +41,13 @@ void Initialize_Kernel() {
 	{
 		exit(INITIALISE_VFS_ERROR);
 	}
-	kiv_os_vfs::prefillDriveC();
 
 	if( !process::createInit() )
 	{
 		exit(CREATE_INIT_ERROR);
 	}
+
+	kiv_os_vfs::prefillDriveC();
 }
 
 void Shutdown_Kernel() {
