@@ -9,15 +9,7 @@
 #undef stdout
 #include "..\api\api.h"
 
-namespace rd_program
-{
-	const size_t SUCCESS = 0;
-	const size_t INCORRECT_SYNTAX = 1;
-	const size_t FILE_NOT_FOUND = 2;
-	const size_t READ_ERROR = 3;
-	const size_t ATTRS_ERROR = 4;
-	const size_t DIR_NOT_EMPTY = 5;
-
+namespace rd_program {
 
 	void incorrectSyntax() {
 		std::string error = "The syntax of the command is incorrect.";
@@ -41,7 +33,7 @@ namespace rd_program
 			// Error - Bad read.
 			std::string error = "Error reading from standard input.";
 			kiv_os_lib::printErr(error.c_str(), error.length());
-			return READ_ERROR;
+			return kiv_os_lib::READ_ERROR;
 		}
 		buffer[read] = 0; // Terminate the string.
 
@@ -73,7 +65,7 @@ namespace rd_program
 
 			if (dirname == nullptr) {
 				incorrectSyntax();
-				return INCORRECT_SYNTAX;
+				return kiv_os_lib::INCORRECT_SYNTAX;
 			}
 
 			kiv_os::THandle dir = kiv_os_rtl::Create_File(dirname, kiv_os::fmOpen_Always);
@@ -81,7 +73,7 @@ namespace rd_program
 				// Error - File not found.
 				std::string error = "File not found.";
 				kiv_os_lib::printErr(error.c_str(), error.length());
-				return FILE_NOT_FOUND;
+				return kiv_os_lib::FILE_NOT_FOUND;
 			}
 
 			bool isDir;
@@ -90,7 +82,7 @@ namespace rd_program
 				// Error - Cannot get attrs.
 				std::string error = "Could not get file attributes.";
 				kiv_os_lib::printErr(error.c_str(), error.length());
-				return ATTRS_ERROR;
+				return kiv_os_lib::ATTRS_ERROR;
 			}
 
 			if (isDir) {
@@ -101,15 +93,15 @@ namespace rd_program
 					// Error - Bad read.
 					std::string error = "Error reading file.";
 					kiv_os_lib::printErr(error.c_str(), error.length());
-					return READ_ERROR;
+					return kiv_os_lib::READ_ERROR;
 				}
 				bool empty = read == -1;
 				size_t result = ask(dirname);
-				if (result == READ_ERROR) {
+				if (result == kiv_os_lib::READ_ERROR) {
 					// Error - Bad read.
 					std::string error = "Error reading from standard input.";
 					kiv_os_lib::printErr(error.c_str(), error.length());
-					return READ_ERROR;
+					return kiv_os_lib::READ_ERROR;
 				}
 
 				bool answer = result;
@@ -120,7 +112,7 @@ namespace rd_program
 					// Error - folder is not empty. 
 					std::string error = "The directory is not empty.";
 					kiv_os_lib::printErr(error.c_str(), error.length());
-					return DIR_NOT_EMPTY;
+					return kiv_os_lib::DIR_NOT_EMPTY;
 				}
 			} else {
 				if (quiet || ask(dirname)) {
@@ -131,15 +123,14 @@ namespace rd_program
 		else {
 			// Error - wrong number of parameters.
 			incorrectSyntax();
-			return INCORRECT_SYNTAX;
+			return kiv_os_lib::INCORRECT_SYNTAX;
 		}
-		return SUCCESS;
+		return kiv_os_lib::SUCCESS;
 	}
 }
 
 
-size_t __stdcall rd(const kiv_os::TRegisters &regs)
-{
+size_t __stdcall rd(const kiv_os::TRegisters &regs) {
 	int argc;
 	char **argv = kiv_os_lib::getArgs("rd", regs, &argc);
 	return rd_program::rd_main(argc, argv);
