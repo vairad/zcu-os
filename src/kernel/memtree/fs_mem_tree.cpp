@@ -15,6 +15,7 @@ namespace fs_mem_tree {
 	filesys_t _fsid;
 
 	MemtreeMount *mountPoints[1];
+	sblock_t _superblock;
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		char *immediatePart, *rest;
@@ -68,7 +69,7 @@ namespace fs_mem_tree {
 		return (int)written;
 	}
 
-	int mountDrive(char *label, node_t inodes, size_t blocks, size_t blockSize) {
+	int mountDrive(char *label, node_t inodes, block_t blocks, size_t blockSize) {
 		if (mountPoints[0] != nullptr) {
 			return 1;
 		}
@@ -81,8 +82,7 @@ namespace fs_mem_tree {
 		sb->inodeCount = sb->emptyInodes = inodes;
 		sb->connections = 0;
 
-		sblock_t psb;
-		int mountResult = kiv_os_vfs::mountDrive(label, sb, &psb);
+		int mountResult = kiv_os_vfs::mountDrive(label, sb, &_superblock);
 		if (mountResult != 0) {
 			return mountResult;
 		}

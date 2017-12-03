@@ -6,9 +6,13 @@
 #undef stdin
 #undef stderr
 #undef stdout
+
 #include "../../api/api.h"
 
-typedef size_t node_t;
+#include "inode.h"
+
+
+
 typedef uint8_t filesys_t;
 typedef uint8_t sblock_t;
 
@@ -16,7 +20,6 @@ typedef uint8_t sblock_t;
 namespace kiv_os_vfs {
 
 	const node_t invalidNode = -1;
-	
 
 	const uint8_t mountpointLabelSize = 8;
 
@@ -27,7 +30,6 @@ namespace kiv_os_vfs {
 	const int mountErr_labelTooLong = 1;
 	const int mountErr_noMoreRoom = 2;
 
-	const uint8_t inode_directLinks = 12;
 	const uint8_t dentry_fileNameLength = 128;
 
 	const char mountSeparator = ':';
@@ -41,7 +43,7 @@ namespace kiv_os_vfs {
 
 		uint16_t attributes;
 		uint8_t status;
-		uint64_t position;
+		size_t position;
 		uint16_t openCounter;
 	};
 
@@ -56,28 +58,13 @@ namespace kiv_os_vfs {
 	struct Superblock {
 		char label[mountpointLabelSize];
 
-		node_t inodeCount;
-		size_t blockCount;
-		size_t emptyBlocks, emptyInodes;
+		node_t inodeCount, emptyInodes;
+		block_t blockCount, emptyBlocks;
+
 		size_t blockSize;
 		size_t groupBlocks, groupInodes; // unused
 		filesys_t filesys_id;
 		size_t connections;
-	};
-
-	struct Inode {
-		uint8_t mode;
-		uint16_t refCount;
-		uint16_t owner, group; // unused
-		size_t size;
-		uint32_t atime, mtime, ctime; // unused
-
-		size_t directBlocks[inode_directLinks];
-		size_t singleIndirect; // not implemented
-		size_t doubleIndirect; // not implemented
-		size_t tripleIndirect; // not implemented
-		void *data; // todo: remove
-
 	};
 
 
@@ -86,7 +73,7 @@ namespace kiv_os_vfs {
 
 	Returns error value
 	*/
-	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
+	int init(uint8_t driverCount, sblock_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
 	
 	/*
 	Performs shutdown tasks

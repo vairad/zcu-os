@@ -147,25 +147,6 @@ size_t MemtreeMount::getSize(node_t n) {
 	return node->size;
 }
 
-bool isValidNode(kiv_os_vfs::Inode *test) {
-	if (test == nullptr) {
-		return false;
-	}
-	if (test->refCount == 0) {
-		return false;
-	}
-
-	return true;
-}
-
-bool isDirectoryNode(kiv_os_vfs::Inode *test) {
-	if (!isValidNode(test)) {
-		return false;
-	}
-
-	return ((test->mode & kiv_os::faDirectory) != 0);
-}
-
 bool MemtreeMount::isDirectory(node_t n) {
 	return isDirectoryNode(this->getNode(n));
 }

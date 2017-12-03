@@ -5,9 +5,12 @@
 namespace vfs_paths {
 	int immediatePathPart(char *src, char** immediate, char**rest) {
 		*immediate = strtok_s(src, &kiv_os_vfs::pathSeparator, rest);
-		if (std::strlen(*rest) == 0) {
-			*rest = nullptr;
+		if (*rest != nullptr) {
+			if (std::strlen(*rest) == 0) {
+				*rest = nullptr;
+			}
 		}
+		
 		return 0;
 	}
 

@@ -97,7 +97,7 @@ namespace kiv_os_vfs {
 	}
 //		VFS STATE FUNCTIONS
 
-	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
+	int init(uint8_t driverCount, sblock_t fsMountCapacity, int(*createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *)) {
 		_fs_drivers = new __nothrow FsDriver[driverCount];
 		_superblocks = new __nothrow Superblock*[fsMountCapacity];
 
@@ -319,6 +319,8 @@ namespace kiv_os_vfs {
 		  // descriptor had multiple references, do nothing
 			return 0;
 		}
+
+		superblock->connections--;
 
 		if (driver->cleanupDescriptor != nullptr) {
 			int error = driver->cleanupDescriptor(fDesc);

@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\src\kernel\filesystem\fs_pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_stdio.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\proc_fs.cpp" />
+    <ClCompile Include="..\..\src\kernel\filesystem\inode.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS_paths.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS_startup.cpp" />
@@ -41,6 +42,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\api\api.h" />
     <ClInclude Include="..\..\src\api\api_extension.h" />
+    <ClInclude Include="..\..\src\kernel\filesystem\inode.h" />
     <ClInclude Include="..\..\src\kernel\memtree\fs_mem_tree.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_pipe.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_stdio.h" />
