@@ -15,13 +15,11 @@ namespace md_program {
 		if (succes)
 		{
 			kiv_os_rtl::Close_File(handle);
+			return true;
 		}
-		else
-		{
-			std::string error = "Directory " + std::string(file) + " could not be created";
-			kiv_os_lib::printErrLn(error.c_str(), error.length());
-			return false;
-		}
+		std::string error = "Directory " + std::string(file) + " could not be created";
+		kiv_os_lib::printErrLn(error.c_str(), error.length());
+		return false;
 	}
 
 	size_t md_main(int argc, char **argv) {
