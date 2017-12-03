@@ -22,4 +22,6 @@ namespace kiv_os_lib {
 	size_t printErr(const char *buffer, size_t buffer_size);
 
 	bool getWD(const char *buffer, size_t buffer_size);
+
+	bool isDir(kiv_os::THandle handle, bool &isDir, uint8_t *attrs);
 }

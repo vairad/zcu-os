@@ -23,10 +23,10 @@ namespace kiv_os_rtl {
 	//uzavre soubor identifikovany pomoci deskriptoru
 	//vraci true, kdyz vse OK
 
-	bool Create_Process(kiv_os::THandle* returned, const char* program, const char* args
-						, const kiv_os::THandle in_stream = kiv_os::erInvalid_Handle
-						, const kiv_os::THandle out_stream = kiv_os::erInvalid_Handle
-						, const kiv_os::THandle err_stream = kiv_os::erInvalid_Handle);
+	bool Create_Process(kiv_os::THandle* returned, const char* program, const char* args,
+		const kiv_os::THandle in_stream = kiv_os::erInvalid_Handle,
+		const kiv_os::THandle out_stream = kiv_os::erInvalid_Handle,
+		const kiv_os::THandle err_stream = kiv_os::erInvalid_Handle);
 
 	bool Join_One_Handle(kiv_os::THandle wait_for);
 	bool Create_Pipe(kiv_os::THandle handles[]);
@@ -34,5 +34,6 @@ namespace kiv_os_rtl {
 	bool Change_Working_Dir(const void *path);
 	bool Delete_File(const void *file);
 
+	bool Get_File_Attributes(kiv_os::THandle handle, uint8_t &attrs);
 	bool Shutdown();
 }

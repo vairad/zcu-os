@@ -24,19 +24,34 @@ namespace dir_program {
 				// Error - File does not exist.
 				std::string error = "File not found.";
 				kiv_os_lib::printErr(error.c_str(), error.length());
+				return;
 			}
 
-			size_t read = 1;
-			char buffer[256];
-			while (read != -1) {
-				// TODO: Klaus - Handle listing file.
-				bool ok = kiv_os_rtl::Read_File(handle, buffer, sizeof(buffer) - 1, read);
-				if (!ok) {
-					// TODO: Handle read error.
-					return;
+			bool isDir;
+			uint8_t attrs;
+			bool ok = kiv_os_lib::isDir(handle, isDir, &attrs);
+			if (!ok) {
+				// Error - Get args fail.
+				std::string error = "Could not get file attributes.";
+				kiv_os_lib::printErr(error.c_str(), error.length());
+				return;
+			}
+
+			if (isDir) {
+				size_t read;
+				kiv_os::TDir_Entry tdir;
+				bool ok;
+				while ((ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read)) && read != -1) {
+					std::string s = std::to_string(tdir.file_attributes);
+					s.append("\t");
+					kiv_os_lib::print(s.c_str(), s.length);
+					kiv_os_lib::printLn(tdir.file_name, strlen(tdir.file_name));
 				}
-				buffer[read] = 0; // Terminate the string.
-				kiv_os_lib::printLn(buffer, read);
+			} else {
+				std::string s = std::to_string(attrs);
+				s.append("\t");
+				kiv_os_lib::print(s.c_str(), s.length);
+				kiv_os_lib::printLn(path.c_str(), path.length());
 			}
 		} else {
 			// Error - wrong number of parameters.

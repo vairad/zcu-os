@@ -117,9 +117,8 @@ bool kiv_os_rtl::Join_One_Handle(const kiv_os::THandle wait_for) {
 }
 
 bool kiv_os_rtl::Create_Pipe(kiv_os::THandle handles[]) {
-	// TODO: Klaus - Check implementation.
-	
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scCreate_Pipe);
+
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(handles);
 
 	return Do_SysCall(regs);
@@ -152,6 +151,16 @@ bool kiv_os_rtl::Delete_File(const void *file) {
 	regs.rdx.r = reinterpret_cast<decltype(regs.rdx.r)>(file);
 
 	const bool result = Do_SysCall(regs);
+	return result;
+}
+
+bool kiv_os_rtl::Get_File_Attributes(kiv_os::THandle handle, uint8_t &attrs) {
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scGetFileAttributes);
+
+	regs.rdx.r = (uint64_t) handle;
+
+	const bool result = Do_SysCall(regs);
+	attrs = regs.rax.l;
 	return result;
 }
 
