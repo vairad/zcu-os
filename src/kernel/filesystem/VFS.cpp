@@ -340,6 +340,20 @@ namespace kiv_os_vfs {
 			return 2;
 		}
 
+
+		char pipe_path[] = "pipe:/";
+		char pathCpy[pathBufferSize];
+		strcpy_s(pathCpy, pathBufferSize, pipe_path);
+		char *pathCpyP = (char *)pathCpy;
+		char **remainingPath = &pathCpyP;
+
+		Superblock *sb;
+		if (resolveFolder(remainingPath, &sb)) {
+			return 2;
+		}
+
+		sb->connections++;
+		sb->connections++;
 		*fd_in = i_in;
 		*fd_out = i_out;
 

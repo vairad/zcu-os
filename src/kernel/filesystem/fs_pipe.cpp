@@ -95,7 +95,7 @@ namespace fs_pipe {
 
 		sb.inodeCount = sb.emptyInodes = pipeCapacity;
 
-		int result = kiv_os_vfs::mountDrive("", sb, &superblock);
+		int result = kiv_os_vfs::mountDrive("pipe", sb, &superblock);
 		if (result) {
 			return result;
 		}
