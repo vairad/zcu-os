@@ -19,6 +19,7 @@ namespace shell_parser {
 	typedef struct shell_command {
 		std::string name;
 		std::vector<std::string> parameters;
+		std::string files[3];
 		InOutType std_in;
 		InOutType std_out;
 		InOutType std_err;

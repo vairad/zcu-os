@@ -24,7 +24,7 @@ namespace shell_executor {
 		kiv_os_lib::printErr(error.c_str(), error.length());
 	}
 
-	bool setStdIn(shell_parser::InOutType in, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
+	bool setStdIn(shell_parser::InOutType in, kiv_os::THandle pipeHandles[], std::string file,
 		kiv_os::THandle *std_in) {
 		bool retVal = true;
 		switch (in) {
@@ -40,9 +40,8 @@ namespace shell_executor {
 			}
 			break;
 		case shell_parser::InOutType::FILE_NEW:
-			if (!params.empty()) {
-				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_in);
+			if (!file.empty()) {
+				bool success = kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_in);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -54,7 +53,7 @@ namespace shell_executor {
 		return retVal;
 	}
 
-	bool setStdOut(shell_parser::InOutType out, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
+	bool setStdOut(shell_parser::InOutType out, kiv_os::THandle pipeHandles[], std::string file,
 		kiv_os::THandle *std_out) {
 		bool retVal = true;
 		bool ok;
@@ -74,9 +73,8 @@ namespace shell_executor {
 			}
 			break;
 		case shell_parser::InOutType::FILE_NEW:
-			if (!params.empty()) {
-				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_out);
+			if (!file.empty()) {
+				bool success = kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_out);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -84,9 +82,8 @@ namespace shell_executor {
 			}
 			break;
 		case shell_parser::InOutType::FILE_APPEND:
-			if (!params.empty()) {
-				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always, 0,*std_out);
+			if (!file.empty()) {
+				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0,*std_out);
 				// TODO: Klaus - We need to set position to the end of the file.
 			} else {
 				// Missing argument (filename).
@@ -99,7 +96,7 @@ namespace shell_executor {
 		return retVal;
 	}
 
-	bool setStdErr(shell_parser::InOutType err, kiv_os::THandle pipeHandles[], std::vector<std::string> params,
+	bool setStdErr(shell_parser::InOutType err, kiv_os::THandle pipeHandles[], std::string file,
 		kiv_os::THandle *std_err) {
 		bool retVal = true;
 		switch (err) {
@@ -107,9 +104,8 @@ namespace shell_executor {
 			*std_err = kiv_os::stdError;
 			break;
 		case shell_parser::InOutType::FILE_NEW:
-			if (!params.empty()) {
-				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_err);
+			if (!file.empty()) {
+				bool success = kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_err);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -117,9 +113,8 @@ namespace shell_executor {
 			}
 			break;
 		case shell_parser::InOutType::FILE_APPEND:
-			if (!params.empty()) {
-				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always, 0, *std_err);
+			if (!file.empty()) {
+				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0, *std_err);
 				// TODO: Klaus - We need to set position to the end of the file.
 			} else {
 				// Missing argument (filename).
@@ -227,9 +222,9 @@ namespace shell_executor {
 				kiv_os::THandle std_in;
 				kiv_os::THandle std_out;
 				kiv_os::THandle std_err;
-				bool ok = setStdIn(in, pipeHandles, params, &std_in);
-				ok = ok && setStdOut(out, pipeHandles, params, &std_out);
-				ok = ok && setStdErr(err, pipeHandles, params, &std_err);
+				bool ok = setStdIn(in, pipeHandles, command.files[0], &std_in);
+				ok = ok && setStdOut(out, pipeHandles, command.files[1], &std_out);
+				ok = ok && setStdErr(err, pipeHandles, command.files[2], &std_err);
 				if (!ok) {
 					return true;
 				}

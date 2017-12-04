@@ -10,10 +10,13 @@
 
 namespace shell_parser {
 
-	Command createCommand(std::string command, std::vector<std::string> parameters, InOutType *in, InOutType *out, InOutType *err) {
+	Command createCommand(std::string command, std::vector<std::string> parameters, std::string files[], InOutType *in, InOutType *out, InOutType *err) {
 		Command retVal;
 		retVal.name = command;
 		retVal.parameters = parameters;
+		retVal.files[0] = files[0];
+		retVal.files[1] = files[1];
+		retVal.files[2] = files[2];
 		retVal.std_in = *in;
 		retVal.std_out = *out;
 		retVal.std_err = *err;
@@ -31,6 +34,7 @@ namespace shell_parser {
 	std::vector<Command> splitToCommands(std::vector<std::string> parts) {
 		std::vector<Command> retVal = std::vector<Command>();
 		std::vector<std::string> params = std::vector<std::string>();
+		std::string files[3] = { "", "", "" };
 		std::string command;
 		size_t size = parts.size();
 		InOutType in = InOutType::STANDARD;
@@ -42,30 +46,52 @@ namespace shell_parser {
 			if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc"
 				|| p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown" || p == "shell" || p == "exit") {
 				if (i != 0) {
-					retVal.push_back(createCommand(command, params, &in, &out, &err));
+					retVal.push_back(createCommand(command, params, files, &in, &out, &err));
 					params.clear();
+					files[0] = "";
+					files[1] = "";
+					files[2] = "";
 				}
 				command = p;
 			} else if (p == "|") {
 				out = InOutType::PIPE;
 			} else if (p == ">") {
 				out = InOutType::FILE_NEW;
+				if (i + 1 < size) {
+					i++;
+					files[1] = parts[i];
+				}
 			} else if (p == ">>") {
 				out = InOutType::FILE_APPEND;
+				if (i + 1 < size) {
+					i++;
+					files[1] = parts[i];
+				}
 			} else if (p == "<") {
 				in = InOutType::FILE_NEW;
+				if (i + 1 < size) {
+					i++;
+					files[0] = parts[i];
+				}
 			} else if (p == "2>") {
 				err = InOutType::FILE_NEW;
+				if (i + 1 < size) {
+					i++;
+					files[2] = parts[i];
+				}
 			} else if (p == "2>>") {
 				err = InOutType::FILE_APPEND;
+				if (i + 1 < size) {
+					i++;
+					files[2] = parts[i];
+				}
 			} else {
-				//p.erase(std::remove_if(p.begin(), p.end(), ](char c) {return c == '\"'; }), p.end());
 				params.push_back(p);
 			}
 		}
 		// Push last command to vector.
 		if (size > 0) {
-			retVal.push_back(createCommand(command, params, &in, &out, &err));
+			retVal.push_back(createCommand(command, params, files, &in, &out, &err));
 		}
 
 		return retVal;
