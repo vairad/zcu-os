@@ -10,8 +10,7 @@ namespace shell_cd {
 
 	bool cd(shell_executor::CommandExecute command, std::string args) {
 		std::vector<std::string> params = command.parameters;
-		kiv_os::THandle std_out = command.std_out;
-		bool success = false;
+		bool success;
 
 		if (params.empty()) {
 			char wd[256];
@@ -20,7 +19,11 @@ namespace shell_cd {
 			kiv_os_lib::printLn(wd, strlen(wd));
 		} else if (params.size() == 1) {
 			success = kiv_os_rtl::Change_Working_Dir(args.c_str());
-			// TODO: Klaus - Handle error.
+			if( ! success )
+			{
+				std::string error = "System could not find selected path";
+				kiv_os_lib::printErr(error.c_str(), error.length());
+			}
 		} else {
 			std::string error = "Invalid parameters.";
 			kiv_os_lib::printErr(error.c_str(), error.length());

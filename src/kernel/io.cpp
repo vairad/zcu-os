@@ -217,11 +217,14 @@ namespace kiv_os_io {
 	void setWorkDir(kiv_os::TRegisters &regs) {
 		const auto c_path = reinterpret_cast<char *>(regs.rdx.r);
 
-		//TODO RVA absolutize path
 		bool success = false;
-		//if ( kiv_os_vfs::checkDireExist(path)) //TODO RVA check on vfs changed folder
+		char pathBuffer[2048];
+		memset(pathBuffer, 0, 2048);
+		vfs_paths::normalizePath(pathBuffer, c_path, 2048);
+
+		if ( kiv_os_vfs::directoryExists(pathBuffer))
 		{
-			const std::string path = c_path;
+			const std::string path = pathBuffer;
 			success = process::changeWorkingDir(path);
 		}
 
