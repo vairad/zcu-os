@@ -51,8 +51,8 @@ namespace kiv_os_vfs {
 		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
 		int(*deleteFile)(char *path);
 
-		int(*read)(FileDescriptor *fd, void *dest, size_t length);
-		int(*write)(FileDescriptor *fd, void *src, size_t length);
+		size_t(*read)(FileDescriptor *fd, void *dest, size_t length);
+		size_t(*write)(FileDescriptor *fd, void *src, size_t length);
 
 		int(*setPos)(FileDescriptor *fd, size_t position, uint8_t posType, uint8_t setType);
 		int(*getPos)(FileDescriptor *fd, size_t *position, uint8_t posType);
@@ -110,11 +110,13 @@ namespace kiv_os_vfs {
 
 	kiv_os::THandle openFile(const char *path, uint64_t flags, uint8_t attrs);
 	int delFile(const char *path);
+
 	bool fileExists(const char *path);
+	bool directoryExists(const char *path);
 
 
-	int read(kiv_os::THandle fd, void *dest, uint64_t length);
-	int write(kiv_os::THandle fd, void *src, uint64_t length);
+	size_t read(kiv_os::THandle fd, void *dest, uint64_t length);
+	size_t write(kiv_os::THandle fd, void *src, uint64_t length);
 
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);

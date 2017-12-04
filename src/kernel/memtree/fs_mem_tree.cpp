@@ -134,21 +134,21 @@ namespace fs_mem_tree {
 	}
 
 
-	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
+	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
 		MemtreeMount *mm = mountPoints[0];
 
 		size_t read = mm->read(fd->inode, (uint8_t *)dst, fd->position, fd->position + length);
 		fd->position += read;
 
-		return (int)read;
+		return read;
 	}
-	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *src, size_t length) {
+	size_t writeBytes(kiv_os_vfs::FileDescriptor *fd, void *src, size_t length) {
 		MemtreeMount *mm = mountPoints[0];
 
 		size_t written = mm->write(fd->inode, (uint8_t *)src, fd->position, fd->position + length);
 		fd->position += written;
 
-		return (int)written;
+		return written;
 	}
 
 	int setPos(kiv_os_vfs::FileDescriptor *fd, size_t position, uint8_t posType, uint8_t setType) {

@@ -39,7 +39,7 @@ namespace fs_pipe {
 		return 0;
 	}
 
-	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
+	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
 		if (fd->status != pipe::status_open_read) {
@@ -49,12 +49,12 @@ namespace fs_pipe {
 			return -1; 
 		}
 
-		uint64_t read = pipe->read_out((uint8_t *)buffer, length);
+		size_t read = pipe->read_out((uint8_t *)buffer, length);
 		// todo: verify read amount / errors
-		return (int)read;
+		return read;
 	}
 
-	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
+	size_t writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
 		if (fd->status != pipe::status_open_write) {
@@ -64,9 +64,9 @@ namespace fs_pipe {
 			return -1;
 		}
 
-		uint64_t written = pipe->write_in((uint8_t *)buffer, length);
+		size_t written = pipe->write_in((uint8_t *)buffer, length);
 		// todo: verify write amount / errors
-		return (int)written;
+		return written;
 	}
 
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {

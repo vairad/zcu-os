@@ -23,7 +23,7 @@ namespace fs_process {
 	int _registered = 0;
 
 
-	int readFolder(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
+	size_t readFolder(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
 	{
 		kiv_os::TDir_Entry dir;
 		size_t index = 0;
@@ -49,7 +49,7 @@ namespace fs_process {
 		return -1;
 	}
 
-	int readFile(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
+	size_t readFile(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
 	{
 		proces_block proces;
 		try
@@ -133,7 +133,7 @@ namespace fs_process {
 		}
 	}
 
-	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
+	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		if(fd->attributes & kiv_os::faDirectory)
 		{
 			return readFolder(fd, buffer, length);
@@ -143,7 +143,7 @@ namespace fs_process {
 		}
 	}
 
-	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
+	size_t writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		proces_block proces;
 		try
 		{
@@ -161,9 +161,9 @@ namespace fs_process {
 
 		registered_processes[fd->inode].name = content;
 
-		const int written = int(to_write.size());
+		const size_t written = to_write.size();
 		fd->position += written;
-		return int(written);
+		return written;
 	}
 
 	int closeDescriptor(kiv_os_vfs::FileDescriptor *fd) {

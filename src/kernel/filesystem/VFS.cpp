@@ -185,7 +185,7 @@ namespace kiv_os_vfs {
 	//		SYSCALL FUNCTIONS
 
 
-	int read(kiv_os::THandle fd, void *dest, uint64_t length) {
+	size_t read(kiv_os::THandle fd, void *dest, uint64_t length) {
 		FileDescriptor *fDesc;
 		Superblock *superblock;
 		FsDriver *driver;
@@ -197,7 +197,7 @@ namespace kiv_os_vfs {
 		return driver->read(fDesc, dest, length);
 	}
 
-	int write(kiv_os::THandle fd, void *src, uint64_t length) {
+	size_t write(kiv_os::THandle fd, void *src, uint64_t length) {
 		FileDescriptor *fDesc;
 		Superblock *superblock;
 		FsDriver *driver;
@@ -261,8 +261,19 @@ namespace kiv_os_vfs {
 	}
 
 	bool fileExists(const char *path) {
-		uint64_t flags = kiv_os::faRead_Only;
-		kiv_os::THandle fd = openFile(path, flags, 0);
+		kiv_os::THandle fd = openFile(path, kiv_os::fmOpen_Always, kiv_os::faRead_Only);
+
+		bool result = fd != kiv_os::erInvalid_Handle;
+
+		if (result) {
+			close(fd);
+		}
+
+		return result;
+	}
+
+	bool directoryExists(const char *path) {
+		kiv_os::THandle fd = openFile(path, kiv_os::fmOpen_Always, kiv_os::faDirectory | kiv_os::faRead_Only);
 
 		bool result = fd != kiv_os::erInvalid_Handle;
 
