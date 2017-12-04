@@ -53,9 +53,6 @@ void Initialize_Kernel() {
 
 void Shutdown_Kernel() {
 
-	//TODO RVA kill all processes
-	// process::killAll();
-
 	process::destructInit();
 	kiv_os_vfs::shutdown();
 	FreeLibrary(User_Programs);
@@ -102,7 +99,7 @@ void runFirstProgram()
 	
 	if(regs.flags.carry == true)
 	{
-		//return; //something went terribly wrong you can add break point here
+		//something went terribly wrong
 		exit(WAITING_SHELL_ERROR);
 	}
 
