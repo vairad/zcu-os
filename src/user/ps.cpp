@@ -8,21 +8,25 @@
 #undef stderr
 #undef stdout
 #include "..\api\api.h"
+#include "../kernel/handles.h"
 
 namespace ps_program
 {
-	int printProcesses(bool pid_flag) 
+	const std::string proc_fs_path = "procfs:/";
+
+	bool openProcfsRoot(kiv_os::THandle &handle)
 	{
-		std::string path = "procfs:/";
-		kiv_os::THandle handle;
-		const bool success = kiv_os_rtl::Create_File(path.c_str(), kiv_os::fmOpen_Always, handle);
+		bool success = kiv_os_rtl::Create_File(proc_fs_path.c_str(), 0, kiv_os::faDirectory, handle);
 		if (!success) {
 			// Error - File does not exist.
 			std::string error = "File not found.";
 			kiv_os_lib::printErr(error.c_str(), error.length());
-			return kiv_os_lib::FILE_NOT_FOUND;
 		}
+		return success;
+	}
 
+	bool verifyProcfsRoot(const kiv_os::THandle handle)
+	{
 		bool isDir;
 		uint16_t attrs;
 		bool ok = kiv_os_lib::isDir(handle, isDir, &attrs);
@@ -32,23 +36,42 @@ namespace ps_program
 			kiv_os_lib::printErr(error.c_str(), error.length());
 			return kiv_os_lib::ATTRS_ERROR;
 		}
+		return ok;
+	}
 
-		if (isDir) {
-			size_t read;
-			kiv_os::TDir_Entry tdir;
-			bool ok;
-			while ((ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read)) && read != -1) {
-				std::string s = std::to_string(tdir.file_attributes);
-				s.append("\t");
-				kiv_os_lib::print(s.c_str(), s.length());
-				kiv_os_lib::printLn(tdir.file_name, strlen(tdir.file_name));
+	int printProcesses(bool pid_flag) 
+	{
+		std::string path = "procfs:/";
+		kiv_os::THandle handle;
+		bool success = openProcfsRoot(handle);
+		success &= verifyProcfsRoot(handle);
+		if (!success) { return kiv_os_lib::FILE_NOT_FOUND; }
+
+		size_t read;
+		kiv_os::TDir_Entry tdir;
+		bool ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
+		ok &= (read != -1);
+		while (ok)
+		{
+			std::string processLn = tdir.file_name;
+			std::string processPath = proc_fs_path + processLn;
+			kiv_os::THandle handle_file;
+			char buffer[3];
+			bool success = kiv_os_rtl::Create_File(processPath.c_str(), 0, 0, handle_file);
+			processLn += "\t\t";
+			while ( success )
+			{
+				success = kiv_os_rtl::Read_File(handle_file, &buffer, 3, read);
+				if(read == -1 || read == 0)
+				{
+					break;
+				}
+				processLn += buffer;
 			}
-		}
-		else {
-			std::string s = std::to_string(attrs);
-			s.append("\t");
-			kiv_os_lib::print(s.c_str(), s.length());
-			kiv_os_lib::printLn(path.c_str(), path.length());
+			kiv_os_lib::printLn(processLn.c_str(), processLn.size());
+
+			ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
+			ok &= (read != -1);
 		}
 	}
 

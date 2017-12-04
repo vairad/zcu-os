@@ -24,13 +24,77 @@ namespace fs_process {
 
 	int _registered = 0;
 
+
+	int readFolder(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
+	{
+		kiv_os::TDir_Entry dir;
+		size_t index = 0;
+		bool success = false;
+		for (auto iterator = registered_processes.begin(); iterator != registered_processes.end(); ++iterator)
+		{
+			if(index == fd->position)
+			{
+				proces_block process = iterator->second;
+				strcpy_s(dir.file_name, sizeof(dir.file_name) , std::to_string(process.pid).c_str());
+				dir.file_attributes = kiv_os::faSystem_File;
+				success = true;
+				break;
+			}
+			index++;
+		}
+		if(success)
+		{
+			*static_cast<kiv_os::TDir_Entry *>(buffer) = dir;
+			fd->position++;
+			return 1;
+		}
+		return -1;
+	}
+
+	int readFile(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length)
+	{
+		proces_block proces;
+		try
+		{
+			proces = registered_processes.at(fd->inode);
+		}
+		catch (std::out_of_range)
+		{
+			return -1; // file not found
+		}
+		if(fd->position == (proces.name.size() - 1))
+		{
+			return -1; // all readed
+		}
+		std::string to_read = proces.name.substr(fd->position, length - 1); // -1 for size
+
+		strcpy_s((char *)buffer, length, to_read.c_str());
+		size_t read = strnlen_s((char *)buffer, length);
+
+		fd->position = fd->position + read;
+		return int(read);
+	}
+
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
 		proces_block proces;
+		if ( strlen(path) == 0 && (attrs & kiv_os::faDirectory) ) // open root folder
+		{
+			fd->position = 0;
+			fd->openCounter = 1;
+			fd->inode = 0;
+			fd->attributes = kiv_os::faDirectory;
+			return 0;
+		}
+
 		proces.pid = atoi(path);
 		try
 		{
 			if(registered_processes.count(proces.pid) > 0 )
 			{
+				fd->position = 0;
+				fd->openCounter = 1;
+				fd->inode = proces.pid;
+
 				registered_processes[proces.pid].referenced++;
 				return 0;
 			}
@@ -46,28 +110,18 @@ namespace fs_process {
 		fd->openCounter = 1;
 		fd->inode = proces.pid;
 
-		proces.referenced = 0;
 		registered_processes[proces.pid] = proces;
 		return 0;
 	}
 
 	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
-		proces_block proces;
-		try
+		if(fd->attributes & kiv_os::faDirectory)
 		{
-			proces = registered_processes.at(fd->inode);
-		}catch(std::out_of_range)
+			return readFolder(fd, buffer, length);
+		}else
 		{
-			return -1; // file not found
+			return readFile(fd, buffer, length);
 		}
-		
-		std::string to_read = proces.name.substr(fd->position, length);
-
-		strcpy_s((char *)buffer, length,to_read.c_str());
-		size_t read = strnlen_s((char *)buffer, length);
-
-		fd->position = fd->position + read - 1;
-		return int(read);
 	}
 
 	int writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
@@ -112,7 +166,7 @@ namespace fs_process {
 			return 0;
 		}
 
-		registered_processes.erase(fd->inode);
+//		registered_processes.erase(fd->inode);
 		return 0;
 	}
 

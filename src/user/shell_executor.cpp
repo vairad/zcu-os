@@ -42,7 +42,7 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_NEW:
 			if (!params.empty()) {
 				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, *std_in);
+				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_in);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -76,7 +76,7 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_NEW:
 			if (!params.empty()) {
 				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, *std_out);
+				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_out);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -86,7 +86,7 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_APPEND:
 			if (!params.empty()) {
 				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always,*std_out);
+				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always, 0,*std_out);
 				// TODO: Klaus - We need to set position to the end of the file.
 			} else {
 				// Missing argument (filename).
@@ -109,7 +109,7 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_NEW:
 			if (!params.empty()) {
 				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, *std_err);
+				bool success = kiv_os_rtl::Create_File(filename.c_str(), 0, 0, *std_err);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -119,7 +119,7 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_APPEND:
 			if (!params.empty()) {
 				std::string filename = params.back();
-				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always, *std_err);
+				bool success = kiv_os_rtl::Create_File(filename.c_str(), kiv_os::fmOpen_Always, 0, *std_err);
 				// TODO: Klaus - We need to set position to the end of the file.
 			} else {
 				// Missing argument (filename).
