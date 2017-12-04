@@ -195,6 +195,9 @@ bool subroutineCreateProcess(kiv_os::TRegisters & context)
 		return false;
 	}
 	
+	//add procfs record
+	addProcessToProcFS(pcb->program_name, pid);
+
 	//prepare and run thread
 	const auto tid = createProcessThread(pid, program, context);
 	if ( -1 == tid)
@@ -336,7 +339,7 @@ kiv_os::THandle createProcessThread(const kiv_os::THandle pid, const kiv_os::TEn
  */
 kiv_os::THandle createThread(const kiv_os::THandle pid, const kiv_os::TThread_Proc entry_point, void * data)
 {
-	std::shared_ptr<TCB> tcb = nullptr;
+	std::shared_ptr<TCB> tcb;
 	kiv_os::THandle tid;
 	{
 		std::unique_lock<std::mutex> lck(thread_table_lock);
@@ -628,7 +631,8 @@ void process0(process::TStartProcessBlock &procInfo)
 	addRecordToThreadMap(procInfo.tid);
 	kiv_os::TRegisters context = procInfo.proc;
 	context.rdi.r = reinterpret_cast<uint64_t>(procInfo.getProcInfo());
-	
+
+
 	// do entry point work
 	const size_t retval = procInfo.entry_point(context);
 
@@ -673,6 +677,9 @@ void thread0(process::TStartThreadBlock& threadInfo)
 void cleanProcess(const kiv_os::THandle handle)
 {
 	std::lock_guard<std::mutex> lock(process_table_lock);
+
+	//rm procfs record
+	remProcessFromProcFS(handle);
 
 	//check stop and clean all threads
 	for (size_t index = 0; index < MAX_THREAD_COUNT; index++)
@@ -960,4 +967,37 @@ void process::removeProcessFD(const kiv_os::THandle program_handle)
 
 	const auto pid = process::getPid();
 	process_table[pid]->io_devices.at(program_handle) = kiv_os::erInvalid_Handle;
+}
+
+bool addProcessToProcFS(std::string name, kiv_os::THandle pid)
+{
+	std::string path = "procfs:/" + std::to_string(pid);
+
+	auto handle = kiv_os_vfs::openFile(const_cast<char*>(path.c_str()), 0, 0);
+	if(handle == kiv_os::erInvalid_Handle)
+	{
+		return false;
+	}
+	kiv_os_vfs::write(handle, (void *)name.c_str(), name.size());
+	kiv_os_vfs::close(handle);
+
+	return true;
+}
+
+bool remProcessFromProcFS(const kiv_os::THandle pid)
+{
+	if (pid == kiv_os::erInvalid_Handle)
+	{
+		return false;
+	}
+
+	std::string path = "procfs:/" + std::to_string(pid);
+	// todo RVA delete record
+	auto success = kiv_os_vfs::delFile(const_cast<char*>(path.c_str()));
+	if (success)
+	{
+		return false;
+	}
+
+	return true;
 }

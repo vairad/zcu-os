@@ -11,7 +11,7 @@ namespace md_program {
 	bool createFile(char * file)
 	{
 		kiv_os::THandle handle = kiv_os::erInvalid_Handle;
-		const bool succes = kiv_os_rtl::Create_File(file, kiv_os::faDirectory, handle);
+		const bool succes = kiv_os_rtl::Create_File(file, kiv_os::faDirectory, 0, handle);
 		if (succes)
 		{
 			kiv_os_rtl::Close_File(handle);

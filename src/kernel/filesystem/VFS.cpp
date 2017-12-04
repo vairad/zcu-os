@@ -29,15 +29,26 @@ namespace kiv_os_vfs {
 
 	//		VFS PRIVATE FUNCTIONS
 
-	Superblock *resolveSuperblock(char *path) {
+	Superblock *resolveSuperblock(char **path) {
 		char *label = nullptr, *rest = nullptr;
-		label = strtok_s(path, mountSeparator, &rest);
+		label = strtok_s(*path, mountSeparator, &rest);
 
 		for (int i = 0; i < _fs_mount_count; i++) {
 			if (!strcmp(label, (_superblocks + i)->label)) {
+				
+				//todo review ... patch missing rest of path
+				if (rest != 0)
+				{
+					size_t remain_length = strlen(rest);
+					strcpy_s(*path, remain_length + 1, rest);
+					*path = rest;
+				}
+				
 				return _superblocks + i;
 			}
 		}
+
+
 
 		return nullptr;
 	}
@@ -50,12 +61,13 @@ namespace kiv_os_vfs {
 			return 0;
 		}
 
-		*sb = resolveSuperblock(*path);
+		*sb = resolveSuperblock(path);
 		if (sb == nullptr) {
 			return 1;
 		}
 
-		*path += strnlen((*sb)->label, mountpointLabelSize);
+		// todo review removed by pathc missing path
+	    //*path += strnlen((*sb)->label, mountpointLabelSize) -1 ; //indexed from zero you have to decrease one
 		if (**path == *pathSeparator) {
 			*path += 1;
 		}
@@ -228,6 +240,10 @@ namespace kiv_os_vfs {
 			(files + fd)->openCounter = 0;
 			return kiv_os::erInvalid_Handle;
 		}
+
+		//todo review patch procfs
+		(files + fd)->superblockId = sb->filesys_id;
+
 		sb->connections++;
 
 		return fd;

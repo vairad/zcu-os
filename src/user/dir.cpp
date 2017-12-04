@@ -20,7 +20,7 @@ namespace dir_program {
 			}
 
 			kiv_os::THandle handle;
-			const bool success = kiv_os_rtl::Create_File(path.c_str(), kiv_os::fmOpen_Always, handle);
+			const bool success = kiv_os_rtl::Create_File(path.c_str(), kiv_os::fmOpen_Always, 0, handle);
 			if (success) {
 				// Error - File does not exist.
 				std::string error = "File not found.";

@@ -18,7 +18,7 @@ namespace kiv_os_rtl {
 	 * \param handle field for returned handle of opened file
 	 * \return success flag
 	 */
-	bool Create_File(const char* file_name, size_t flags, kiv_os::THandle& handle);
+	bool Create_File(const char* file_name, size_t flags, uint16_t attrs, kiv_os::THandle& handle);
 
 
 	bool Write_File(const kiv_os::THandle file_handle, const void *buffer, const size_t buffer_size, size_t &written);

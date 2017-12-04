@@ -69,7 +69,7 @@ namespace rd_program {
 			}
 
 			kiv_os::THandle dir;
-			bool success = kiv_os_rtl::Create_File(dirname, kiv_os::fmOpen_Always, dir);
+			bool success = kiv_os_rtl::Create_File(dirname, kiv_os::fmOpen_Always, 0, dir);
 			if (dir == kiv_os::erInvalid_Handle) {
 				// Error - File not found.
 				std::string error = "File not found.";
