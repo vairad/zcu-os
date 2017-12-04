@@ -208,6 +208,7 @@ namespace kiv_os_io {
 			regs.rax.r = kiv_os::erInvalid_Handle; //TODO RVA consider beter retval
 		}
 		regs.flags.carry = false;
+		regs.rax.r = wd_size;
 	}
 
 	/*
