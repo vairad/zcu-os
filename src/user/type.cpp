@@ -18,7 +18,8 @@ namespace type_program {
 
 	size_t type_main(int argc, char *argv[]) {
 		if (argc > 1) {
-			for (size_t i = 1; i < argc; i++) {
+			for (size_t i = 1; i < argc; i++)
+			{
 				kiv_os::THandle file;
 				const bool success = kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always, 0, file);
 				if (!success) {
@@ -42,6 +43,7 @@ namespace type_program {
 					memset(buffer, 0, sizeof(buffer)); // null buffer for sure
 				}
 				kiv_os_lib::printLn(buffer, 0);
+				kiv_os_rtl::Close_File(file);
 			}
 		} else {
 			// Error - wrong number of parameters.
