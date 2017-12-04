@@ -16,7 +16,7 @@ MemtreeMount::MemtreeMount(kiv_os_vfs::Superblock *superblock)
 
 	std::memset(this->data, 0, superblock->blockCount * superblock->blockSize);
 	std::memset(this->inodes, 0, superblock->inodeCount * sizeof(kiv_os_vfs::Inode));
-	
+
 	this->rootNode = this->reserveFreeNode(kiv_os::faDirectory | kiv_os::faSystem_File);
 }
 
@@ -93,7 +93,24 @@ void MemtreeMount::releaseBlock(kiv_os_vfs::Inode *node, block_t nodeBlock) {
 	if (node->directBlocks[nodeBlock] != invalidBlock) {
 		this->blockBitmap->clear(node->directBlocks[nodeBlock]);
 		node->directBlocks[nodeBlock] = invalidBlock;
-	}	
+	}
+}
+
+
+bool MemtreeMount::deleteDirectory(kiv_os_vfs::Inode *dir) {
+	uint16_t readEntries;
+	MemtreeDirEntry dirEntry;
+
+	for (readEntries = 0; readEntries * this->dirEntrySize < dir->size; readEntries++) {
+		size_t read = this->readNode(dir, (uint8_t *)&dirEntry, readEntries * this->dirEntrySize, (readEntries + 1) * this->dirEntrySize);
+		if (read != this->dirEntrySize) {
+			break;
+		}
+		this->deleteFile((node_t)(dir - this->inodes), dirEntry.node);
+
+	}
+
+	return true;
 }
 
 //		PUBLIC
@@ -149,6 +166,7 @@ size_t MemtreeMount::writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t fro
 		blockN = static_cast<block_t>(i / this->sb->blockSize);
 		blockOffset = static_cast<block_t>(i % this->sb->blockSize);
 
+		// possible optimalization: use memcpy
 		realBlock = node->directBlocks[blockN];
 		if (realBlock == invalidBlock) {
 			realBlock = this->reserveBlock(node, blockN);
@@ -176,6 +194,31 @@ size_t MemtreeMount::write(node_t n, uint8_t *src, size_t from, size_t to) {
 	return writeNode(node, src, from, to);
 }
 
+size_t MemtreeMount::readDirNode(kiv_os_vfs::Inode *node, kiv_os::TDir_Entry *dst, uint16_t nFrom, uint16_t nTo) {
+
+	MemtreeDirEntry dentry;
+	size_t totalRead = 0;
+	for (uint16_t i = nFrom; i < nTo; i++) {
+		size_t read = this->readNode(node, (uint8_t *)&dentry, i * this->dirEntrySize, (i + 1) * this->dirEntrySize);
+		if (read != this->dirEntrySize) {
+			return totalRead;
+		}
+		memcpy(dst + (i - nFrom), &dentry.apiEntry, sizeof(kiv_os::TDir_Entry));
+		totalRead += sizeof(kiv_os::TDir_Entry);
+	}
+
+	return totalRead;
+}
+
+size_t MemtreeMount::readDir(node_t n, kiv_os::TDir_Entry *dst, uint16_t nFrom, uint16_t nTo) {
+	kiv_os_vfs::Inode *node = this->getNode(n);
+	if (!isDirectoryNode(node)) {
+		return 0;
+	}
+
+	return this->readDirNode(node, dst, nFrom, nTo);
+}
+
 
 bool MemtreeMount::setSize(node_t n, size_t size) {
 	kiv_os_vfs::Inode *node = getNode(n);
@@ -188,6 +231,16 @@ bool MemtreeMount::setSize(node_t n, size_t size) {
 	}
 
 	node->size = size;
+
+	uint16_t requiredBlocks = (uint16_t)(size / this->sb->blockSize);
+	if (size % this->sb->blockSize) {
+		requiredBlocks++;
+	}
+	// 2 blocks are required: 0, 1.. release 2...directBlocks
+	for (int i = requiredBlocks; i < kiv_os_vfs::inode_directLinks; i++) {
+		this->releaseBlock(node, i);
+	}
+
 	return true;
 }
 size_t MemtreeMount::getSize(node_t n) {
@@ -253,4 +306,46 @@ node_t MemtreeMount::createFile(node_t directory, const char* name, uint16_t att
 	writeNode(parentNode, (uint8_t *)(&newFileDentry), parentNode->size, parentNode->size + this->dirEntrySize);
 
 	return newFile;
+}
+
+bool MemtreeMount::deleteFile(node_t parentDirectory, node_t f) {
+	kiv_os_vfs::Inode *dir = this->getNode(parentDirectory);
+	kiv_os_vfs::Inode *file = this->getNode(f);
+
+	if (!isValidNode(file)) {
+		return false;
+	}
+
+	if (isDirectoryNode(file)) {
+		if (!this->deleteDirectory(file)) {
+			return false;
+		}
+	}	
+	this->releaseNode(f);
+
+	MemtreeDirEntry dirEntry;
+	size_t readEntries = 0, readBytes;
+	bool deleted = false;
+
+	while (readEntries * this->dirEntrySize < dir->size)
+	{
+		readBytes = this->readNode(dir, (uint8_t *)(&dirEntry), readEntries * this->dirEntrySize, (readEntries + 1) * this->dirEntrySize);
+		if (readBytes != this->dirEntrySize) {
+			break;
+		}
+
+		if (deleted) {
+			this->writeNode(dir, (uint8_t *)(&dirEntry), (readEntries - 1) * this->dirEntrySize, readEntries * this->dirEntrySize);
+		}
+		else if (dirEntry.node == f) {
+			deleted = true;
+		}
+
+		readEntries++;
+	}
+	if (deleted) {
+		this->setSize(parentDirectory, (readEntries - 1) * this->dirEntrySize);
+	}
+
+	return true;
 }

@@ -31,63 +31,80 @@ namespace fs_mem_tree {
 		fd->position = 0;
 	}
 
-	int resolveFile(char *path, node_t *file, node_t *parent, bool createMissingDirs) {
+	int resolveFile(char *path, node_t *file, node_t *parent, char **immediatePart, bool createMissingDirs) {
 		MemtreeMount *mm = mountPoints[0];
 		char *rest;
-		char *immediatePart;
 
 		*parent = mm->getRootNode();
 
-		vfs_paths::immediatePathPart(path, &immediatePart, &rest);
+		vfs_paths::immediatePathPart(path, immediatePart, &rest);
 
 		while (rest != nullptr) {
 			if (!mm->isDirectory(*parent)) {
 				// there is still some path to be walked but current node is not a directory
 				return fileMissingPathMissing;
 			}
-			*file = mm->findInDirectory(*parent, immediatePart);
+
+			*file = mm->findInDirectory(*parent, *immediatePart);
 			if (*file == kiv_os_vfs::invalidNode) {
 				// current immediate part was not found in parent folder
-				return fileMissingPathMissing;
+				if (createMissingDirs) {
+					*file = mm->createFile(*parent, *immediatePart, kiv_os::faDirectory);
+				}
+
+				if (*file == kiv_os_vfs::invalidNode) {
+					return fileMissingPathMissing;
+				}
 			}
 
-			vfs_paths::immediatePathPart(rest, &immediatePart, &rest);
+			*parent = *file;
+
+			vfs_paths::immediatePathPart(rest, immediatePart, &rest);
 		}
 
-		*file = mm->findInDirectory(*parent, immediatePart);
-
+		*file = mm->findInDirectory(*parent, *immediatePart);
+		if (*file == kiv_os_vfs::invalidNode) {
+			return fileMissingPathResolved;
+		}
 		return fileResolved;
 	}
 
 	int openFile(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd) {
-	
+
 		MemtreeMount *mm = mountPoints[0];
 
 		node_t parentFolder;
 		node_t desiredFile;
+		char *filename;
 
-		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, false);
-		
+		bool createNew = (flags & kiv_os::fmOpen_Always) == 0;
+
+		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, &filename, createNew);
+
 		if (resolveResult == fileMissingPathMissing) {
-			return 1;
+			return kiv_os::erFile_Not_Found;
 		}
 
 		if (resolveResult == fileResolved) {
 			// file is found within a folder 
 			bool fileTypeMatches = ((attrs & kiv_os::faDirectory) != 0) == mm->isDirectory(desiredFile);
 			if (!fileTypeMatches) {
-				return 2;
+				return kiv_os::erFile_Not_Found;
 			}
 			createDescriptor(fd, desiredFile, attrs);
+			if (createNew) {
+				mm->setSize(desiredFile, 0);
+			}
 
 			return 0;
 		}
 
 		// parent folder was found but the final file was not
-		if (flags & kiv_os::fmOpen_Always) {
-			return 2;
+		if (!createNew) {
+			return kiv_os::erFile_Not_Found;
 		}
-		desiredFile = mm->createFile(parentFolder, immediatePart, attrs);
+
+		desiredFile = mm->createFile(parentFolder, filename, attrs);
 		if (desiredFile == kiv_os_vfs::invalidNode) {
 			return 3;
 		}
@@ -98,14 +115,22 @@ namespace fs_mem_tree {
 	}
 
 	int deleteFile(char *path) {
+		MemtreeMount *mm = mountPoints[0];
+		
 		node_t parentFolder;
 		node_t desiredFile;
+		char *filename;
 
-		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, false);
 
-		// todo: implement
+		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, &filename, false);
 
-		return 1;
+		if (resolveResult != fileResolved) {
+			return kiv_os::erFile_Not_Found;
+		}
+
+		mm->deleteFile(parentFolder, desiredFile);
+
+		return 0;
 	}
 
 
@@ -133,7 +158,7 @@ namespace fs_mem_tree {
 		MemtreeMount *mm = mountPoints[0];
 
 		currentSize = mm->getSize(fd->inode);
-		
+
 		switch (posType) {
 		case kiv_os::fsBeginning:
 			newPosition = position; break;
