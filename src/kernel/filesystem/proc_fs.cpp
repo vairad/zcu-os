@@ -113,6 +113,11 @@ namespace fs_process {
 		return 0;
 	}
 
+	int deleteFile(char *path) {
+		// todo: implement
+		return 1;
+	}
+
 	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		if(fd->attributes & kiv_os::faDirectory)
 		{
@@ -197,6 +202,7 @@ namespace fs_process {
 		driver.read = readBytes;
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
+		driver.deleteFile = deleteFile;
 
 		filesys_t fs_id;
 
