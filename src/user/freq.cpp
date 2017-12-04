@@ -11,7 +11,7 @@
 
 namespace freq_program {
 
-	size_t freq_main(int argc, char **argv) {
+	size_t freq_main(int argc, char *argv[]) {
 		std::map<char, int> freqs;
 		size_t read;
 		size_t buffer_size = 255;

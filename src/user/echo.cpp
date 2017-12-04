@@ -9,7 +9,7 @@
 
 namespace echo_program {
 
-	size_t echo_main(int argc, char **argv) {
+	size_t echo_main(int argc, char *argv[]) {
 		std::string line = "";
 		for (size_t i = 1; i < argc; i++) {
 			if (i != 1) {

@@ -22,7 +22,7 @@ namespace md_program {
 		return false;
 	}
 
-	size_t md_main(int argc, char **argv) {
+	size_t md_main(int argc, char *argv[]) {
 		if (argc > 1) {
 			bool success = true;
 			for (int i = 1; i < argc; ++i)

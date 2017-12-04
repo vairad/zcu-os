@@ -7,7 +7,7 @@
 #include "..\api\api.h"
 
 
-size_t shutdown_main(int argc, char **argv) {
+size_t shutdown_main(int argc, char *argv[]) {
 	if (argc == 1) {
 		kiv_os_rtl::Shutdown();
 	}

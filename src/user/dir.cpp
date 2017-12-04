@@ -10,7 +10,7 @@
 
 namespace dir_program {
 
-	size_t dir_main(int argc, char **argv) {
+	size_t dir_main(int argc, char *argv[]) {
 		if (argc >= 1 && argc <= 2) {
 			std::string path = "";
 			if (argc == 1) {

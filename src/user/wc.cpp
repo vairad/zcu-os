@@ -9,7 +9,7 @@
 
 namespace wc_program {
 
-	size_t wc_main(int argc, char **argv) {
+	size_t wc_main(int argc, char *argv[]) {
 		std::string line = "";
 		size_t read;
 		size_t buffer_size = 255;

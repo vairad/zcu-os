@@ -28,7 +28,7 @@ namespace rgen_program {
 		return kiv_os_lib::SUCCESS;
 	}
 
-	size_t rgen_main(int argc, char **argv) {
+	size_t rgen_main(int argc, char *argv[]) {
 		bool run = true;
 
 		kiv_os::THandle handle;

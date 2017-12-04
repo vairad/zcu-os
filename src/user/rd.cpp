@@ -43,7 +43,7 @@ namespace rd_program {
 		return 0;
 	}
 
-	size_t rd_main(int argc, char **argv) {
+	size_t rd_main(int argc, char *argv[]) {
 		if (argc > 1 && argc <= 4) {
 			bool quiet = true;
 			bool recursive = false;
