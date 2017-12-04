@@ -992,7 +992,6 @@ bool remProcessFromProcFS(const kiv_os::THandle pid)
 	}
 
 	std::string path = "procfs:/" + std::to_string(pid);
-	// todo RVA delete record
 	auto success = kiv_os_vfs::delFile(const_cast<char*>(path.c_str()));
 	if (success)
 	{

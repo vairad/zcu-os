@@ -14,7 +14,6 @@ namespace fs_process {
 	struct proces_block{
 		kiv_os::THandle pid;
 		std::string name;
-		size_t referenced;
 	};
 
 	std::map<size_t, proces_block> registered_processes;
@@ -94,7 +93,6 @@ namespace fs_process {
 				fd->openCounter = 1;
 				fd->inode = proces.pid;
 
-				registered_processes[proces.pid].referenced++;
 				return 0;
 			}
 			registered_processes[kiv_os::erInvalid_Handle] = proces;
@@ -114,8 +112,25 @@ namespace fs_process {
 	}
 
 	int deleteFile(char *path) {
-		// todo: implement
-		return 1;
+		proces_block proces;
+		if (strlen(path) == 0) // fail to remove root
+		{
+			return 1;
+		}
+
+		proces.pid = atoi(path);
+		try
+		{
+			if (registered_processes.count(proces.pid) > 0)
+			{
+				registered_processes.erase(proces.pid);
+			}
+			return 0;
+		}
+		catch (...)
+		{
+			return 2;
+		}
 	}
 
 	int readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
@@ -165,12 +180,6 @@ namespace fs_process {
 			return 0; // file not found -> so its closed
 		}
 		
-		if (registered_processes[fd->inode].referenced > 0) {
-			registered_processes[fd->inode].referenced--;
-			return 0;
-		}
-
-//		registered_processes.erase(fd->inode);
 		return 0;
 	}
 
@@ -213,7 +222,5 @@ namespace fs_process {
 
 		return mountStdio(fs_id);
 	}
-
-	//TODO delete records
 
 }
