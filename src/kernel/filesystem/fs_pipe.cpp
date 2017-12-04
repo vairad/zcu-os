@@ -64,7 +64,7 @@ namespace fs_pipe {
 			return -1;
 		}
 
-		uint64_t written = pipe->read_out((uint8_t *)buffer, length);
+		uint64_t written = pipe->write_in((uint8_t *)buffer, length);
 		// todo: verify write amount / errors
 		return (int)written;
 	}
