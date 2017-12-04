@@ -8,29 +8,40 @@
 
 namespace type_program {
 
+	const size_t BUFFER_SIZE = 1024;
+
+	void printErr(char * filename)
+	{
+		std::string message = "Error occured while processing: " + std::string(filename);
+		kiv_os_lib::printErrLn(message.c_str(), message.size());
+	}
+
 	size_t type_main(int argc, char *argv[]) {
 		if (argc > 1) {
 			for (size_t i = 1; i < argc; i++) {
 				kiv_os::THandle file;
-				kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always, 0, file);
-				if (file == kiv_os::erInvalid_Handle) {
-					// TODO: Klaus - Handle error.
+				const bool success = kiv_os_rtl::Create_File(argv[i], kiv_os::fmOpen_Always, 0, file);
+				if (!success) {
+					printErr(argv[i]);
 					continue;
 				}
 
 				size_t read = 1;
-				char buffer[1024];
+				size_t written = 0;
+				char buffer[BUFFER_SIZE];
 				while (read != -1) {
 					bool ok = kiv_os_rtl::Read_File(file, buffer, sizeof(buffer) - 1, read);
-					if (!ok) {
-						// TODO: Handle read error.
-						continue;
+					if ( !ok ) {
+						if (written == 0) {
+							printErr(argv[i]);
+						}
+						break;
 					}
 					buffer[read] = 0; // Terminate the string.
-					kiv_os_lib::printLn(buffer, read);
+					written += kiv_os_lib::print(buffer, read); //do not break line print what exactly is in file
+					memset(buffer, 0, sizeof(buffer)); // null buffer for sure
 				}
-
-				size_t written = kiv_os_lib::print(buffer, read);
+				kiv_os_lib::printLn(buffer, 0);
 			}
 		} else {
 			// Error - wrong number of parameters.
