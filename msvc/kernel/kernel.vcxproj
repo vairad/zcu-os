@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\src\kernel\filesystem\fs_mem_tree.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_pipe.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\fs_stdio.cpp" />
+    <ClCompile Include="..\..\src\kernel\filesystem\proc_fs.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS.cpp" />
     <ClCompile Include="..\..\src\kernel\filesystem\VFS_startup.cpp" />
     <ClCompile Include="..\..\src\kernel\handles.cpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="..\..\src\kernel\filesystem\fs_mem_tree.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_pipe.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\fs_stdio.h" />
+    <ClInclude Include="..\..\src\kernel\filesystem\proc_fs.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS.h" />
     <ClInclude Include="..\..\src\kernel\filesystem\VFS_startup.h" />
     <ClInclude Include="..\..\src\kernel\handles.h" />
@@ -112,7 +114,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\compiled\</OutDir>
     <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
     <SourcePath>$(VC_SourcePath);$(VC_SourcePath)/*;</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,7 +146,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KERNEL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <EnablePREfast>true</EnablePREfast>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

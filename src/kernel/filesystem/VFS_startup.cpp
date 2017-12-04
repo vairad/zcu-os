@@ -2,6 +2,7 @@
 
 #include "fs_stdio.h"
 #include "fs_pipe.h"
+#include "proc_fs.h"
 #include "fs_mem_tree.h"
 
 #undef stdin
@@ -20,6 +21,8 @@ namespace kiv_os_vfs {
 		fs_stdio::registerAndMount();
 
 		fs_pipe::registerAndMount();
+
+		fs_process::registerAndMount();
 
 		fs_mem_tree::registerDriver();
 

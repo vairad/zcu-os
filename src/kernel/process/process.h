@@ -126,3 +126,7 @@ void thread0(process::TStartThreadBlock &threadInfo);
 // cleaning methods
 void cleanProcess(const kiv_os::THandle handle);
 void cleanThread(const kiv_os::THandle table_index);
+
+// procfs methods
+bool addProcessToProcFS(std::string name, kiv_os::THandle pid);
+bool remProcessFromProcFS(kiv_os::THandle pid);
