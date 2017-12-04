@@ -62,7 +62,7 @@ namespace fs_process {
 		{
 			return -1; // file not found
 		}
-		if(fd->position == (proces.name.size() - 1))
+		if(fd->position == proces.name.size())
 		{
 			return -1; // all readed
 		}

@@ -67,6 +67,7 @@ namespace ps_program
 					break;
 				}
 				processLn += buffer;
+				memset(buffer, 0, 3); // clear buffer
 			}
 			kiv_os_lib::printLn(processLn.c_str(), processLn.size());
 
