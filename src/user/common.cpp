@@ -79,8 +79,10 @@ size_t kiv_os_lib::read(const char *buffer, size_t buffer_size) {
 
 size_t kiv_os_lib::print(const char *buffer, size_t buffer_size) {
 	size_t written = -1;
-	// TODO: Klaus - Handle bad write.
+
 	bool ok = kiv_os_rtl::Write_File(kiv_os::stdOutput, buffer, buffer_size, written);
+	
+	if (!ok) { return -1; }
 	return written;
 }
 

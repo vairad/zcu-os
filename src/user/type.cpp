@@ -32,7 +32,7 @@ namespace type_program {
 				char buffer[BUFFER_SIZE];
 				while (read != -1) {
 					bool ok = kiv_os_rtl::Read_File(file, buffer, sizeof(buffer) - 1, read);
-					if ( !ok ) {
+					if ( !ok || read == 0) {
 						if (written == 0) {
 							printErr(argv[i]);
 						}
