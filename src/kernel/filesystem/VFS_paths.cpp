@@ -91,10 +91,10 @@ namespace vfs_paths {
 			strcpy_s(dst + wd.length(), maxDstLength - wd.length(), src);
 
 			// assumes workdir always has system label
-			labelLength = strstr(dst, labelSeparator) - dst;
+			labelLength = (uint16_t)(strstr(dst, labelSeparator) - dst);
 		}
 
-		uint16_t pathLength = strnlen_s(dst, maxDstLength);
+		uint16_t pathLength = (uint16_t)strnlen_s(dst, maxDstLength);
 
 		for (uint16_t i = 0; i < pathLength; i++) {
 			if (dst[i] == '\\') {
@@ -112,7 +112,7 @@ namespace vfs_paths {
 			return false;
 		}
 		if (labelLength != nullptr) {
-			*labelLength = mountSeparatorPos - path;
+			*labelLength = (uint16_t)(mountSeparatorPos - path);
 		}
 
 		return  mountSeparatorPos - path < kiv_os_vfs::mountpointLabelSize;

@@ -11,9 +11,17 @@ namespace fs_pipe {
 
 	pipe *pipes[pipeCapacity];
 
+	void createDescriptor(kiv_os_vfs::FileDescriptor *fd, node_t node, uint16_t attrs) {
+		fd->superblockId = superblock;
+		fd->position = 0;
+		fd->openCounter = 1;
+		fd->inode = node;
+		fd->attributes = attrs;
+	}
+
 	int createPipe(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out) {
-		size_t freePipe = -1;
-		for (size_t i = 0; i < pipeCapacity; i++) {
+		node_t freePipe = -1;
+		for (node_t i = 0; i < pipeCapacity; i++) {
 			if (pipes[i] == nullptr) {
 				freePipe = i;
 				break;
@@ -25,17 +33,8 @@ namespace fs_pipe {
 
 		pipes[freePipe] = new pipe();
 
-		fd_in->superblockId = superblock;
-		fd_in->position = 0;
-		fd_in->openCounter = 1;
-		fd_in->status = pipe::status_open_write;
-		fd_in->inode = freePipe;
-
-		fd_out->superblockId = superblock;
-		fd_out->position = 0;
-		fd_out->openCounter = 1;
-		fd_out->status = pipe::status_open_read;
-		fd_out->inode = freePipe;
+		createDescriptor(fd_in, freePipe, pipe::status_open_write);
+		createDescriptor(fd_out, freePipe, pipe::status_open_read);
 
 		return 0;
 	}
@@ -120,7 +119,5 @@ namespace fs_pipe {
 
 		return mountPipe(fs_id);
 	}
-
-
 
 }

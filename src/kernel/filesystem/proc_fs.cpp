@@ -1,7 +1,6 @@
 #include "VFS.h"
 #include "proc_fs.h"
 
-#include "fs_mem_tree.h"
 #include <string>
 #include <string.h>
 #include <map>
@@ -170,13 +169,13 @@ namespace fs_process {
 		return 0;
 	}
 
-	int mountStdio(kiv_os_vfs::filesys_t fs_id) {
-		kiv_os_vfs::Superblock sb;
+	int mountStdio(filesys_t fs_id) {
+		kiv_os_vfs::Superblock *sb = new kiv_os_vfs::Superblock();
 
-		sb.filesys_id = fs_id;
-		sb.connections = 0;
+		sb->filesys_id = fs_id;
+		sb->connections = 0;
 
-		sb.inodeCount = sb.emptyInodes = processCapacity;
+		sb->inodeCount = sb->emptyInodes = processCapacity;
 
 		int result = kiv_os_vfs::mountDrive("procfs", sb);
 		if (result) {
@@ -199,7 +198,7 @@ namespace fs_process {
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
 
-		kiv_os_vfs::filesys_t fs_id;
+		filesys_t fs_id;
 
 		int result = kiv_os_vfs::registerDriver(driver, &fs_id);
 		if (result != 0) {

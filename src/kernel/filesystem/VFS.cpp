@@ -50,7 +50,7 @@ namespace kiv_os_vfs {
 			return 1;
 		}
 
-		uint8_t lblLength = mountSeparatorPos - path;
+		uint8_t lblLength = (uint8_t)(mountSeparatorPos - path);
 		if (lblLength > mountpointLabelSize) {
 			return 1;
 		}
@@ -343,20 +343,12 @@ namespace kiv_os_vfs {
 			return 2;
 		}
 
-
-		char pipe_path[] = "pipe:/";
-		char pathCpy[pathBufferSize];
-		strcpy_s(pathCpy, pathBufferSize, pipe_path);
-		char *pathCpyP = (char *)pathCpy;
-		char **remainingPath = &pathCpyP;
-
-		Superblock *sb;
-		if (resolveFolder(remainingPath, &sb)) {
+		Superblock *sb = resolveSuperblockByLabel("pipe");
+		if (sb == nullptr) {
 			return 2;
 		}
 
-		sb->connections++;
-		sb->connections++;
+		sb->connections += 2;
 		*fd_in = i_in;
 		*fd_out = i_out;
 
