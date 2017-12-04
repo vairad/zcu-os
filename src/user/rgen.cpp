@@ -17,7 +17,7 @@ namespace rgen_program {
 	size_t __stdcall generateNumbers(const void *data) {
 		bool * run = (bool *) data;
 		
-		srand(time(0));
+		srand((unsigned) time(0));
 		while ( *run ) {
 			double r = rand();
 			double num = r / RAND_MAX;
