@@ -19,7 +19,8 @@ namespace rgen_program {
 		
 		srand(time(0));
 		while ( *run ) {
-			double num = rand() / RAND_MAX;
+			double r = rand();
+			double num = r / RAND_MAX;
 			std::string s = std::to_string(num);
 			kiv_os_lib::printLn(s.c_str(), s.length());
 		}
