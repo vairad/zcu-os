@@ -7,12 +7,59 @@
 #undef stdin
 #undef stderr
 #undef stdout
-#include "..\api\api.h"
-#include "../kernel/handles.h"
+#include "../api/api.h"
+
 
 namespace ps_program
 {
 	const std::string proc_fs_path = "procfs:/";
+
+	void printProcess(std::string name, std::string pid, bool pid_flag)
+	{
+		std::string line = "\t";
+		line += name;
+		if(pid_flag)
+		{
+			line += "\t";
+			line += pid;
+		}
+		kiv_os_lib::printLn(line.c_str(), line.size());
+	}
+
+	bool browseAndPrint(const kiv_os::THandle handle, const bool pid_flag)
+	{
+		bool whole_success = true;
+		size_t read;
+		kiv_os::TDir_Entry tdir;
+		bool ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
+		whole_success &= ok;
+		ok &= (read != -1);
+		while (ok)
+		{
+			std::string processPid = tdir.file_name;
+			std::string processPath = proc_fs_path + processPid;
+			kiv_os::THandle handle_file;
+			char buffer[3];
+			bool success = kiv_os_rtl::Create_File(processPath.c_str(), 0, 0, handle_file);
+			whole_success &= success;
+			std::string processLn = "";
+			while (success)
+			{
+				success = kiv_os_rtl::Read_File(handle_file, &buffer, 3, read);
+				if (read == -1 || read == 0)
+				{
+					break;
+				}
+				processLn += buffer;
+				memset(buffer, 0, 3); // clear buffer
+			}
+			printProcess(processLn, processPid, pid_flag);
+
+			ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
+			ok &= (read != -1);
+		}
+		return whole_success;
+	}
 
 	bool openProcfsRoot(kiv_os::THandle &handle)
 	{
@@ -41,39 +88,18 @@ namespace ps_program
 
 	int printProcesses(bool pid_flag) 
 	{
-		std::string path = "procfs:/";
 		kiv_os::THandle handle;
+		
 		bool success = openProcfsRoot(handle);
+		
 		success &= verifyProcfsRoot(handle);
+		
 		if (!success) { return kiv_os_lib::FILE_NOT_FOUND; }
 
-		size_t read;
-		kiv_os::TDir_Entry tdir;
-		bool ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
-		ok &= (read != -1);
-		while (ok)
-		{
-			std::string processLn = tdir.file_name;
-			std::string processPath = proc_fs_path + processLn;
-			kiv_os::THandle handle_file;
-			char buffer[3];
-			bool success = kiv_os_rtl::Create_File(processPath.c_str(), 0, 0, handle_file);
-			processLn += "\t\t";
-			while ( success )
-			{
-				success = kiv_os_rtl::Read_File(handle_file, &buffer, 3, read);
-				if(read == -1 || read == 0)
-				{
-					break;
-				}
-				processLn += buffer;
-				memset(buffer, 0, 3); // clear buffer
-			}
-			kiv_os_lib::printLn(processLn.c_str(), processLn.size());
-
-			ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
-			ok &= (read != -1);
-		}
+		success = browseAndPrint(handle, pid_flag);
+		
+		if (!success) { return kiv_os_lib::FILE_NOT_FOUND; }
+		return kiv_os_lib::SUCCESS;
 	}
 
 	void printHelp()
@@ -87,12 +113,14 @@ namespace ps_program
 		kiv_os_lib::printLn(help_message.c_str(), help_message.size());
 	}
 
-	size_t ps_main(int argc, char **argv)
+	size_t ps_main(int argc, char *argv[])
 	{
-		if (argc >= 1 && argc <= 2) {
+		if (argc == 1) {
 			return printProcesses(false);
 		}
-		else {
+		
+		if( argc == 2)
+		{
 			if (strcmp(argv[1], "-pid") == 0 ) {
 				return printProcesses(true);
 			}
@@ -105,6 +133,10 @@ namespace ps_program
 			kiv_os_lib::printErr(error.c_str(), error.length());
 			return kiv_os_lib::INCORRECT_SYNTAX;
 		}
+		// Error - wrong number of parameters.
+		std::string error = "The syntax of the command is incorrect.";
+		kiv_os_lib::printErr(error.c_str(), error.length());
+		return kiv_os_lib::INCORRECT_SYNTAX;
 	}
 }
 
