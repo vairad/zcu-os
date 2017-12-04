@@ -7,13 +7,21 @@ namespace fs_pipe {
 
 	int _registered = 0;
 
-	kiv_os_vfs::sblock_t superblock;
+	sblock_t superblock;
 
 	pipe *pipes[pipeCapacity];
 
+	void createDescriptor(kiv_os_vfs::FileDescriptor *fd, node_t node, uint16_t attrs) {
+		fd->superblockId = superblock;
+		fd->position = 0;
+		fd->openCounter = 1;
+		fd->inode = node;
+		fd->attributes = attrs;
+	}
+
 	int createPipe(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out) {
-		size_t freePipe = -1;
-		for (size_t i = 0; i < pipeCapacity; i++) {
+		node_t freePipe = -1;
+		for (node_t i = 0; i < pipeCapacity; i++) {
 			if (pipes[i] == nullptr) {
 				freePipe = i;
 				break;
@@ -25,17 +33,8 @@ namespace fs_pipe {
 
 		pipes[freePipe] = new pipe();
 
-		fd_in->superblockId = superblock;
-		fd_in->position = 0;
-		fd_in->openCounter = 1;
-		fd_in->status = pipe::status_open_write;
-		fd_in->inode = freePipe;
-
-		fd_out->superblockId = superblock;
-		fd_out->position = 0;
-		fd_out->openCounter = 1;
-		fd_out->status = pipe::status_open_read;
-		fd_out->inode = freePipe;
+		createDescriptor(fd_in, freePipe, pipe::status_open_write);
+		createDescriptor(fd_out, freePipe, pipe::status_open_read);
 
 		return 0;
 	}
@@ -87,13 +86,13 @@ namespace fs_pipe {
 		return 0;
 	}
 
-	int mountPipe(kiv_os_vfs::filesys_t fs_id) {
-		kiv_os_vfs::Superblock sb;
+	int mountPipe(filesys_t fs_id) {
+		kiv_os_vfs::Superblock *sb = new kiv_os_vfs::Superblock;
 
-		sb.filesys_id = fs_id;
-		sb.connections = 0;
+		sb->filesys_id = fs_id;
+		sb->connections = 0;
 
-		sb.inodeCount = sb.emptyInodes = pipeCapacity;
+		sb->inodeCount = sb->emptyInodes = pipeCapacity;
 
 		int result = kiv_os_vfs::mountDrive("pipe", sb, &superblock);
 		if (result) {
@@ -111,7 +110,7 @@ namespace fs_pipe {
 		driver.write = writeBytes;
 		driver.cleanupDescriptor = closeDescriptor;
 
-		kiv_os_vfs::filesys_t fs_id;
+		filesys_t fs_id;
 
 		int result = kiv_os_vfs::registerDriver(driver, &fs_id);
 		if (result != 0) {
@@ -120,7 +119,5 @@ namespace fs_pipe {
 
 		return mountPipe(fs_id);
 	}
-
-
 
 }

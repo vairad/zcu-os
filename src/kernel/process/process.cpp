@@ -840,9 +840,9 @@ bool process::createInit()
 	pcb->program_name = "init";
 	pcb->working_directory = root_directory;
 	//open default streams
-	pcb->io_devices[kiv_os::stdInput] = kiv_os_vfs::openFile("CONIN$", 1, 0);
-	pcb->io_devices[kiv_os::stdOutput] = kiv_os_vfs::openFile("CONOUT$", 1, 0);
-	pcb->io_devices[kiv_os::stdError] = kiv_os_vfs::openFile("CONOUT$", 1, 0);
+	pcb->io_devices[kiv_os::stdInput] = kiv_os_vfs::openFile("stdio:/CONIN$", 1, 0);
+	pcb->io_devices[kiv_os::stdOutput] = kiv_os_vfs::openFile("stdio:/CONOUT$", 1, 0);
+	pcb->io_devices[kiv_os::stdError] = kiv_os_vfs::openFile("stdio:/CONOUT$", 1, 0);
 
 	//find next free TID value
 	const auto tid = getNextFreeTid();

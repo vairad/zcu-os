@@ -6,13 +6,20 @@
 #undef stdin
 #undef stderr
 #undef stdout
+
 #include "../../api/api.h"
+
+#include "inode.h"
+
+
+
+typedef uint8_t filesys_t;
+typedef uint8_t sblock_t;
+
 
 namespace kiv_os_vfs {
 
-	typedef uint8_t filesys_t;
-	
-	typedef uint8_t sblock_t;
+	const node_t invalidNode = -1;
 
 	const uint8_t mountpointLabelSize = 8;
 
@@ -23,101 +30,92 @@ namespace kiv_os_vfs {
 	const int mountErr_labelTooLong = 1;
 	const int mountErr_noMoreRoom = 2;
 
-	const uint8_t inode_directLinks = 12;
 	const uint8_t dentry_fileNameLength = 128;
+
+	const char mountSeparator = ':';
+	const char pathSeparator = '/';
 
 
 	struct FileDescriptor {
 		sblock_t superblockId;
-		size_t inode;
-		size_t size;
+		node_t inode;
 
 		uint16_t attributes;
 		uint8_t status;
-		uint64_t position;
+		size_t position;
 		uint16_t openCounter;
-	};
-
-	struct Dentry
-	{
-		char fileName[dentry_fileNameLength];
-		size_t inode;
 	};
 
 
 	struct FsDriver {
 		int(*openFile)(char *path, uint64_t flags, uint8_t attrs, kiv_os_vfs::FileDescriptor *fd);
-		int(*read)(FileDescriptor *fd, void *b, size_t length);
-		int(*write)(FileDescriptor *fd, void *b, size_t length);
+		int(*deleteFile)(char *path);
+
+		int(*read)(FileDescriptor *fd, void *dest, size_t length);
+		int(*write)(FileDescriptor *fd, void *src, size_t length);
+
+		int(*setPos)(FileDescriptor *fd, size_t position, uint8_t posType, uint8_t setType);
+		int(*getPos)(FileDescriptor *fd, size_t *position, uint8_t posType);
+
 		int(*cleanupDescriptor)(FileDescriptor *fd);
 	};
 
 	struct Superblock {
 		char label[mountpointLabelSize];
 
-		size_t inodeCount;
-		size_t blockCount;
-		size_t emptyBlocks, emptyInodes;
+		node_t inodeCount, emptyInodes;
+		block_t blockCount, emptyBlocks;
+
 		size_t blockSize;
 		size_t groupBlocks, groupInodes; // unused
 		filesys_t filesys_id;
 		size_t connections;
 	};
 
-	struct Inode {
-		uint8_t mode;
-		uint16_t refCount;
-		uint16_t owner, group; // unused
-		size_t size;
-		uint32_t atime, mtime, ctime; // unused
-
-		size_t directBlocks[inode_directLinks]; // not implemented
-		size_t singleIndirect; // not implemented
-		size_t doubleIndirect; // not implemented
-		size_t tripleIndirect; // not implemented
-		void *data; // todo: remove
-
-	};
 
 	/*
-		Allocates resources for required number of drivers and mounting points
+	Allocates resources for required number of drivers and mounting points
 
-		Returns error value
+	Returns error value
 	*/
-	int init(uint8_t driverCount, uint8_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
-	
-	/*
-		Performs shutdown tasks
+	int init(uint8_t driverCount, sblock_t fsMountCapacity, int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *, kiv_os_vfs::FileDescriptor *));
 
-		Returns error value
+	/*
+	Performs shutdown tasks
+
+	Returns error value
 	*/
 	int shutdown();
 
 	/*
-		Adds given filesystem driver
+	Adds given filesystem driver
 
-		Returns error value
+	Returns error value
 	*/
 	int registerDriver(FsDriver &p_driver, filesys_t *result);
 
 	/*
-		Registers given filesystem under desired label if that label is not taken yet
+	Registers given filesystem under desired label if that label is not taken yet
 
-		Returns error value
+	Returns error value
 	*/
-	int mountDrive(char *label, Superblock &superblock, sblock_t *mountpoint = nullptr);
+	int mountDrive(char *label, Superblock *superblock, sblock_t *result = nullptr);
 
 	/*
-		Looks up coresponding file descriptor and increases its  open counter
+	Looks up coresponding file descriptor and increases its  open counter
 
-		Returns error value
+	Returns error value
 	*/
 	int increaseFDescOpenCounter(kiv_os::THandle fd);
 
-	kiv_os::THandle openFile(char *path, uint64_t flags, uint8_t attrs);
+	kiv_os::THandle openFile(const char *path, uint64_t flags, uint8_t attrs);
+	int delFile(const char *path);
+	bool fileExists(const char *path);
+
+
 	int read(kiv_os::THandle fd, void *dest, uint64_t length);
-	int write(kiv_os::THandle fd, void *dest, uint64_t length);
-	int delFile(char *path);
+	int write(kiv_os::THandle fd, void *src, uint64_t length);
+
 	int setPos(kiv_os::THandle fd, size_t position, uint8_t posType, uint8_t setType);
 	int getPos(kiv_os::THandle fd, size_t *position, uint8_t posType);
 	int close(kiv_os::THandle fd);
@@ -127,7 +125,7 @@ namespace kiv_os_vfs {
 	/*
 	Looks for file or folder on given path.
 	*/
-	bool fileExists(char *path);
+
 
 	int getFileAttributes(kiv_os::THandle fd, uint16_t *dest);
 

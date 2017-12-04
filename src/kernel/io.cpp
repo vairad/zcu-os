@@ -3,6 +3,8 @@
 #include "io.h"
 
 #include "filesystem/VFS.h"
+#include "filesystem/VFS_paths.h"
+
 #include "process/process_api.h"
 
 #undef stdin
@@ -11,7 +13,6 @@
 #include "../api/api.h"
 
 namespace kiv_os_io {
-	typedef void(*IoHandle)(kiv_os::TRegisters &regs);
 
 	void illegalAL(kiv_os::TRegisters &regs) {
 		// todo:? handle errorneous state
@@ -24,10 +25,9 @@ namespace kiv_os_io {
 		OUT:	ax je handle nove otevreneho souboru
 	*/
 	void createFile(kiv_os::TRegisters &regs) {
-		char *fileName = (char*)regs.rdx.r;
+		const char *fileName = (const char*)regs.rdx.r;
 		uint64_t flags = regs.rcx.r;
 		uint8_t attrs = regs.rdi.e;
-
 
 		kiv_os::THandle vfsHandle = kiv_os_vfs::openFile(fileName, flags, attrs);
 
