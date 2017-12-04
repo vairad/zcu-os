@@ -1,6 +1,8 @@
 #include "common.h"
 
+#include <sstream>
 #include <string>
+#include <vector>
 
 #undef stdin
 #undef stderr
@@ -8,6 +10,17 @@
 #include "..\api\api.h"
 
 namespace wc_program {
+
+	void str_replace(std::string& str,
+		const std::string& oldStr,
+		const std::string& newStr)
+	{
+		std::string::size_type pos = 0u;
+		while ((pos = str.find(oldStr, pos)) != std::string::npos) {
+			str.replace(pos, oldStr.length(), newStr);
+			pos += newStr.length();
+		}
+	}
 
 	size_t wc_main(int argc, char *argv[]) {
 		std::string line = "";
@@ -17,18 +30,28 @@ namespace wc_program {
 		while ((read = kiv_os_lib::read(buffer, buffer_size)) != -1) {
 			buffer[read] = 0; // Terminate the string.
 			line.append(buffer);
+			line.append(" ");
 		}
 
 		int count = 0;
-		for (size_t i = 0; i < line.length(); i++) {
-			if (line[i] == ' ') {
-				count++;
+		str_replace(line, "\n", " ");
+		str_replace(line, "\r", " ");
+		str_replace(line, "\t", " ");
+		//str_replace(line, "\n", " ");
+
+		std::stringstream line_stream(line);
+		std::string segment;
+		std::vector<std::string> seglist;
+
+		while (std::getline(line_stream, segment, ' '))
+		{
+			if(segment.size() > 0)
+			{
+				seglist.push_back(segment);
 			}
 		}
-
-		line = std::to_string(count);
+		line = std::to_string(seglist.size());
 		kiv_os_lib::printLn(line.c_str(), line.length());
-
 		return kiv_os_lib::SUCCESS;
 	}
 
