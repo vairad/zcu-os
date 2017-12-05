@@ -39,17 +39,18 @@ namespace ps_program
 			std::string processPid = tdir.file_name;
 			std::string processPath = proc_fs_path + processPid;
 			kiv_os::THandle handle_file;
-			char buffer[3];
+			char buffer[128];
 			bool success = kiv_os_rtl::Create_File(processPath.c_str(), 0, 0, handle_file);
 			whole_success &= success;
 			std::string processLn = "";
 			while (success)
 			{
-				success = kiv_os_rtl::Read_File(handle_file, &buffer, 3, read);
+				success = kiv_os_rtl::Read_File(handle_file, &buffer, sizeof(buffer) - 1, read);
 				if (read == -1 || read == 0)
 				{
 					break;
 				}
+				buffer[read] = 0;
 				processLn += buffer;
 				memset(buffer, 0, 3); // clear buffer
 			}
