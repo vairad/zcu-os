@@ -11,12 +11,23 @@ namespace md_program {
 	bool createFile(char * file)
 	{
 		kiv_os::THandle handle = kiv_os::erInvalid_Handle;
-		const bool succes = kiv_os_rtl::Create_File(file, 0, kiv_os::faDirectory, handle);
+
+		bool succes = kiv_os_rtl::Create_File(file, kiv_os::fmOpen_Always, kiv_os::faDirectory, handle);
+		if (succes) {
+			kiv_os_rtl::Close_File(handle);
+
+			std::string error = "Directory " + std::string(file) + " already exists";
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
+			return false;
+		}
+
+		succes = kiv_os_rtl::Create_File(file, 0, kiv_os::faDirectory, handle);
 		if (succes)
 		{
 			kiv_os_rtl::Close_File(handle);
 			return true;
 		}
+
 		std::string error = "Directory " + std::string(file) + " could not be created";
 		kiv_os_lib::printErrLn(error.c_str(), error.length());
 		return false;
