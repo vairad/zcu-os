@@ -68,6 +68,10 @@ public:
 	bool isOpenRead();
 	bool isEmpty();
 
+
+	bool readMakeNoSense();
+	bool writteMakeNoSense();
+
 	bool statusContains(PipeStatus ps);
 	bool close(PipeStatus ps);
 
