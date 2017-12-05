@@ -70,8 +70,8 @@ public:
 	bool isEmpty();
 
 
-	bool readMakeNoSense();
-	bool writteMakeNoSense();
+	bool readMakeSense();
+	bool writteMakeSense();
 
 	bool statusContains(PipeStatus ps);
 	bool close(PipeStatus ps);

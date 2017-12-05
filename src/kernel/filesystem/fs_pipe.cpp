@@ -45,9 +45,11 @@ namespace fs_pipe {
 	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
-		if (!pipe->statusContains(pipe::status_open_read)) {
-			return -1; // file descriptor is not open for reading
-		}
+		if ((fd->status & pipe::status_open_read) == 0) {
+			// file descriptor is not open for reading
+			return -1;
+		}	
+
 		if (!pipe->isOpenRead()) {
 			return -1; 
 		}
@@ -60,8 +62,9 @@ namespace fs_pipe {
 	size_t writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
-		if (!pipe->statusContains(pipe::status_open_write)) {
-			return -1; // file descriptor is not open for reading
+		if ((fd->status & pipe::status_open_write) == 0) {
+			// file descriptor is not open for reading
+			return -1; 
 		}
 		if (!pipe->isOpenWrite()) {
 			return -1;

@@ -33,16 +33,13 @@ pipe::pipe()
 size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 {
 	size_t written = 0;
-	if (writteMakeNoSense()) {
-		return written;
-	}
 	for(size_t iter = 0; iter < nbytes; iter++)
 	{
-		if (writteMakeNoSense()) {
+		if (!writteMakeSense()) {
 			return written;
 		}
 		empty.acquire();
-		if (writteMakeNoSense()) {
+		if (!writteMakeSense()) {
 			empty.release();
 			return written;
 		}
@@ -63,12 +60,12 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 	size_t read = 0;
 	for (size_t iter = 0; iter < nbytes; iter++)
 	{
-		if (readMakeNoSense()) {
+		if (!isOpenRead()) {
 			buf[iter] = EOF;
 			return read;
 		}
 		full.acquire();
-		if (readMakeNoSense()) {
+		if (!readMakeSense()) {
 			buf[iter] = EOF;
 			empty.release();
 			return read;
@@ -108,38 +105,38 @@ bool pipe::close(PipeStatus s) {
 }
 
 bool pipe::statusContains(PipeStatus s) {
-	std::lock_guard<std::mutex> guard(write_lock);
+	//std::lock_guard<std::mutex> guard(write_lock);
 	return (status & s);
 }
 
 bool pipe::isOpenWrite() {
-	std::lock_guard<std::mutex> guard(write_lock);
+	//std::lock_guard<std::mutex> guard(write_lock);
 	 bool ret = status & pipe::status_open_write;
 	 return ret;
 }
 
 bool pipe::isOpenRead() {
-	std::lock_guard<std::mutex> guard(write_lock);
+	//std::lock_guard<std::mutex> guard(write_lock);
 	bool ret = status & pipe::status_open_read;
 	return ret;
 }
 
 bool pipe::isEmpty() {
-	std::lock_guard<std::mutex> guard(write_lock);
+	//std::lock_guard<std::mutex> guard(write_lock);
 	bool ret = fields_count;
 	return !ret;
 }
 
-bool pipe::readMakeNoSense()
+bool pipe::readMakeSense()
 {
 	bool sense = isOpenRead() && !isEmpty();
-	return !sense;
+	return sense;
 }
 
-bool pipe::writteMakeNoSense()
+bool pipe::writteMakeSense()
 {
-	bool nonsense = !isOpenWrite() || !isOpenRead();
-	return nonsense;
+	bool sense = isOpenWrite() && isOpenRead();
+	return sense;
 }
 
 
