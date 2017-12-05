@@ -84,12 +84,12 @@ namespace fs_stdio {
 		{
 		case in:
 			
-			if(!std::cin.good())
+			getline(std::cin, readed);
+			if (!std::cin.good())
 			{
 				checkCin(fd->openCounter);
 				return -1;
 			}
-			getline(std::cin, readed);
 			break;
 		default: //none and out is fault
 			return -1;
@@ -114,12 +114,12 @@ namespace fs_stdio {
 		{
 		case out:
 			
+			std::cout << to_write;
 			if (!std::cout.good())
 			{
 				checkCout(fd->openCounter);
 				return -1;
 			}
-			std::cout << to_write;
 			break;
 		default: //none and in is fault
 			return -1;
