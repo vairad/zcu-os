@@ -175,6 +175,18 @@ bool kiv_os_rtl::Delete_File(const void *file) {
 	return result;
 }
 
+bool kiv_os_rtl::Set_Position(kiv_os::THandle file, const size_t pos, const uint8_t posType) {
+	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scSet_File_Position);
+
+	regs.rdx.x = static_cast<decltype(regs.rdx.x)>(file);
+	regs.rdi.r = pos;
+	regs.rcx.l = posType;
+	regs.rcx.h = kiv_os::fsSet_Position;
+
+	const bool result = Do_SysCall(regs);
+	return result;
+}
+
 bool kiv_os_rtl::Get_File_Attributes(kiv_os::THandle handle, uint16_t &attrs) {
 	kiv_os::TRegisters regs = Prepare_SysCall_Context(kiv_os::scIO, kiv_os::scGetFileAttributes);
 

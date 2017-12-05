@@ -74,7 +74,7 @@ namespace shell_executor {
 			break;
 		case shell_parser::InOutType::FILE_NEW:
 			if (!file.empty()) {
-				bool success = kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_out);
+				kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_out);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -83,8 +83,12 @@ namespace shell_executor {
 			break;
 		case shell_parser::InOutType::FILE_APPEND:
 			if (!file.empty()) {
-				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0,*std_out);
-				// TODO: Klaus - We need to set position to the end of the file.
+				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0, *std_out);
+				if (success) {
+					kiv_os_rtl::Set_Position(*std_out, 0, kiv_os::fsEnd);
+				} else {
+					kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_out);
+				}
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
@@ -115,7 +119,11 @@ namespace shell_executor {
 		case shell_parser::InOutType::FILE_APPEND:
 			if (!file.empty()) {
 				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0, *std_err);
-				// TODO: Klaus - We need to set position to the end of the file.
+				if (success) {
+					kiv_os_rtl::Set_Position(*std_err, 0, kiv_os::fsEnd);
+				} else {
+					kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_err);
+				}
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();

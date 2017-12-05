@@ -42,6 +42,7 @@ namespace kiv_os_rtl {
 	bool Get_Working_Dir(const void *wd, const size_t wd_size, size_t &read);
 	bool Change_Working_Dir(const void *path);
 	bool Delete_File(const void *file);
+	bool Set_Position(kiv_os::THandle file, const size_t pos, const uint8_t posType);
 
 	bool Get_File_Attributes(kiv_os::THandle handle, uint16_t &attrs);
 	bool Shutdown();
