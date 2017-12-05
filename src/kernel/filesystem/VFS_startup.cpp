@@ -44,6 +44,8 @@ namespace kiv_os_vfs {
 	}
 
 	void prefillDriveC() {
+		size_t read;
+
 		kiv_os_vfs::openFile("var/././../etc/./karel.txt", 0, 0);
 
 		createFolder("C:/comics");
@@ -65,6 +67,12 @@ namespace kiv_os_vfs {
 		fd = kiv_os_vfs::openFile("C:/comics/marvel/test1.txt", 0, 0);
 		kiv_os_vfs::close(fd);
 
+		kiv_os::TDir_Entry dentry[17];
+		fd = kiv_os_vfs::openFile("C:/comics/marvel/", kiv_os::fmOpen_Always, kiv_os::faDirectory);
+		read = kiv_os_vfs::read(fd, (void *)&dentry, sizeof(kiv_os::TDir_Entry) * 17);
+		
+
+
 		fd = kiv_os_vfs::openFile("C:/del-me/ahoj.txt", 0, 0);
 		kiv_os_vfs::write(fd, "aibohphobia", 11);
 		kiv_os_vfs::close(fd);
@@ -81,7 +89,7 @@ namespace kiv_os_vfs {
 
 		char bfr[255] = {0};
 		fd = kiv_os_vfs::openFile("C:/del-me/ahoj.txt", kiv_os::fmOpen_Always, 0);
-		size_t read = kiv_os_vfs::read(fd, bfr, 255);
+		read = kiv_os_vfs::read(fd, bfr, 255);
 
 		kiv_os_vfs::setPos(fd, 0, kiv_os::fsBeginning, 0);
 		read += kiv_os_vfs::read(fd, bfr + read, 255 - read);

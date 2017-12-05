@@ -133,11 +133,32 @@ namespace fs_mem_tree {
 		return 0;
 	}
 
+	size_t readDirectory(node_t node, kiv_os::TDir_Entry *dst, size_t position, size_t length) {
+		MemtreeMount *mm = mountPoints[0];
+		
+		uint16_t dentrySize = sizeof(kiv_os::TDir_Entry);
 
-	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
+		if (position % dentrySize != 0 || length % dentrySize != 0) {
+			// the position or read length is misaligned - do nothing
+			return 0;
+		}
+
+		uint16_t nFrom = (uint16_t)(position / dentrySize), n = (uint16_t)(length / dentrySize);
+
+		return mm->readDir(node, dst, nFrom, nFrom + n);
+	}
+
+	size_t read(kiv_os_vfs::FileDescriptor *fd, void *dst, size_t length) {
 		MemtreeMount *mm = mountPoints[0];
 
-		size_t read = mm->read(fd->inode, (uint8_t *)dst, fd->position, fd->position + length);
+		size_t read;
+		if (fd->attributes & kiv_os::faDirectory) {
+			read = readDirectory(fd->inode, (kiv_os::TDir_Entry *)dst, fd->position, length);
+		}
+		else {
+			read = mm->read(fd->inode, (uint8_t *)dst, fd->position, fd->position + length);
+		}
+		
 		fd->position += read;
 
 		return read;
@@ -227,7 +248,7 @@ namespace fs_mem_tree {
 		driver.openFile = openFile;
 		driver.deleteFile = deleteFile;
 
-		driver.read = readBytes;
+		driver.read = read;
 		driver.write = writeBytes;
 
 		driver.setPos = setPos;
