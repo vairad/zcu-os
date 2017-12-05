@@ -24,10 +24,12 @@ namespace sort_program {
 			size_t read;
 			size_t buffer_size = 1023;
 			char buffer[1024];
-			while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
+			read = kiv_os_lib::read(buffer, buffer_size);
+			while (read != 0 && read != -1) {
 				buffer[read] = 0; // Terminate the line.
 				std::string line = buffer;
 				lines.push_back(line);
+				read = kiv_os_lib::read(buffer, buffer_size);
 			}
 
 			std::sort(lines.begin(), lines.end());
