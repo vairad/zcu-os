@@ -14,13 +14,16 @@ namespace sort_program {
 	size_t sort_main(int argc, char *argv[]) {
 		if (argc == 1 || argc == 2) {
 			bool reverse = false;
-			if (argc == 2 && (argv[1] == "/R" || argv[1] == "/r")) {
-				reverse = true;
+			if (argc == 2) {
+				std::string arg = argv[1];
+				if (arg == "/R" || arg == "/r") {
+					reverse = true;
+				}
 			}
 			std::vector<std::string> lines = std::vector<std::string>();
 			size_t read;
-			size_t buffer_size = 255;
-			char buffer[256];
+			size_t buffer_size = 1023;
+			char buffer[1024];
 			while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
 				buffer[read] = 0; // Terminate the line.
 				std::string line = buffer;
@@ -32,12 +35,12 @@ namespace sort_program {
 			if (!reverse) {
 				for (size_t i = 0; i < lines.size(); i++) {
 					std::string line = lines[i];
-					kiv_os_lib::printLn(line.c_str(), line.length());
+					kiv_os_lib::print(line.c_str(), line.length());
 				}
 			} else {
-				for (size_t i = lines.size(); i >= 0; i--) {
+				for (size_t i = lines.size() - 1; i > 0; i--) {
 					std::string line = lines[i];
-					kiv_os_lib::printLn(line.c_str(), line.length());
+					kiv_os_lib::print(line.c_str(), line.length());
 				}
 			}
 		} else {
