@@ -32,7 +32,7 @@ namespace vfs_paths {
 		return 0;
 	}
 
-	size_t ensureAbsoluteForm(char *dst, const char *src, size_t maxDstLength, uint16_t *labelLength) {
+	uint16_t ensureAbsoluteForm(char *dst, const char *src, size_t maxDstLength, uint16_t *labelLength) {
 		if (isAbsolute(src, labelLength)) {
 			strcpy_s(dst, maxDstLength, src);
 		}
@@ -64,16 +64,16 @@ namespace vfs_paths {
 		return (uint16_t)strnlen_s(dst, maxDstLength);
 	}
 
-	size_t removeDots(char *path, const uint16_t labelLength, const uint16_t pathLength) {
-		size_t srcPos = labelLength + 2;
-		size_t dstPos = srcPos;
+	uint16_t removeDots(char *path, const uint16_t labelLength, const uint16_t pathLength) {
+		uint16_t srcPos = labelLength + 2;
+		uint16_t dstPos = srcPos;
 
 		uint16_t depth = 0;
 
 		const char *sepPos;
 		while ((sepPos = strchr(path + srcPos, kiv_os_vfs::pathSeparator)) != nullptr) {
-			size_t sepPosN = sepPos - path;
-			size_t pathPartLength = sepPosN - srcPos;
+			uint16_t sepPosN = (uint16_t)(sepPos - path);
+			uint16_t pathPartLength = sepPosN - srcPos;
 
 			if (pathPartLength == 0 || pathPartLength == 1 && path[srcPos] == '.') {
 				// duplicated path separator OR
@@ -102,7 +102,7 @@ namespace vfs_paths {
 			srcPos += pathPartLength + 1;
 		}
 
-		size_t lastPartLength = pathLength - srcPos;
+		uint16_t lastPartLength = pathLength - srcPos;
 		if (lastPartLength == 1 && path[srcPos] == '.') {
 			srcPos += 1; // skip dot
 		}
