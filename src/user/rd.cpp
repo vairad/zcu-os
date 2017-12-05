@@ -47,7 +47,7 @@ namespace rd_program {
 		if (argc > 1 && argc <= 4) {
 			bool quiet = true;
 			bool recursive = false;
-			char *dirname = nullptr;
+			std::vector<char *> dirnameVector = std::vector<char *>();
 
 			for (size_t i = 1; i < argc; i++) {
 				// TODO: Klaus - Test this.
@@ -59,65 +59,67 @@ namespace rd_program {
 					quiet = false;
 				}
 				else {
-					dirname = str;
+					dirnameVector.push_back(str);
 				}
 			}
 
-			if (dirname == nullptr) {
+			if (dirnameVector.empty()) {
 				incorrectSyntax();
 				return kiv_os_lib::INCORRECT_SYNTAX;
 			}
 
-			kiv_os::THandle dir;
-			bool success = kiv_os_rtl::Create_File(dirname, kiv_os::fmOpen_Always, 0, dir);
-			if (dir == kiv_os::erInvalid_Handle) {
-				// Error - File not found.
-				std::string error = "File not found.";
-				kiv_os_lib::printErrLn(error.c_str(), error.length());
-				return kiv_os_lib::FILE_NOT_FOUND;
-			}
+			for (size_t i = 0; i < dirnameVector.size(); i++) {
+				kiv_os::THandle dir;
+				bool success = kiv_os_rtl::Create_File(dirnameVector[i], kiv_os::fmOpen_Always, 0, dir);
+				if (dir == kiv_os::erInvalid_Handle) {
+					// Error - File not found.
+					std::string error = "File not found.";
+					kiv_os_lib::printErrLn(error.c_str(), error.length());
+					return kiv_os_lib::FILE_NOT_FOUND;
+				}
 
-			bool isDir;
-			bool ok = kiv_os_lib::isDir(dir, isDir, nullptr);
-			if (!ok) {
-				// Error - Cannot get attrs.
-				std::string error = "Could not get file attributes.";
-				kiv_os_lib::printErrLn(error.c_str(), error.length());
-				return kiv_os_lib::ATTRS_ERROR;
-			}
-
-			if (isDir) {
-				size_t read;
-				kiv_os::TDir_Entry tdir;
-				bool ok = kiv_os_rtl::Read_File(dir, &tdir, sizeof(kiv_os::TDir_Entry), read);
+				bool isDir;
+				bool ok = kiv_os_lib::isDir(dir, isDir, nullptr);
 				if (!ok) {
-					// Error - Bad read.
-					std::string error = "Error reading file.";
+					// Error - Cannot get attrs.
+					std::string error = "Could not get file attributes.";
 					kiv_os_lib::printErrLn(error.c_str(), error.length());
-					return kiv_os_lib::READ_ERROR;
-				}
-				bool empty = read == -1;
-				size_t result = ask(dirname);
-				if (result == kiv_os_lib::READ_ERROR) {
-					// Error - Bad read.
-					std::string error = "Error reading from standard input.";
-					kiv_os_lib::printErrLn(error.c_str(), error.length());
-					return kiv_os_lib::READ_ERROR;
+					return kiv_os_lib::ATTRS_ERROR;
 				}
 
-				bool answer = result;
-				if ((empty || recursive) && (quiet || answer)) {
-					deleteDir(dir, dirname);
-				}
-				if (!empty && !recursive) {
-					// Error - folder is not empty. 
-					std::string error = "The directory is not empty.";
-					kiv_os_lib::printErrLn(error.c_str(), error.length());
-					return kiv_os_lib::DIR_NOT_EMPTY;
-				}
-			} else {
-				if (quiet || ask(dirname)) {
-					deleteDir(dir, dirname);
+				if (isDir) {
+					size_t read;
+					kiv_os::TDir_Entry tdir;
+					bool ok = kiv_os_rtl::Read_File(dir, &tdir, sizeof(kiv_os::TDir_Entry), read);
+					if (!ok) {
+						// Error - Bad read.
+						std::string error = "Error reading file.";
+						kiv_os_lib::printErrLn(error.c_str(), error.length());
+						return kiv_os_lib::READ_ERROR;
+					}
+					bool empty = read == -1;
+					size_t result = ask(dirnameVector[i]);
+					if (result == kiv_os_lib::READ_ERROR) {
+						// Error - Bad read.
+						std::string error = "Error reading from standard input.";
+						kiv_os_lib::printErrLn(error.c_str(), error.length());
+						return kiv_os_lib::READ_ERROR;
+					}
+
+					bool answer = result;
+					if ((empty || recursive) && (quiet || answer)) {
+						deleteDir(dir, dirnameVector[i]);
+					}
+					if (!empty && !recursive) {
+						// Error - folder is not empty. 
+						std::string error = "The directory is not empty.";
+						kiv_os_lib::printErrLn(error.c_str(), error.length());
+						return kiv_os_lib::DIR_NOT_EMPTY;
+					}
+				} else {
+					if (quiet || ask(dirnameVector[i])) {
+						deleteDir(dir, dirnameVector[i]);
+					}
 				}
 			}
 		}
