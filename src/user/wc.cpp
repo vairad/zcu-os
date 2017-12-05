@@ -1,8 +1,8 @@
-#include "common.h"
-
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "common.h"
 
 #undef stdin
 #undef stderr

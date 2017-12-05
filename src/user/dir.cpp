@@ -1,7 +1,7 @@
+#include <string>
+
 #include "common.h"
 #include "rtl.h"
-
-#include <string>
 
 #undef stdin
 #undef stderr

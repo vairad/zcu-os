@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "shell_parser.h"
 
 #undef stdin

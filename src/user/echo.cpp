@@ -1,6 +1,6 @@
-#include "common.h"
-
 #include <string>
+
+#include "common.h"
 
 #undef stdin
 #undef stderr

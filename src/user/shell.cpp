@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -7,7 +6,6 @@
 #include "common.h"
 #include "shell_parser.h"
 #include "shell_executor.h"
-#include "rtl.h"
 
 #undef stdin
 #undef stderr

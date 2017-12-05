@@ -1,9 +1,9 @@
-#include "common.h"
-
 #include <string>
 #include <vector>
 #include <sstream>
 #include <algorithm>
+
+#include "common.h"
 
 #undef stdin
 #undef stderr

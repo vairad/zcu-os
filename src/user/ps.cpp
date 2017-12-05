@@ -1,8 +1,8 @@
-#include "common.h"
-#include "rtl.h"
-
 #include <string>
 #include <vector>
+
+#include "common.h"
+#include "rtl.h"
 
 #undef stdin
 #undef stderr
