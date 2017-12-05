@@ -19,8 +19,11 @@ size_t pipe::getWriteIndex()
 pipe::pipe()
 	: empty(PIPE_SIZE)
 	, full(0)
+	, read_index(0)
+	, write_index(0)
 {
 	status = pipe::status_open;
+	memset(buffer, 0, PIPE_SIZE);
 }
 
 /*size_t pipe::read_in(uint8_t* buf, const size_t nbytes) const
@@ -30,7 +33,7 @@ pipe::pipe()
 
 size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 {
-	size_t written = -1;
+	size_t written = 0;
 	std::lock_guard<std::mutex> guard(write_lock);
 	if (!isOpenRead()) {
 		return written;
@@ -54,7 +57,7 @@ size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 
 size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 {
-	size_t read = -1;
+	size_t read = 0;
 	std::lock_guard<std::mutex> guard(read_lock);
 	
 	for (size_t iter = 0; iter < nbytes; iter++)

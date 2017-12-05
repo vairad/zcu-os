@@ -15,9 +15,9 @@ class pipe
 	semaphore::semaphore empty;
 	semaphore::semaphore full;
 
-	uint8_t buffer[PIPE_SIZE] = { 0 };
-	size_t read_index = 0;
-	size_t write_index = 0;
+	uint8_t buffer[PIPE_SIZE];
+	size_t read_index;
+	size_t write_index;
 
 	PipeStatus status = status_idle;
 
