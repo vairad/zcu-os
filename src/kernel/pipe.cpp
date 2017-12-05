@@ -21,6 +21,7 @@ pipe::pipe()
 	, full(0)
 	, read_index(0)
 	, write_index(0)
+    , fields_count(0)
 {
 	status = pipe::status_open;
 	memset(buffer, 0, PIPE_SIZE);
@@ -34,7 +35,6 @@ pipe::pipe()
 size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 {
 	size_t written = 0;
-	std::lock_guard<std::mutex> guard(write_lock);
 	if (!isOpenRead()) {
 		return written;
 	}
@@ -47,8 +47,12 @@ size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 		if (!isOpenRead()) {
 			return written;
 		}
-		buffer[getWriteIndex()] = src[iter];
-		written++;
+		{
+			std::lock_guard<std::mutex> guard(write_lock);
+			buffer[getWriteIndex()] = src[iter];
+			written++;
+			fields_count++;
+		}
 		full.release();
 	}
 	
@@ -58,8 +62,6 @@ size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 {
 	size_t read = 0;
-	std::lock_guard<std::mutex> guard(read_lock);
-	
 	for (size_t iter = 0; iter < nbytes; iter++)
 	{
 		if (!isOpenWrite() && isEmpty()) {
@@ -71,8 +73,12 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 			buf[iter] = EOF;
 			return read;
 		}
-		buf[iter] = buffer[getReadIndex()];
-		read++;
+		{
+			std::lock_guard<std::mutex> guard(write_lock);
+			buf[iter] = buffer[getReadIndex()];
+			read++;
+			fields_count--;
+		}
 		empty.release();
 	}
 	return read;
@@ -82,10 +88,6 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 {
 	return 0;
 }*/
-
-bool pipe::statusContains(PipeStatus s) {
-	return (status & s);
-}
 
 bool pipe::close(PipeStatus s) {
 	bool currentStatus = status & s;
@@ -105,16 +107,24 @@ bool pipe::close(PipeStatus s) {
 	return 0;
 }
 
+bool pipe::statusContains(PipeStatus s) {
+	std::lock_guard<std::mutex> guard(write_lock);
+	return (status & s);
+}
+
 bool pipe::isOpenWrite() {
+	std::lock_guard<std::mutex> guard(write_lock);
 	return status & pipe::status_open_write;
 }
 
 bool pipe::isOpenRead() {
+	std::lock_guard<std::mutex> guard(write_lock);
 	return status & pipe::status_open_read;
 }
 
 bool pipe::isEmpty() {
-	return read_index == write_index;
+	std::lock_guard<std::mutex> guard(write_lock);
+	return fields_count;
 }
 
 

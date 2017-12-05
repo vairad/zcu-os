@@ -18,6 +18,7 @@ class pipe
 	uint8_t buffer[PIPE_SIZE];
 	size_t read_index;
 	size_t write_index;
+	size_t fields_count;
 
 	PipeStatus status = status_idle;
 
