@@ -33,7 +33,7 @@ namespace type_program {
 				while (read != -1) {
 					bool ok = kiv_os_rtl::Read_File(file, buffer, sizeof(buffer) - 1, read);
 					if ( !ok || read == 0) {
-						if (written == 0) {
+						if ( !ok ) {
 							printErr(argv[i]);
 						}
 						break;
