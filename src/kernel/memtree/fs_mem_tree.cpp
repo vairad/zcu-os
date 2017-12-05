@@ -15,6 +15,7 @@ namespace fs_mem_tree {
 	const int fileResolved = 0;
 	const int fileMissingPathResolved = 1;
 	const int fileMissingPathMissing = 2;
+	const int rootResolved = 3;
 
 
 	filesys_t _fsid;
@@ -38,6 +39,10 @@ namespace fs_mem_tree {
 		*parent = mm->getRootNode();
 
 		vfs_paths::immediatePathPart(path, immediatePart, &rest);
+		if (*immediatePart == nullptr) {
+			*file = *parent;
+			return fileResolved;
+		}
 
 		while (rest != nullptr) {
 			if (!mm->isDirectory(*parent)) {
@@ -80,14 +85,21 @@ namespace fs_mem_tree {
 		bool createNew = (flags & kiv_os::fmOpen_Always) == 0;
 
 		int resolveResult = resolveFile(path, &desiredFile, &parentFolder, &filename, createNew);
+		bool fileTypeMatches = ((attrs & kiv_os::faDirectory) != 0) == mm->isDirectory(desiredFile);
 
-		if (resolveResult == fileMissingPathMissing) {
+		switch (resolveResult) 
+		{
+		case fileMissingPathMissing:
 			return kiv_os::erFile_Not_Found;
-		}
 
-		if (resolveResult == fileResolved) {
-			// file is found within a folder 
-			bool fileTypeMatches = ((attrs & kiv_os::faDirectory) != 0) == mm->isDirectory(desiredFile);
+		case rootResolved:
+			if (!(attrs & kiv_os::faDirectory)) {
+				return kiv_os::erFile_Not_Found;
+			}
+			createDescriptor(fd, desiredFile, attrs | kiv_os::faSystem_File);
+			return 0;
+
+		case fileResolved: // file is found within a folder 
 			if (!fileTypeMatches) {
 				return kiv_os::erFile_Not_Found;
 			}
@@ -97,21 +109,24 @@ namespace fs_mem_tree {
 			}
 
 			return 0;
+		
+		case fileMissingPathResolved: // parent folder was found but the final file was not
+			if (!createNew) {
+				return kiv_os::erFile_Not_Found;
+			}
+
+			desiredFile = mm->createFile(parentFolder, filename, attrs);
+			if (desiredFile == kiv_os_vfs::invalidNode) {
+				return 3;
+			}
+
+			createDescriptor(fd, desiredFile, attrs);
+
+			return 0;
 		}
 
-		// parent folder was found but the final file was not
-		if (!createNew) {
-			return kiv_os::erFile_Not_Found;
-		}
-
-		desiredFile = mm->createFile(parentFolder, filename, attrs);
-		if (desiredFile == kiv_os_vfs::invalidNode) {
-			return 3;
-		}
-
-		createDescriptor(fd, desiredFile, attrs);
-
-		return 0;
+		
+		return kiv_os::erFile_Not_Found;
 	}
 
 	int deleteFile(char *path) {

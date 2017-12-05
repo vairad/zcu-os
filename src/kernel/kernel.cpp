@@ -48,7 +48,7 @@ void Initialize_Kernel() {
 	}
 
 	// todo: run this code for FS testing
-	// kiv_os_vfs::prefillDriveC();
+	kiv_os_vfs::prefillDriveC();
 }
 
 void Shutdown_Kernel() {
