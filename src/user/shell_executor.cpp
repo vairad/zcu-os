@@ -41,7 +41,7 @@ namespace shell_executor {
 			break;
 		case shell_parser::InOutType::FILE_NEW:
 			if (!file.empty()) {
-				bool success = kiv_os_rtl::Create_File(file.c_str(), 0, 0, *std_in);
+				bool success = kiv_os_rtl::Create_File(file.c_str(), kiv_os::fmOpen_Always, 0, *std_in);
 			} else {
 				// Missing argument (filename).
 				incorrectSyntax();
