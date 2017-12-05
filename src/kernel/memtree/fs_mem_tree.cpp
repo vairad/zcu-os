@@ -4,8 +4,6 @@
 #include "../filesystem/VFS.h"
 #include "../filesystem/VFS_paths.h"
 
-
-
 #undef stdin
 #undef stderr
 #undef stdout

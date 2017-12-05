@@ -1,8 +1,10 @@
 #pragma once
 
-#include <cstdlib>
 #include <cstdint>
 
+#undef stdin
+#undef stderr
+#undef stdout
 #include "../../api/api.h"
 
 typedef size_t node_t;

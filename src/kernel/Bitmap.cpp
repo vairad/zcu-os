@@ -1,7 +1,5 @@
 #include "Bitmap.h"
 
-
-
 Bitmap::Bitmap(size_t mapSize)
 {
 	this->mapPartCount = static_cast<uint16_t>(mapSize / this->partSize + 1);

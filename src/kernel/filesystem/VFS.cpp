@@ -1,11 +1,11 @@
 #include <cstring>
 
+#include "VFS.h"
+#include "VFS_paths.h"
+
 #undef stdin
 #undef stderr
 #undef stdout
-
-#include "VFS.h"
-#include "VFS_paths.h"
 
 namespace kiv_os_vfs {
 

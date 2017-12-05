@@ -1,6 +1,10 @@
 #pragma once
 #include <cstdint>
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 
 typedef size_t bitmap_t;
 

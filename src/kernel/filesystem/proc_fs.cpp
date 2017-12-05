@@ -1,9 +1,9 @@
-#include "VFS.h"
-#include "proc_fs.h"
-
 #include <string>
 #include <string.h>
 #include <map>
+
+#include "VFS.h"
+#include "proc_fs.h"
 
 #undef stdin
 #undef stderr

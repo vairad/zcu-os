@@ -2,6 +2,10 @@
 
 #include "MemtreeMount.h"
 
+#undef stdin
+#undef stderr
+#undef stdout
+
 
 MemtreeMount::MemtreeMount(kiv_os_vfs::Superblock *superblock)
 {

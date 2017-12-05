@@ -1,9 +1,10 @@
 #pragma once
 
 #include "semaphore.h"
-#include <list>
 
-
+#undef stdin
+#undef stderr
+#undef stdout
 
 class pipe
 {

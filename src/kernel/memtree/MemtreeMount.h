@@ -1,8 +1,12 @@
 #pragma once
 
-#include "../../api/api.h"
 #include "../filesystem/VFS.h"
 #include "../Bitmap.h"
+
+#undef stdin
+#undef stderr
+#undef stdout
+#include "../../api/api.h"
 
 struct MemtreeDirEntry {
 	kiv_os::TDir_Entry apiEntry;

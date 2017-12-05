@@ -1,7 +1,5 @@
 #include "pipe.h"
 
-
-
 size_t pipe::getReadIndex()
 {
 	const auto actual_read = read_index;

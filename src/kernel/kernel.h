@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #undef stdin
 #undef stderr
 #undef stdout
