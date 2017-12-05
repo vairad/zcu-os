@@ -13,10 +13,10 @@ namespace freq_program {
 
 	size_t freq_main(int argc, char *argv[]) {
 		std::map<char, int> freqs;
-		size_t read;
 		size_t buffer_size = 255;
 		char buffer[256];
-		while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
+		size_t read = kiv_os_lib::read(buffer, buffer_size);
+		while (read != 0 && read != -1) {
 			buffer[read] = 0; // Terminate the string.
 			for (size_t i = 0; i < read; i++) {
 				char c = buffer[i];
@@ -27,6 +27,8 @@ namespace freq_program {
 					freqs[c] = 1;
 				}
 			}
+
+			read = kiv_os_lib::read(buffer, buffer_size);
 		}
 
 		for (std::map<char, int>::iterator it = freqs.begin(); it != freqs.end(); ++it) {

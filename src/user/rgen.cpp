@@ -40,11 +40,12 @@ namespace rgen_program {
 			return kiv_os_lib::CANNOT_CREATE_THREAD;
 		}
 
-		size_t read;
 		size_t buffer_size = 255;
 		char buffer[256];
-		while ((read = kiv_os_lib::read(buffer, buffer_size)) != -1) {
+		size_t read = kiv_os_lib::read(buffer, buffer_size);
+		while (read != 0 && read != -1) {
 			// Nothing, wait for EOF.
+			read = kiv_os_lib::read(buffer, buffer_size);
 		}
 		run = false;
 

@@ -45,6 +45,19 @@ namespace type_program {
 				kiv_os_lib::printLn(buffer, 0);
 				kiv_os_rtl::Close_File(file);
 			}
+		} else if (argc == 1) {
+			std::string line = "";
+			size_t buffer_size = 255;
+			char buffer[256];
+			size_t read = kiv_os_lib::read(buffer, buffer_size);
+			while (read != 0 && read != -1) {
+				buffer[read] = 0; // Terminate the string.
+				line.append(buffer);
+
+				read = kiv_os_lib::read(buffer, buffer_size);
+			}
+
+			kiv_os_lib::printLn(line.c_str(), line.length());
 		} else {
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";

@@ -24,12 +24,14 @@ namespace wc_program {
 
 	size_t wc_main(int argc, char *argv[]) {
 		std::string line = "";
-		size_t read;
 		size_t buffer_size = 255;
 		char buffer[256];
-		while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
+		size_t read = kiv_os_lib::read(buffer, buffer_size);
+		while (read != 0 && read != -1) {
 			buffer[read] = 0; // Terminate the string.
 			line.append(buffer);
+
+			read = kiv_os_lib::read(buffer, buffer_size);
 		}
 
 		int count = 0;

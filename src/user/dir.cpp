@@ -35,16 +35,6 @@ namespace dir_program {
 			return kiv_os_lib::FILE_NOT_FOUND;
 		}
 
-		/*bool isDir;
-		uint16_t attrs;
-		bool ok = kiv_os_lib::isDir(handle, isDir, &attrs);
-		if (!ok) {
-			// Error - Get args fail.
-			std::string error = "Could not get file attributes.";
-			kiv_os_lib::printErrLn(error.c_str(), error.length());
-			return kiv_os_lib::ATTRS_ERROR;
-		}*/
-
 		size_t read;
 		kiv_os::TDir_Entry tdir;
 		bool ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
@@ -56,12 +46,6 @@ namespace dir_program {
 
 			ok = kiv_os_rtl::Read_File(handle, &tdir, sizeof(kiv_os::TDir_Entry), read);
 		}
-		/*} else {
-			std::string s = std::to_string(attrs);
-			s.append("\t");
-			kiv_os_lib::print(s.c_str(), s.length());
-			kiv_os_lib::printLn(path.c_str(), path.length());
-		}*/
 
 		return kiv_os_lib::SUCCESS;
 	}
