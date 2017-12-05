@@ -30,13 +30,16 @@ pipe::pipe()
 
 size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 {
-	size_t written = 0;
+	size_t written = -1;
 	std::lock_guard<std::mutex> guard(write_lock);
 	if (!isOpenRead()) {
 		return written;
 	}
 	for(size_t iter = 0; iter < nbytes; iter++)
 	{
+		if (!isOpenRead()) {
+			return written;
+		}
 		empty.acquire();
 		if (!isOpenRead()) {
 			return written;
@@ -51,7 +54,7 @@ size_t pipe::write_in(const uint8_t* src, const size_t nbytes)
 
 size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 {
-	size_t read = 0;
+	size_t read = -1;
 	std::lock_guard<std::mutex> guard(read_lock);
 	
 	for (size_t iter = 0; iter < nbytes; iter++)
@@ -61,7 +64,10 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 			return read;
 		}
 		full.acquire();
-		
+		if (!isOpenWrite() && isEmpty()) {
+			buf[iter] = EOF;
+			return read;
+		}
 		buf[iter] = buffer[getReadIndex()];
 		read++;
 		empty.release();
@@ -75,7 +81,7 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 }*/
 
 bool pipe::statusContains(PipeStatus s) {
-	return !!(status & s);
+	return (status & s);
 }
 
 bool pipe::close(PipeStatus s) {
@@ -85,10 +91,10 @@ bool pipe::close(PipeStatus s) {
 		return 0;
 	}
 	if (s == pipe::status_open_read) {
-		// todo: wake waiting writers
+		empty.release();
 	}
 	else if (s == pipe::status_open_write) {
-		// todo: wake waiting readers
+		full.release();
 	}
 
 	status = status & ~s;

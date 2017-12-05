@@ -34,7 +34,10 @@ namespace fs_pipe {
 		pipes[freePipe] = new pipe();
 
 		createDescriptor(fd_in, freePipe, pipe::status_open_write);
+		fd_in->status = pipe::status_open_write;
+
 		createDescriptor(fd_out, freePipe, pipe::status_open_read);
+		fd_out->status = pipe::status_open_read;
 
 		return 0;
 	}
@@ -42,7 +45,7 @@ namespace fs_pipe {
 	size_t readBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
-		if (fd->status != pipe::status_open_read) {
+		if (!pipe->statusContains(pipe::status_open_read)) {
 			return -1; // file descriptor is not open for reading
 		}
 		if (!pipe->isOpenRead()) {
@@ -57,7 +60,7 @@ namespace fs_pipe {
 	size_t writeBytes(kiv_os_vfs::FileDescriptor *fd, void *buffer, size_t length) {
 		pipe *pipe = pipes[fd->inode];
 
-		if (fd->status != pipe::status_open_write) {
+		if (!pipe->statusContains(pipe::status_open_write)) {
 			return -1; // file descriptor is not open for reading
 		}
 		if (!pipe->isOpenWrite()) {
