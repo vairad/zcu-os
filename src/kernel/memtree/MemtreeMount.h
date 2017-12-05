@@ -34,6 +34,7 @@ class MemtreeMount
 	size_t writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t from, size_t to);
 	size_t readDirNode(kiv_os_vfs::Inode *node, kiv_os::TDir_Entry *dst, uint16_t nFrom, uint16_t nTo);
 
+	bool setNodeSize(kiv_os_vfs::Inode *node, size_t size);
 
 	node_t reserveFreeNode(uint16_t attrs);
 	void releaseNode(node_t n);
@@ -52,7 +53,7 @@ public:
 	size_t read(node_t node, uint8_t *dst, size_t from, size_t to);
 	size_t write(node_t node, uint8_t *src, size_t from, size_t to);
 	size_t readDir(node_t node, kiv_os::TDir_Entry *dst, uint16_t nFrom, uint16_t nTo);
-
+	
 	bool setSize(node_t node, size_t size);
 	size_t getSize(node_t node);
 

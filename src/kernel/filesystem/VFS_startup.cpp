@@ -73,9 +73,18 @@ namespace kiv_os_vfs {
 		kiv_os_vfs::write(fd, "Jelenovi pivo nelej", 19);
 		kiv_os_vfs::close(fd);
 
+		fd = kiv_os_vfs::openFile("C:/del-me/ahoj.txt", kiv_os::fmOpen_Always, 0);
+		kiv_os_vfs::setPos(fd, 0, kiv_os::fsEnd, 0);
+
+		kiv_os_vfs::write(fd, ". Ups, jeste ta tecka.", 22);
+		kiv_os_vfs::close(fd);
+
 		char bfr[255] = {0};
 		fd = kiv_os_vfs::openFile("C:/del-me/ahoj.txt", kiv_os::fmOpen_Always, 0);
 		size_t read = kiv_os_vfs::read(fd, bfr, 255);
+
+		kiv_os_vfs::setPos(fd, 0, kiv_os::fsBeginning, 0);
+		read += kiv_os_vfs::read(fd, bfr + read, 255 - read);
 		kiv_os_vfs::close(fd);
 
 		// this should be invalid handle

@@ -14,12 +14,12 @@ namespace kiv_os_vfs {
 	int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out);
 
 
-	uint8_t _fs_driver_count_max;
-	uint8_t _fs_driver_count;
+	filesys_t _fs_driver_count_max;
+	filesys_t _fs_driver_count;
 	FsDriver *_fs_drivers;
 
-	uint8_t _fs_mount_count_max;
-	uint8_t _fs_mount_count;
+	sblock_t _fs_mount_count_max;
+	sblock_t _fs_mount_count;
 	Superblock **_superblocks;
 
 	const kiv_os::THandle fdCount = 0xFFFF;
@@ -27,12 +27,15 @@ namespace kiv_os_vfs {
 
 	//		VFS PRIVATE FUNCTIONS
 
-	Superblock *resolveSuperblockByLabel(const char *label) {
-		for (int i = 0; i < _fs_mount_count; i++) {
+	Superblock *resolveSuperblockByLabel(const char *label, sblock_t *sblockId = nullptr) {
+		for (sblock_t i = 0; i < _fs_mount_count; i++) {
 			if (_superblocks[i] == nullptr) {
 				continue;
 			}
 			if (!strcmp(label, (_superblocks[i])->label)) {
+				if (sblockId != nullptr) {
+					*sblockId = i;
+				}
 				return _superblocks[i];
 			}
 		}
@@ -42,7 +45,7 @@ namespace kiv_os_vfs {
 		return nullptr;
 	}
 
-	int resolveSuperblock(char *path, Superblock **sb, char **fsRest) {
+	int resolveSuperblock(char *path, Superblock **sb, char **fsRest, sblock_t *sblockId = nullptr) {
 		char pathLabel[mountpointLabelSize] = { 0 };
 		char *mountSeparatorPos = strchr(path, mountSeparator);
 
@@ -57,7 +60,7 @@ namespace kiv_os_vfs {
 
 		strncpy_s(pathLabel, path, lblLength);
 
-		*sb = resolveSuperblockByLabel(pathLabel);
+		*sb = resolveSuperblockByLabel(pathLabel, sblockId);
 		if (sb == nullptr) {
 			return 1;
 		}
@@ -210,13 +213,14 @@ namespace kiv_os_vfs {
 	}
 
 	kiv_os::THandle openFile(const char *path, uint64_t flags, uint8_t attrs) {
-		Superblock *sb;
+		Superblock *sb; sblock_t sblockId;
+
 		char *drivePath;
 
 		char pathBuffer[pathBufferSize] = {0};
 		vfs_paths::normalizePath(pathBuffer, path, pathBufferSize);
 
-		if (resolveSuperblock(pathBuffer, &sb, &drivePath)) {
+		if (resolveSuperblock(pathBuffer, &sb, &drivePath, &sblockId)) {
 			return kiv_os::erInvalid_Handle;
 		}
 
@@ -233,8 +237,7 @@ namespace kiv_os_vfs {
 			return kiv_os::erInvalid_Handle;
 		}
 
-		//todo review patch procfs
-		(files + fd)->superblockId = sb->filesys_id;
+		(files + fd)->superblockId = sblockId;
 
 		sb->connections++;
 

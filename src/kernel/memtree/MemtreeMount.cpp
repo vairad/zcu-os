@@ -157,6 +157,9 @@ size_t MemtreeMount::writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t fro
 	if (to > this->maxFilesize) {
 		to = this->maxFilesize;
 	}
+	if (to > node->size) {
+		this->setNodeSize(node, to);
+	}
 	if (from > to) {
 		return 0;
 	}
@@ -169,18 +172,11 @@ size_t MemtreeMount::writeNode(kiv_os_vfs::Inode *node, uint8_t *src, size_t fro
 		// possible optimalization: use memcpy
 		realBlock = node->directBlocks[blockN];
 		if (realBlock == invalidBlock) {
-			realBlock = this->reserveBlock(node, blockN);
-			if (realBlock == invalidBlock) {
-				to = i;
-				break;
-			}
+			to = i;
+			break;
 		}
 
 		this->data[realBlock * this->sb->blockSize + blockOffset] = src[i - from];
-	}
-
-	if (to > node->size) {
-		node->size = to;
 	}
 
 	return to - from;
@@ -219,13 +215,7 @@ size_t MemtreeMount::readDir(node_t n, kiv_os::TDir_Entry *dst, uint16_t nFrom, 
 	return this->readDirNode(node, dst, nFrom, nTo);
 }
 
-
-bool MemtreeMount::setSize(node_t n, size_t size) {
-	kiv_os_vfs::Inode *node = getNode(n);
-	if (node == nullptr) {
-		return false;
-	}
-
+bool MemtreeMount::setNodeSize(kiv_os_vfs::Inode *node, size_t size) {
 	if (size > this->maxFilesize) {
 		return false;
 	}
@@ -236,12 +226,31 @@ bool MemtreeMount::setSize(node_t n, size_t size) {
 	if (size % this->sb->blockSize) {
 		requiredBlocks++;
 	}
-	// 2 blocks are required: 0, 1.. release 2...directBlocks
-	for (int i = requiredBlocks; i < kiv_os_vfs::inode_directLinks; i++) {
-		this->releaseBlock(node, i);
+
+	for (uint16_t i = 0; i < kiv_os_vfs::inode_directLinks; i++) {
+		// example: 2 blocks are required: ensure 0, 1 are assigned AND release 2...directBlocks
+		if (i < requiredBlocks) {
+			if (node->directBlocks[i] == invalidBlock) {
+				if (this->reserveBlock(node, i) == invalidBlock) {
+					return false;
+				}
+			}
+		}
+		else {
+			this->releaseBlock(node, i);
+		}
+
 	}
 
 	return true;
+}
+
+bool MemtreeMount::setSize(node_t n, size_t size) {
+	kiv_os_vfs::Inode *node = getNode(n);
+	if (node == nullptr) {
+		return false;
+	}
+	return this->setNodeSize(node, size);
 }
 size_t MemtreeMount::getSize(node_t n) {
 	kiv_os_vfs::Inode *node = getNode(n);
@@ -320,7 +329,7 @@ bool MemtreeMount::deleteFile(node_t parentDirectory, node_t f) {
 		if (!this->deleteDirectory(file)) {
 			return false;
 		}
-	}	
+	}
 	this->releaseNode(f);
 
 	MemtreeDirEntry dirEntry;
