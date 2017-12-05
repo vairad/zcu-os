@@ -89,7 +89,7 @@ size_t kiv_os_lib::print(const char *buffer, size_t buffer_size) {
 size_t kiv_os_lib::printLn(const char* buffer, size_t buffer_size)
 {
 	const size_t written = print(buffer, buffer_size);
-	print("\r\n", 3);
+	print("\r\n", 2);
 	return written;
 }
 
@@ -103,7 +103,7 @@ size_t kiv_os_lib::printErr(const char *buffer, size_t buffer_size) {
 size_t kiv_os_lib::printErrLn(const char* buffer, size_t buffer_size)
 {
 	const size_t written = printErr(buffer, buffer_size);
-	printErr("\r\n", 3);
+	printErr("\r\n", 2);
 	return written;
 }
 
