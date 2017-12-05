@@ -10,6 +10,23 @@
 
 namespace shell_parser {
 
+	const char commands[][16] = {
+		"echo", "cd", "dir", "md", "rd", "type", "wc",
+		"sort", "ps", "rgen", "freq", "shutdown", "shell", "exit",
+		"repeater"
+	};
+	const size_t commandCount = sizeof(commands);
+
+	bool isValidCommand(std::string &test) {
+		for (uint8_t i = 0; i < commandCount; i++) {
+			if (test == commands[i]) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	Command createCommand(std::string command, std::vector<std::string> parameters, std::string files[], InOutType *in, InOutType *out, InOutType *err) {
 		Command retVal;
 		retVal.name = command;
@@ -31,6 +48,8 @@ namespace shell_parser {
 		return retVal;
 	}
 
+
+
 	std::vector<Command> splitToCommands(std::vector<std::string> parts) {
 		std::vector<Command> retVal = std::vector<Command>();
 		std::vector<std::string> params = std::vector<std::string>();
@@ -43,8 +62,7 @@ namespace shell_parser {
 
 		for (int i = 0; i < size; i++) {
 			std::string p = parts[i];
-			if (p == "echo" || p == "cd" || p == "dir" || p == "md" || p == "rd" || p == "type" || p == "wc"
-				|| p == "sort" || p == "ps" || p == "rgen" || p == "freq" || p == "shutdown" || p == "shell" || p == "exit") {
+			if (isValidCommand(p)) {
 				if (i != 0) {
 					retVal.push_back(createCommand(command, params, files, &in, &out, &err));
 					params.clear();

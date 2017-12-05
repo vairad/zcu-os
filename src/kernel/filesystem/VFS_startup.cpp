@@ -55,9 +55,9 @@ namespace kiv_os_vfs {
 
 		auto fd = kiv_os_vfs::openFile("C:/comics/marvel/spdrmn.txt", 0, 0);
 
-		kiv_os_vfs::write(fd, "2017-11-i23 Block A\n", 20);
 		kiv_os_vfs::write(fd, "2017-11-i24 Block B\n", 20);
 		kiv_os_vfs::write(fd, "2017-11-i27 Not available\n", 26);
+		kiv_os_vfs::write(fd, "2017-11-i23 Block A\n", 20);
 		kiv_os_vfs::write(fd, "2017-11-i28 Block A\n", 20);
 
 		fd = kiv_os_vfs::openFile("C:/comics/marvel/dedpl.txt", 0, 0);

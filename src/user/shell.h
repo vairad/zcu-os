@@ -21,3 +21,5 @@ extern "C" size_t __stdcall rgen(const kiv_os::TRegisters &regs);
 extern "C" size_t __stdcall freq(const kiv_os::TRegisters &regs);
 extern "C" size_t __stdcall ps(const kiv_os::TRegisters &regs);
 extern "C" size_t __stdcall shutdown(const kiv_os::TRegisters &regs);
+
+extern "C" size_t __stdcall repeater(const kiv_os::TRegisters &regs);
