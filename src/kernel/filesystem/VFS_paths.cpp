@@ -86,9 +86,15 @@ namespace vfs_paths {
 			// a relative path - use current work dir as a prefix
 			std::string wd = process::getWorkingDir();
 			const char *wdp = wd.c_str();
-			strcpy_s(dst, maxDstLength, wdp);
+			size_t wdLength = wd.length();
 
-			strcpy_s(dst + wd.length(), maxDstLength - wd.length(), src);
+			strcpy_s(dst, maxDstLength, wdp);
+			if (dst[wdLength - 1] != kiv_os_vfs::pathSeparator) {
+				dst[wdLength] = kiv_os_vfs::pathSeparator;
+				wdLength++;
+			}
+
+			strcpy_s(dst + wdLength, maxDstLength - wdLength, src);
 
 			// assumes workdir always has system label
 			labelLength = (uint16_t)(strstr(dst, labelSeparator) - dst);
