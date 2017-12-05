@@ -30,14 +30,12 @@ namespace wc_program {
 		while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
 			buffer[read] = 0; // Terminate the string.
 			line.append(buffer);
-			line.append(" ");
 		}
 
 		int count = 0;
 		str_replace(line, "\n", " ");
 		str_replace(line, "\r", " ");
 		str_replace(line, "\t", " ");
-		//str_replace(line, "\n", " ");
 
 		std::stringstream line_stream(line);
 		std::string segment;

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 #include <algorithm>
 
 #undef stdin
@@ -20,16 +21,24 @@ namespace sort_program {
 					reverse = true;
 				}
 			}
-			std::vector<std::string> lines = std::vector<std::string>();
+			std::string line = "";
 			size_t read;
 			size_t buffer_size = 1023;
 			char buffer[1024];
 			read = kiv_os_lib::read(buffer, buffer_size);
 			while (read != 0 && read != -1) {
 				buffer[read] = 0; // Terminate the line.
-				std::string line = buffer;
-				lines.push_back(line);
+				line.append(buffer);
 				read = kiv_os_lib::read(buffer, buffer_size);
+			}
+
+			std::vector<std::string> lines = std::vector<std::string>();
+			std::stringstream ss(line);
+			std::string segment;
+			while (std::getline(ss, segment, '\n')) {
+				if (segment.size() > 0) {
+					lines.push_back(segment);
+				}
 			}
 
 			std::sort(lines.begin(), lines.end());
@@ -37,12 +46,12 @@ namespace sort_program {
 			if (!reverse) {
 				for (size_t i = 0; i < lines.size(); i++) {
 					std::string line = lines[i];
-					kiv_os_lib::print(line.c_str(), line.length());
+					kiv_os_lib::printLn(line.c_str(), line.length());
 				}
 			} else {
 				for (size_t i = lines.size() - 1; i > 0; i--) {
 					std::string line = lines[i];
-					kiv_os_lib::print(line.c_str(), line.length());
+					kiv_os_lib::printLn(line.c_str(), line.length());
 				}
 			}
 		} else {
