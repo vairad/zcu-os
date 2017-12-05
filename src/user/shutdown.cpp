@@ -13,8 +13,8 @@ size_t shutdown_main(int argc, char *argv[]) {
 	}
 	else {
 		// Error - wrong number of parameters.
-		std::string error = "The syntax of the command is incorrect. \n";
-		kiv_os_lib::printErr(error.c_str(), error.length());
+		std::string error = "The syntax of the command is incorrect.";
+		kiv_os_lib::printErrLn(error.c_str(), error.length());
 	}
 
 	return 0;

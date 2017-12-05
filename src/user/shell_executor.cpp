@@ -20,8 +20,8 @@ namespace shell_executor {
 	}
 
 	void incorrectSyntax() {
-		std::string error = "The syntax of the command is incorrect.\n";
-		kiv_os_lib::printErr(error.c_str(), error.length());
+		std::string error = "The syntax of the command is incorrect.";
+		kiv_os_lib::printErrLn(error.c_str(), error.length());
 	}
 
 	bool setStdIn(shell_parser::InOutType in, kiv_os::THandle pipeHandles[], std::string file,
@@ -67,8 +67,8 @@ namespace shell_executor {
 				*std_out = pipeHandles[0];
 			} else {
 				// Error occured while creating pipe.
-				std::string error = "Error creating pipe.\n";
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				std::string error = "Error creating pipe.";
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 				retVal = false;
 			}
 			break;
@@ -145,8 +145,8 @@ namespace shell_executor {
 
 			bool ok = kiv_os_rtl::Join_One_Handle(toWait[i].handle);
 			if (!ok) {
-				std::string error = "Error waiting for process or thread.\n";
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				std::string error = "Error waiting for process or thread.";
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 				continue;
 			}
 		}
@@ -188,15 +188,15 @@ namespace shell_executor {
 					const size_t error = kiv_os_rtl::Get_Last_Error();
 					switch (error) {
 					case kiv_os::erFile_Not_Found:
-						errorStr = "\'" + ce->name + "\' is not recognized as an internal or external command.\n";
+						errorStr = "\'" + ce->name + "\' is not recognized as an internal or external command.";
 						break;
 					case kiv_os::erProces_Not_Created:
-						errorStr = "Error creating new process or thread.\n";
+						errorStr = "Error creating new process or thread.";
 						break;
 					default:
-						errorStr = "Unspecified error during run program.\n";
+						errorStr = "Unspecified error during run program.";
 					}
-					kiv_os_lib::printErr(errorStr.c_str(), errorStr.length());
+					kiv_os_lib::printErrLn(errorStr.c_str(), errorStr.length());
 					closeHandles(ce);
 					return;
 				}
@@ -248,8 +248,8 @@ namespace shell_executor {
 				// Unknown command.
 				std::string error = "\'";
 				error.append(command.parameters[0]);
-				error.append("\' is not recognized as an internal or external command.\n");
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				error.append("\' is not recognized as an internal or external command.");
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 				return true;
 			}
 		}

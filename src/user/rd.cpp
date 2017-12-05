@@ -13,7 +13,7 @@ namespace rd_program {
 
 	void incorrectSyntax() {
 		std::string error = "The syntax of the command is incorrect.";
-		kiv_os_lib::printErr(error.c_str(), error.length());
+		kiv_os_lib::printErrLn(error.c_str(), error.length());
 	}
 
 	void deleteDir(kiv_os::THandle dir, char *dirname) {
@@ -32,7 +32,7 @@ namespace rd_program {
 		if (read == -1) {
 			// Error - Bad read.
 			std::string error = "Error reading from standard input.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 			return kiv_os_lib::READ_ERROR;
 		}
 		buffer[read] = 0; // Terminate the string.
@@ -73,7 +73,7 @@ namespace rd_program {
 			if (dir == kiv_os::erInvalid_Handle) {
 				// Error - File not found.
 				std::string error = "File not found.";
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 				return kiv_os_lib::FILE_NOT_FOUND;
 			}
 
@@ -82,7 +82,7 @@ namespace rd_program {
 			if (!ok) {
 				// Error - Cannot get attrs.
 				std::string error = "Could not get file attributes.";
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 				return kiv_os_lib::ATTRS_ERROR;
 			}
 
@@ -93,7 +93,7 @@ namespace rd_program {
 				if (!ok) {
 					// Error - Bad read.
 					std::string error = "Error reading file.";
-					kiv_os_lib::printErr(error.c_str(), error.length());
+					kiv_os_lib::printErrLn(error.c_str(), error.length());
 					return kiv_os_lib::READ_ERROR;
 				}
 				bool empty = read == -1;
@@ -101,7 +101,7 @@ namespace rd_program {
 				if (result == kiv_os_lib::READ_ERROR) {
 					// Error - Bad read.
 					std::string error = "Error reading from standard input.";
-					kiv_os_lib::printErr(error.c_str(), error.length());
+					kiv_os_lib::printErrLn(error.c_str(), error.length());
 					return kiv_os_lib::READ_ERROR;
 				}
 
@@ -112,7 +112,7 @@ namespace rd_program {
 				if (!empty && !recursive) {
 					// Error - folder is not empty. 
 					std::string error = "The directory is not empty.";
-					kiv_os_lib::printErr(error.c_str(), error.length());
+					kiv_os_lib::printErrLn(error.c_str(), error.length());
 					return kiv_os_lib::DIR_NOT_EMPTY;
 				}
 			} else {

@@ -67,7 +67,7 @@ namespace ps_program
 		if (!success) {
 			// Error - File does not exist.
 			std::string error = "File not found.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 		}
 		return success;
 	}
@@ -80,7 +80,7 @@ namespace ps_program
 		if (!ok) {
 			// Error - Get args fail.
 			std::string error = "Could not get file attributes.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 			return kiv_os_lib::ATTRS_ERROR;
 		}
 		return ok;
@@ -130,12 +130,12 @@ namespace ps_program
 			}
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 			return kiv_os_lib::INCORRECT_SYNTAX;
 		}
 		// Error - wrong number of parameters.
 		std::string error = "The syntax of the command is incorrect.";
-		kiv_os_lib::printErr(error.c_str(), error.length());
+		kiv_os_lib::printErrLn(error.c_str(), error.length());
 		return kiv_os_lib::INCORRECT_SYNTAX;
 	}
 }

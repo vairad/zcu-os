@@ -16,7 +16,7 @@ namespace freq_program {
 		size_t read;
 		size_t buffer_size = 255;
 		char buffer[256];
-		while ((read = kiv_os_lib::read(buffer, buffer_size)) != -1) {
+		while ((read = kiv_os_lib::read(buffer, buffer_size)) != 0) {
 			buffer[read] = 0; // Terminate the string.
 			for (size_t i = 0; i < read; i++) {
 				char c = buffer[i];

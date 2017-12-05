@@ -36,7 +36,7 @@ namespace rgen_program {
 		if (!ok) {
 			// Error - wrong number of parameters.
 			std::string error = "The syntax of the command is incorrect.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 			return kiv_os_lib::CANNOT_CREATE_THREAD;
 		}
 

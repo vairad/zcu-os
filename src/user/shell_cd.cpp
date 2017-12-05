@@ -21,12 +21,12 @@ namespace shell_cd {
 			success = kiv_os_rtl::Change_Working_Dir(args.c_str());
 			if( ! success )
 			{
-				std::string error = "System could not find selected path";
-				kiv_os_lib::printErr(error.c_str(), error.length());
+				std::string error = "System could not find selected path.";
+				kiv_os_lib::printErrLn(error.c_str(), error.length());
 			}
 		} else {
 			std::string error = "Invalid parameters.";
-			kiv_os_lib::printErr(error.c_str(), error.length());
+			kiv_os_lib::printErrLn(error.c_str(), error.length());
 			success = false;
 		}
 		return success;
