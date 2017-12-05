@@ -86,7 +86,7 @@ namespace kiv_os_io {
 		// error occured
 		regs.flags.carry = read == -1;
 
-		if (!regs.flags.carry || read == toBeRead) {
+		if (!regs.flags.carry) {
 			regs.rax.r = read;
 		}
 		else {
@@ -111,7 +111,7 @@ namespace kiv_os_io {
 		uint64_t written = kiv_os_vfs::write(vfsFd, buffer, toBeWritten);
 
 		// error occured
-		regs.flags.carry = written == -1 || written != toBeWritten;
+		regs.flags.carry = written == -1;
 		if (!regs.flags.carry) {
 			regs.rax.r = written;
 		}
