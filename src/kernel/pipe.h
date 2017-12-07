@@ -1,6 +1,7 @@
 #pragma once
 
 #include "semaphore.h"
+#include "filesystem\VFS.h"
 
 #undef stdin
 #undef stderr
@@ -8,7 +9,7 @@
 
 class pipe
 {
-	typedef uint8_t PipeStatus;
+	typedef FdStatus PipeStatus;
 
 	static const size_t PIPE_SIZE = 1024;
 
@@ -21,23 +22,13 @@ class pipe
 	size_t write_index;
 	size_t fields_count;
 
-	PipeStatus status = status_idle;
+	FdStatus status = kiv_os_vfs::fdStatus_idle;
 
 	size_t getReadIndex();
 	size_t getWriteIndex();
 
 public:
-	// Pipe is about to be cleaned up
-	static const PipeStatus status_idle = 0;
-	// A reference to this pipe still exists
-	static const PipeStatus status_both_closed = 1;
-	// Pipes read end is open
-	static const PipeStatus status_open_read = 2;
-	// Pipes write end is open
-	static const PipeStatus status_open_write = 4;
-	// Pipe is fully open
-	static const PipeStatus status_open = status_both_closed | status_open_read | status_open_write;
-
+	
 	pipe();
 	
 

@@ -1,4 +1,5 @@
 #include "pipe.h"
+#include "filesystem\VFS.h"
 
 size_t pipe::getReadIndex()
 {
@@ -21,7 +22,7 @@ pipe::pipe()
 	, write_index(0)
     , fields_count(0)
 {
-	status = pipe::status_open;
+	status = kiv_os_vfs::fdStatus_open;
 	memset(buffer, 0, PIPE_SIZE);
 }
 
@@ -60,7 +61,7 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 	size_t read = 0;
 	for (size_t iter = 0; iter < nbytes; iter++)
 	{
-		if (!isOpenRead()) {
+		if (!this->readMakeSense()) {
 			buf[iter] = EOF;
 			return read;
 		}
@@ -92,10 +93,10 @@ bool pipe::close(PipeStatus s) {
 	if (!currentStatus) {
 		return 0;
 	}
-	if (s == pipe::status_open_read) {
+	if (s == kiv_os_vfs::fdStatus_openRead) {
 		empty.release();
 	}
-	else if (s == pipe::status_open_write) {
+	else if (s == kiv_os_vfs::fdStatus_openWrite) {
 		full.release();
 	}
 
@@ -111,13 +112,13 @@ bool pipe::statusContains(PipeStatus s) {
 
 bool pipe::isOpenWrite() {
 	//std::lock_guard<std::mutex> guard(write_lock);
-	 bool ret = status & pipe::status_open_write;
+	 bool ret = this->status & kiv_os_vfs::fdStatus_openWrite;
 	 return ret;
 }
 
 bool pipe::isOpenRead() {
 	//std::lock_guard<std::mutex> guard(write_lock);
-	bool ret = status & pipe::status_open_read;
+	bool ret = this->status & kiv_os_vfs::fdStatus_openRead;
 	return ret;
 }
 
@@ -129,7 +130,7 @@ bool pipe::isEmpty() {
 
 bool pipe::readMakeSense()
 {
-	bool sense = isOpenRead() && !isEmpty();
+	bool sense = isOpenRead() && (!isEmpty() || isOpenWrite());
 	return sense;
 }
 

@@ -1,4 +1,5 @@
 #include <cstring>
+#include <condition_variable>
 
 #include "VFS.h"
 #include "VFS_paths.h"
@@ -10,6 +11,8 @@
 namespace kiv_os_vfs {
 
 	const size_t pathBufferSize = 2048;
+
+	std::mutex descriptorsMutex;
 
 	int(*_fs_createPipe)(kiv_os_vfs::FileDescriptor *fd_in, kiv_os_vfs::FileDescriptor *fd_out);
 
@@ -94,10 +97,14 @@ namespace kiv_os_vfs {
 	}
 
 	kiv_os::THandle getFreeDescriptorIndex(kiv_os::THandle searchStart = 0) {
+		std::lock_guard<std::mutex> lock(descriptorsMutex);
+		
 		for (kiv_os::THandle i = searchStart; i < fdCount; i++) {
-			if (files[i].openCounter > 0) {
+			if (files[i].status != fdStatus_idle) {
 				continue;
 			}
+
+			files[i].status = fdStatus_reserved;
 			return i;
 		}
 
@@ -233,7 +240,7 @@ namespace kiv_os_vfs {
 
 		// if opening failed, mark this fd as unopened, usable
 		if (result != 0) {
-			(files + fd)->openCounter = 0;
+			memset(files + fd, 0, sizeof(FileDescriptor));
 			return kiv_os::erInvalid_Handle;
 		}
 
@@ -340,6 +347,8 @@ namespace kiv_os_vfs {
 				return 2;
 			}
 		}
+
+		memset(fDesc, 0, sizeof(FileDescriptor));
 
 		return 0;
 	}

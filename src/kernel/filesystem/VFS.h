@@ -12,6 +12,7 @@
 
 typedef uint8_t filesys_t;
 typedef uint8_t sblock_t;
+typedef uint8_t FdStatus;
 
 
 namespace kiv_os_vfs {
@@ -19,6 +20,13 @@ namespace kiv_os_vfs {
 	const node_t invalidNode = -1;
 
 	const uint8_t mountpointLabelSize = 8;
+
+	const FdStatus fdStatus_idle = 0x00;
+	const FdStatus fdStatus_reserved = 0x01;
+	const FdStatus fdStatus_openRead = 0x02;
+	const FdStatus fdStatus_openWrite = 0x04;
+	const FdStatus fdStatus_open = fdStatus_openRead | fdStatus_openWrite;
+	
 
 	const uint8_t driverErr_notLoaded = 1;
 	const uint8_t driverReg_err = 1;
