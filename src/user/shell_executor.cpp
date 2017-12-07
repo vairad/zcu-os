@@ -205,6 +205,7 @@ namespace shell_executor {
 		}
 
 		waitForCommands(toExecute);
+		kiv_os_lib::printLn("", 0);
 	}
 
 	/**
