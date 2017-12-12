@@ -46,13 +46,13 @@ namespace ps_program
 			while (success)
 			{
 				success = kiv_os_rtl::Read_File(handle_file, &buffer, sizeof(buffer) - 1, read);
-				if (read == -1 || read == 0)
+				if (read == 0 || read >= sizeof(buffer))
 				{
 					break;
 				}
 				buffer[read] = 0;
 				processLn += buffer;
-				memset(buffer, 0, 3); // clear buffer
+				memset(buffer, 0, sizeof(buffer)); // clear buffer
 			}
 			printProcess(processLn, processPid, pid_flag);
 
