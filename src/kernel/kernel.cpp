@@ -15,7 +15,8 @@
 #define CREATE_INIT_ERROR 11
 #define INITIALISE_VFS_ERROR 12
 #define USER_DLL_ERROR 13
-#define WAITING_SHELL_ERROR 14
+#define CREATING_SHELL_ERROR 14
+#define WAITING_SHELL_ERROR 15
 
 HMODULE User_Programs;
 
@@ -100,7 +101,7 @@ void runFirstProgram()
 	if(regs.flags.carry == true)
 	{
 		//something went terribly wrong
-		exit(WAITING_SHELL_ERROR);
+		exit(CREATING_SHELL_ERROR);
 	}
 
 	kiv_os::THandle handles[1];
@@ -112,6 +113,12 @@ void runFirstProgram()
 	regs.rcx.r = 1;
 
 	Sys_Call(regs);
+
+	if (regs.flags.carry == true)
+	{
+		//something went terribly wrong
+		exit(WAITING_SHELL_ERROR);
+	}
 }
 
 /// ///////////////////////////////////////////////////////////////////
