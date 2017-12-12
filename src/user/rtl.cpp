@@ -44,7 +44,7 @@ bool kiv_os_rtl::Create_File(const char *file_name, size_t flags, uint16_t attrs
 		handle = static_cast<kiv_os::THandle>(regs.rax.x);
 		return true;
 	}
-
+	handle = kiv_os::erInvalid_Handle;
 	return false;
 }
 

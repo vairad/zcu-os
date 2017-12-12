@@ -37,7 +37,7 @@ namespace rd_program {
 		}
 		buffer[read] = 0; // Terminate the string.
 
-		if (buffer == "Y" || buffer == "y") {
+		if (buffer[0] == 'Y' || buffer[0] == 'y') {
 			return 1;
 		}
 		return 0;
@@ -45,21 +45,21 @@ namespace rd_program {
 
 	size_t rd_main(int argc, char *argv[]) {
 		if (argc > 1 && argc <= 4) {
-			bool quiet = true;
+			bool quiet = false;
 			bool recursive = false;
 			std::vector<char *> dirnameVector = std::vector<char *>();
 
 			for (size_t i = 1; i < argc; i++) {
 				// TODO: Klaus - Test this.
-				char *str = argv[i];
+				std::string str = argv[i];
 				if (str == "/S" || str == "/s") {
 					recursive = true;
 				}
 				else if (str == "/Q" || str == "/q") {
-					quiet = false;
+					quiet = true;
 				}
 				else {
-					dirnameVector.push_back(str);
+					dirnameVector.push_back(argv[i]);
 				}
 			}
 
@@ -70,7 +70,7 @@ namespace rd_program {
 
 			for (size_t i = 0; i < dirnameVector.size(); i++) {
 				kiv_os::THandle dir;
-				bool success = kiv_os_rtl::Create_File(dirnameVector[i], kiv_os::fmOpen_Always, 0, dir);
+				bool success = kiv_os_rtl::Create_File(dirnameVector[i], kiv_os::fmOpen_Always, kiv_os::faDirectory, dir);
 				if (dir == kiv_os::erInvalid_Handle) {
 					// Error - File not found.
 					std::string error = "File not found.";
@@ -97,13 +97,17 @@ namespace rd_program {
 						kiv_os_lib::printErrLn(error.c_str(), error.length());
 						return kiv_os_lib::READ_ERROR;
 					}
-					bool empty = read == -1;
-					size_t result = ask(dirnameVector[i]);
-					if (result == kiv_os_lib::READ_ERROR) {
-						// Error - Bad read.
-						std::string error = "Error reading from standard input.";
-						kiv_os_lib::printErrLn(error.c_str(), error.length());
-						return kiv_os_lib::READ_ERROR;
+					bool empty = read == 0;
+					size_t result = false;
+					if(!quiet)
+					{
+						result = ask(dirnameVector[i]);
+						if (result == kiv_os_lib::READ_ERROR) {
+							// Error - Bad read.
+							std::string error = "Error reading from standard input.";
+							kiv_os_lib::printErrLn(error.c_str(), error.length());
+							return kiv_os_lib::READ_ERROR;
+						}
 					}
 
 					bool answer = result;
