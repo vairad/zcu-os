@@ -44,13 +44,12 @@ namespace rd_program {
 	}
 
 	size_t rd_main(int argc, char *argv[]) {
-		if (argc > 1 && argc <= 4) {
+		if (argc > 1) {
 			bool quiet = false;
 			bool recursive = false;
 			std::vector<char *> dirnameVector = std::vector<char *>();
 
 			for (size_t i = 1; i < argc; i++) {
-				// TODO: Klaus - Test this.
 				std::string str = argv[i];
 				if (str == "/S" || str == "/s") {
 					recursive = true;
@@ -70,8 +69,8 @@ namespace rd_program {
 
 			for (size_t i = 0; i < dirnameVector.size(); i++) {
 				kiv_os::THandle dir;
-				bool success = kiv_os_rtl::Create_File(dirnameVector[i], kiv_os::fmOpen_Always, kiv_os::faDirectory, dir);
-				if (dir == kiv_os::erInvalid_Handle) {
+				const bool success = kiv_os_rtl::Create_File(dirnameVector[i], kiv_os::fmOpen_Always, kiv_os::faDirectory, dir);
+				if (!success) {
 					// Error - File not found.
 					std::string error = "File not found.";
 					kiv_os_lib::printErrLn(error.c_str(), error.length());
@@ -79,7 +78,7 @@ namespace rd_program {
 				}
 
 				bool isDir;
-				bool ok = kiv_os_lib::isDir(dir, isDir, nullptr);
+				const bool ok = kiv_os_lib::isDir(dir, isDir, nullptr);
 				if (!ok) {
 					// Error - Cannot get attrs.
 					std::string error = "Could not get file attributes.";
@@ -90,8 +89,8 @@ namespace rd_program {
 				if (isDir) {
 					size_t read;
 					kiv_os::TDir_Entry tdir;
-					bool ok = kiv_os_rtl::Read_File(dir, &tdir, sizeof(kiv_os::TDir_Entry), read);
-					if (!ok) {
+					const bool read_ok = kiv_os_rtl::Read_File(dir, &tdir, sizeof(kiv_os::TDir_Entry), read);
+					if (!read_ok) {
 						// Error - Bad read.
 						std::string error = "Error reading file.";
 						kiv_os_lib::printErrLn(error.c_str(), error.length());
