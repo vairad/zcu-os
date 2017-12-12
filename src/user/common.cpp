@@ -111,7 +111,7 @@ bool kiv_os_lib::getWD(const char* buffer, size_t buffer_size)
 {
 	size_t readed = -1;
 	bool ok = kiv_os_rtl::Get_Working_Dir(buffer, buffer_size, readed);
-	ok &= readed != sizeof(buffer);
+	ok &= (readed <= buffer_size);
 	return ok;
 }
 
