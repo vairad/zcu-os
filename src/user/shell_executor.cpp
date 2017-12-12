@@ -194,7 +194,7 @@ namespace shell_executor {
 						errorStr = "Error creating new process or thread.";
 						break;
 					default:
-						errorStr = "Unspecified error during run program.";
+						errorStr = "Unspecified error during run program. Error code:" + std::to_string(error);
 					}
 					kiv_os_lib::printErrLn(errorStr.c_str(), errorStr.length());
 					closeHandles(ce);
