@@ -13,7 +13,7 @@ class pipe
 
 	static const size_t PIPE_SIZE = 1024;
 
-	std::mutex read_lock, write_lock;
+	std::mutex attr_lock, write_lock;
 	semaphore::semaphore empty;
 	semaphore::semaphore full;
 

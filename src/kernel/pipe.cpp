@@ -88,6 +88,7 @@ size_t pipe::read_out(uint8_t* buf, const size_t nbytes)
 }*/
 
 bool pipe::close(PipeStatus s) {
+	std::lock_guard<std::mutex> guard(attr_lock);
 	bool currentStatus = status & s;
 
 	if (!currentStatus) {
@@ -130,12 +131,14 @@ bool pipe::isEmpty() {
 
 bool pipe::readMakeSense()
 {
+	std::lock_guard<std::mutex> guard(attr_lock);
 	bool sense = isOpenRead() && (!isEmpty() || isOpenWrite());
 	return sense;
 }
 
 bool pipe::writteMakeSense()
 {
+	std::lock_guard<std::mutex> guard(attr_lock);
 	bool sense = isOpenWrite() && isOpenRead();
 	return sense;
 }
