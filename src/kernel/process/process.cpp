@@ -637,15 +637,23 @@ void process0(process::TStartProcessBlock &procInfo)
 
 	{
 		std::lock_guard<std::mutex> lock(process_table_lock);
-		//I'm done, notify others
-		const auto pid = process::getPid();
+		std::unique_lock<std::mutex> lck(thread_table_lock);
 
+		//I'm done, notify others
+		const auto threadIndex = TidToTableIndex(process::getTid());
+		const auto pid = process::getPid();
 
 		const size_t size = process_table[pid]->waiting.size();
 		process_table[pid]->retval.make_done(retval, size);
 
 		process_table[pid]->waiting.close();
 		process_table[pid]->waiting.notifyAll();
+
+		const size_t size_th = thread_table[threadIndex]->waiting.size();
+		thread_table[threadIndex]->retval.make_done(retval, size_th);
+
+		thread_table[threadIndex]->waiting.close();
+		thread_table[threadIndex]->waiting.notifyAll();
 	}
 }
 
@@ -884,8 +892,6 @@ void process::wakeUpThreadHandle(const kiv_os::THandle handle)
 */
 void process::wakeUpProcessHandle(const kiv_os::THandle handle)
 {
-	std::lock_guard<std::mutex> lock(thread_table_lock);
-
 	const auto pid = process::getPid();
 	if (thread_table[TidToTableIndex(handle)] && pid < MAX_THREAD_COUNT)
 	{
