@@ -20,6 +20,7 @@ kiv_os::TRegisters Prepare_SysCall_Context(uint8_t major, uint8_t minor) {
 	kiv_os::TRegisters regs;
 	regs.rax.h = major;
 	regs.rax.l = minor;
+	regs.flags.carry = false;
 	return regs;
 }
 
